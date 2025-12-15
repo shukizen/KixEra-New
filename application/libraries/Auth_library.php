@@ -172,8 +172,26 @@ class Auth_library {
         
         $user = $query->row_array();
         
-        // Verifikasi password (MD5 - sebaiknya gunakan password_hash/verify)
-        if (md5($password) !== $user['password']) {
+        // Verifikasi password - Support both md5 (legacy) and password_hash
+        $password_valid = false;
+        
+        if (password_get_info($user['password'])['algo'] !== 0) {
+            // Password menggunakan password_hash
+            $password_valid = password_verify($password, $user['password']);
+        } else {
+            // Legacy MD5 password
+            $password_valid = (md5($password) === $user['password']);
+            
+            // Update to password_hash if MD5 is correct
+            if ($password_valid) {
+                $this->CI->db->where('id_user', $user['id_user']);
+                $this->CI->db->update('users', [
+                    'password' => password_hash($password, PASSWORD_DEFAULT)
+                ]);
+            }
+        }
+        
+        if (!$password_valid) {
             return [
                 'success' => false,
                 'message' => 'Password salah'
@@ -211,18 +229,21 @@ class Auth_library {
         // Log activity
         $this->log_activity($user['id_user'], 'User login', 'users');
         
+        // Get redirect URL based on role and folder structure
+        $redirect_url = $this->get_redirect_url($user['role']);
+        
         return [
             'success' => true,
             'message' => 'Login berhasil',
             'user' => $user_details,
-            'redirect' => $this->get_redirect_url($user['role'])
+            'redirect' => $redirect_url
         ];
     }
     
     /**
      * Get user details berdasarkan role
      */
-    private function get_user_details($user) {
+    public function get_user_details($user) {
         $details = [
             'id_user' => $user['id_user'],
             'username' => $user['username'],
@@ -315,7 +336,7 @@ class Auth_library {
                 'status' => 'trial',
                 'paket' => 'Trial',
                 'features' => $this->paket_features['Trial'],
-                'sisa_hari' => 7, // Default trial 7 hari
+                'sisa_hari' => 7,
                 'message' => 'Anda menggunakan paket trial'
             ];
         }
@@ -350,7 +371,7 @@ class Auth_library {
     /**
      * Set user session
      */
-    private function set_user_session($user_details) {
+    public function set_user_session($user_details) {
         $session_data = [
             'id_user' => $user_details['id_user'],
             'username' => $user_details['username'],
@@ -362,9 +383,9 @@ class Auth_library {
         // Add role-specific data
         switch($user_details['role']) {
             case 'admin':
-                $session_data['id_admin'] = $user_details['id_admin'];
-                $session_data['nama'] = $user_details['nama'];
-                $session_data['email'] = $user_details['email'];
+                $session_data['id_admin'] = $user_details['id_admin'] ?? null;
+                $session_data['nama'] = $user_details['nama'] ?? 'Admin';
+                $session_data['email'] = $user_details['email'] ?? '';
                 break;
                 
             case 'owner':
@@ -606,16 +627,16 @@ class Auth_library {
     }
     
     /**
-     * Get redirect URL based on role
+     * Get redirect URL based on role - SESUAI STRUKTUR FOLDER
      */
-    private function get_redirect_url($role) {
+    public function get_redirect_url($role) {
         switch($role) {
             case 'admin':
-                return base_url('admin/dashboard');
+                return base_url('admin/admin_dashboard');
             case 'owner':
-                return base_url('owner/dashboard');
+                return base_url('pemilik/pemilik_dashboard');
             case 'karyawan':
-                return base_url('karyawan/dashboard');
+                return base_url('karyawan/karyawan_dashboard');
             default:
                 return base_url('auth/login');
         }
