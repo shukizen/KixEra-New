@@ -3,221 +3,130 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Auth extends CI_Controller {
     
+    public function __construct() {
+        parent::__construct();
+        $this->load->library('session');
+        $this->load->library('auth_library');
+        $this->load->helper('url');
+    }
+    
+    /**
+     * Halaman login
+     */
     public function login() {
-
+        // Jika sudah login, redirect ke dashboard
+        if ($this->auth_library->is_logged_in()) {
+            $this->_redirect_by_role();
+            return;
+        }
+        
+        // Proses form login jika POST
+        if ($this->input->method() === 'post') {
+            $email = $this->input->post('email', TRUE);
+            $password = $this->input->post('password', TRUE);
+            
+            // Login menggunakan email sebagai username
+            $result = $this->auth_library->login($email, $password);
+            
+            if ($result['success']) {
+                // Cek apakah ada intended_url untuk redirect
+                $intended_url = $this->session->userdata('intended_url');
+                
+                if ($intended_url) {
+                    // Hapus intended_url dari session
+                    $this->session->unset_userdata('intended_url');
+                    redirect($intended_url);
+                } else {
+                    // Redirect berdasarkan role
+                    redirect($result['redirect']);
+                }
+            } else {
+                // Login gagal
+                $this->session->set_flashdata('error', $result['message']);
+                redirect('auth/login');
+            }
+        }
         
         // Show login view
         $this->load->view('auth/login');
     }
     
-    public function google() {
-        // Google OAuth logic
+    /**
+     * Proses login via AJAX
+     */
+    public function ajax_login() {
+        if ($this->input->method() !== 'post') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request']);
+            return;
+        }
+        
+        $email = $this->input->post('email', TRUE);
+        $password = $this->input->post('password', TRUE);
+        
+        $result = $this->auth_library->login($email, $password);
+        
+        if ($result['success']) {
+            // Cek intended_url
+            $intended_url = $this->session->userdata('intended_url');
+            
+            if ($intended_url) {
+                $this->session->unset_userdata('intended_url');
+                $result['redirect'] = $intended_url;
+            }
+        }
+        
+        echo json_encode($result);
     }
+    
+    /**
+     * Google OAuth callback
+     */
+    public function google() {
+        // Google OAuth logic - implementasi nanti
+        $this->session->set_flashdata('info', 'Google OAuth belum diimplementasikan');
+        redirect('auth/login');
+    }
+    
+    /**
+     * Halaman register
+     */
     public function register() {
+        // Jika sudah login, redirect
+        if ($this->auth_library->is_logged_in()) {
+            $this->_redirect_by_role();
+            return;
+        }
+        
         $this->load->view('auth/register');
     }
-
-//     public function index()
-//     {
-//         redirect('auth/login');
-//     }
-
-//     public function login()
-//     {
-//         // Check if already logged in
-//         if ($this->session->userdata('user_id') && $this->session->userdata('logged_in')) {
-//             $this->_redirect_by_role();
-//         }
-
-//         $this->form_validation->set_rules('username', 'Username', 'required|trim');
-//         $this->form_validation->set_rules('password', 'Password', 'required');
-
-//         if ($this->form_validation->run() == FALSE) {
-//             $data['title'] = 'Login - Laboratory Management System';
-//             $this->load->view('auth/login', $data);
-//         } else {
-//             $username = $this->input->post('username', TRUE);
-//             $password = $this->input->post('password', TRUE);
-            
-//             $user = $this->User_model->validate_login($username, $password);
-            
-//             if ($user) {
-//                 // Set session data
-//                 $session_data = array(
-//                     'id_user' => $user['id_user'],
-//                     'username' => $user['username'],
-//                     'nama' => isset($user['nama']) ? $user['nama'] : $user['username'],
-//                     'role' => $user['role'],
-//                     'logged_in' => TRUE
-//                 );
-                
-//                 // Add role-specific data
-//                 switch($user['role']) {
-//                     case 'pemilik':
-//                         if (isset($user['telepon'])) {
-//                             $session_data['telepon'] = $user['telepon'];
-//                         }
-//                         break;
-//                     case 'karyawan':
-//                         if (isset($user['no_telp'])) {
-//                             $session_data['no_telp'] = $user['telepon'];
-//                         }
-//                         break;
-//                 }
-                
-//                 $this->session->set_userdata($session_data);
-                
-//                 // Log activity
-//                 $this->User_model->log_activity($user['id_user'], 'User logged in', 'users');
-                
-//                 // Set success message
-//                 $this->session->set_flashdata('success', 'Login berhasil! Selamat datang ' . $session_data['nama']);
-                
-//                 // Redirect based on role
-//                 $this->_redirect_by_role();
-//             } else {
-//                 $data['error'] = 'Username atau password salah!';
-//                 $data['title'] = 'Login - Laboratory Management System';
-//                 $this->load->view('auth/login', $data);
-//             }
-//         }
-//     }
-
-//     public function logout()
-//     {
-//         // Log activity before destroying session
-//         if ($this->session->userdata('id_user')) {
-//             $this->User_model->log_activity($this->session->userdata('id_user'), 'User logged out', 'users');
-//         }
+    
+    /**
+     * Logout
+     */
+    public function logout() {
+        $this->auth_library->logout();
+        $this->session->set_flashdata('success', 'Anda telah berhasil logout');
+        redirect('auth/login');
+    }
+    
+    /**
+     * Redirect berdasarkan role
+     */
+    private function _redirect_by_role() {
+        $role = $this->session->userdata('role');
         
-//         // Destroy all session data
-//         $this->session->unset_userdata([
-//             'id_user', 'username', 'nama', 'role', 'logged_in', 
-//             'no_telp'
-//         ]);
-        
-//         // Destroy session completely
-//         $this->session->sess_destroy();
-        
-//         $this->session->set_flashdata('success', 'Anda telah keluar dari sistem');
-//         redirect('auth/login');
-//     }
-
-//     public function check_session()
-//     {
-
-//         if (!$this->session->userdata('logged_in')) {
-//             echo json_encode(['valid' => false]);
-//         } else {
-//             echo json_encode(['valid' => true]);
-//         }
-//     }
-//     private function _redirect_by_role()
-//     {
-//         $role = $this->session->userdata('role');
-        
-//         switch($role) {
-//             case 'admin':
-//                 redirect('admin/admin_dashboard');
-//                 break;
-//             case 'administrasi':
-//                 redirect('pemilik/pemilik_dashboard');
-//                 break;
-//             case 'petugas_lab':
-//                 redirect('karyawan/karyawan)dashboard');
-//                 break;
-//             default:
-//                 // Fallback for unknown roles
-//                 $this->session->set_flashdata('error', 'Role tidak dikenali. Hubungi administrator.');
-//                 redirect('auth/logout');
-//                 break;
-//         }
-//     }
-
-//     /**
-//      * Check if user has permission to access a specific role
-//      */
-//     public function check_role_permission($required_role)
-//     {
-//         if (!$this->session->userdata('logged_in')) {
-//             return false;
-//         }
-        
-//         $user_role = $this->session->userdata('role');
-        
-//         // Admin can access everything
-//         if ($user_role === 'admin') {
-//             return true;
-//         }
-        
-//         // Other roles can only access their own pages
-//         return $user_role === $required_role;
-//     }
-
-//     /**
-//      * Middleware to check authentication
-//      */
-//     public function require_login()
-//     {
-//         if (!$this->session->userdata('logged_in')) {
-//             $this->session->set_flashdata('error', 'Anda harus login terlebih dahulu');
-//             redirect('auth/login');
-//         }
-//     }
-
-//     /**
-//      * Middleware to check role permission
-//      */
-//     public function require_role($required_role)
-//     {
-//         $this->require_login();
-        
-//         if (!$this->check_role_permission($required_role)) {
-//             $this->session->set_flashdata('error', 'Anda tidak memiliki akses ke halaman tersebut');
-//             $this->_redirect_by_role();
-//         }
-//     }
-
-//     /**
-//      * Change password (for logged in users)
-//      */
-//     public function change_password()
-//     {
-//         $this->require_login();
-        
-//         if ($this->input->method() === 'post') {
-//             $this->form_validation->set_rules('current_password', 'Password Lama', 'required');
-//             $this->form_validation->set_rules('new_password', 'Password Baru', 'required|min_length[6]');
-//             $this->form_validation->set_rules('confirm_password', 'Konfirmasi Password', 'required|matches[new_password]');
-            
-//             if ($this->form_validation->run() === TRUE) {
-//                 $user_id = $this->session->userdata('user_id');
-//                 $current_password = $this->input->post('current_password');
-//                 $new_password = $this->input->post('new_password');
-                
-//                 // Verify current password
-//                 $user = $this->User_model->get_user_by_id($user_id);
-//                 if (md5($current_password) === $user['password']) {
-//                     // Update password
-//                     if ($this->User_model->change_password($user_id, $new_password)) {
-//                         $this->User_model->log_activity($user_id, 'Password changed', 'users');
-//                         $this->session->set_flashdata('success', 'Password berhasil diubah');
-//                     } else {
-//                         $this->session->set_flashdata('error', 'Gagal mengubah password');
-//                     }
-//                 } else {
-//                     $this->session->set_flashdata('error', 'Password lama tidak sesuai');
-//                 }
-                
-//                 $this->_redirect_by_role();
-//             }
-//         }
-        
-//         $data['title'] = 'Ubah Password';
-//         $this->load->view('template/header', $data);
-//         $this->load->view('template/sidebar', $data);
-//         $this->load->view('auth/change_password', $data);
-//         $this->load->view('template/footer');
-//     }
-// }
+        switch ($role) {
+            case 'admin':
+                redirect('admin/dashboard');
+                break;
+            case 'owner':
+                redirect('pemilik/pemilik_dashboard');
+                break;
+            case 'karyawan':
+                redirect('karyawan/karyawan_dashboard');
+                break;
+            default:
+                redirect('landingpage');
+        }
+    }
 }
