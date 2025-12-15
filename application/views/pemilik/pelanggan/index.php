@@ -5,20 +5,17 @@
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
         <main class="flex-1 ml-64">
-            <!-- Header -->
+
             <header class="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <h1 class="text-2xl font-bold text-gray-800">Kelola Pelanggan</h1>
                     
                     <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
-                        <!-- Search -->
                         <div class="relative flex-1 md:w-72">
                             <input type="text" placeholder="Search..." 
                                    class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:border-emerald-500">
                             <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                         </div>
-                        
-                        <!-- Branch Filter -->
                         <select class="px-4 py-2 border border-gray-300 rounded-xl text-black focus:outline-none focus:border-emerald-500">
                             <option>Semua Cabang</option>
                             <option>Kota Gede</option>
@@ -27,8 +24,6 @@
                             <option>Jakal</option>
                             <option>Banguntapan</option>
                         </select>
-                        
-                        <!-- Add Customer Button -->
                         <button class="bg-gradient-to-r from-emerald-500 to-emerald-300 text-white px-6 py-2 rounded-xl hover:opacity-90 transition flex items-center justify-center gap-2">
                             <i class="fas fa-user-plus"></i>
                             <span>Tambah Pelanggan</span>
@@ -36,12 +31,10 @@
                     </div>
                 </div>
             </header>
-            
-            <!-- Dashboard Content -->
+
             <div class="p-6">
-                   <!-- Charts Section -->
+
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Distribusi Pelanggan Per Cabang -->
                     <div class="bg-white rounded-2xl shadow-sm p-6">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4">Distribusi Pelanggan Per Cabang</h2>
                         <div class="h-64">

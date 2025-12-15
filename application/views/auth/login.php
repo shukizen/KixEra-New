@@ -37,11 +37,7 @@
                 <!-- Image Circle -->
                 <div class="relative w-80 h-80 lg:w-96 lg:h-96">
                     <div class="absolute inset-0 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                        <img 
-                            src="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=600&h=400&fit=crop" 
-                            alt="KixEra Dashboard Preview" 
-                            class="w-4/5 h-auto object-cover rounded-lg shadow-lg"
-                        />
+                        <img src="<?= site_url ('assets/img/konten/dashbd.png') ?>" alt="dashboard">
                     </div>
                 </div>
                 

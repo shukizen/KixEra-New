@@ -13,8 +13,7 @@ $CI =& get_instance();
 $segment2 = $CI->uri->segment(2);
 // Mengambil segment ke-2 dari URL
 ?>
-
-<aside id="sidebar" class="sidebar w-64 bg-teal-700 min-h-screen flex flex-col fixed left-0 top-0 z-40 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0">
+<aside id="sidebar" class="sidebar w-64 bg-teal-700 min-h-screen flex flex-col fixed left-0 top-0 z-40 transition-all duration-300 ease-in-out transform -translate-x-full lg:translate-x-0">
     <!-- Logo Area -->
     <div class="h-24 border-b border-teal-600 flex items-center justify-between px-6">
         <div class="flex items-center gap-2">
@@ -107,15 +106,20 @@ $segment2 = $CI->uri->segment(2);
             document.body.style.overflow = 'hidden';
         }
         
-        // Fungsi untuk menutup sidebar
-        function closeSidebar(e) {
-            if (e) e.preventDefault();
-            console.log('Closing sidebar...');
-            sidebar.classList.add('-translate-x-full');
-            overlay.classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-        
+       // Fungsi untuk menutup sidebar
+function closeSidebar(e) {
+    if (e) e.preventDefault();
+    console.log('Closing sidebar...');
+    sidebar.classList.add('-translate-x-full');
+    sidebar.classList.remove('lg:translate-x-0'); // Tambahkan ini
+    overlay.classList.add('hidden');
+    document.body.style.overflow = '';
+    
+    // Untuk mobile, tambahkan class khusus
+    if (window.innerWidth < 1024) {
+        document.querySelector('main').classList.remove('lg:ml-64');
+    }
+}
         // Event listeners
         mobileMenuBtn.addEventListener('click', openSidebar);
         closeSidebarBtn.addEventListener('click', closeSidebar);
