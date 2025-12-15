@@ -1,16 +1,194 @@
-<?php 
-defined('BASEPATH') OR exit('No direct script access allowed');
-class Pesanan extends CI_Controller {
+<?php
+defined('BASEPATH') or exit('No direct script access allowed');
+class Pesanan extends CI_Controller
+{
     public function __construct()
     {
         parent::__construct();
+        $this->load->database(); // Load database library
+        $this->load->model('Pesanan_model');
+        $this->load->model('Owner_model');
+        $this->load->library('session');
     }
 
     public function index()
     {
-        $this->load->view('template/header', );
-        $this->load->view('template/sidebar', );
-        $this->load->view('pemilik/pesanan/index', );
+        // Determine pemilik id from session or user mapping
+        $user_id = $this->session->userdata('user_id');
+        $id_pemilik = $this->session->userdata('id_pemilik');
+        if (empty($id_pemilik) && !empty($user_id)) {
+            $owner = $this->Owner_model->getOwnerByUserId($user_id);
+            if ($owner) {
+                $id_pemilik = isset($owner->id_pemilik) ? $owner->id_pemilik : (isset($owner->id_owner) ? $owner->id_owner : null);
+            }
+        }
+
+        // Fallback: Jika belum ada id_pemilik, ambil pemilik pertama (untuk testing)
+        if (empty($id_pemilik)) {
+            $this->load->model('Owner_model');
+            $first_owner = $this->db->get('pemilik')->row();
+            if ($first_owner) {
+                $id_pemilik = isset($first_owner->id_pemilik) ? $first_owner->id_pemilik : null;
+            }
+        }
+
+        $data['status_list'] = [
+            'menunggu' => 'Menunggu',
+            'diterima' => 'Diterima',
+            'dalam_proses' => 'Dalam Proses',
+            'selesai' => 'Selesai',
+            'dibatalkan' => 'Dibatalkan',
+        ];
+
+        $data['pesanan'] = $this->Pesanan_model->getAllPesananByOwner($id_pemilik);
+
+        // load auxiliary lists for modal selects
+        $this->load->model('Pelanggan_model');
+        $this->load->model('Layanan_model');
+        $this->load->model('Karyawan_model');
+
+        $data['pelanggan_list'] = method_exists($this->Pelanggan_model, 'getAllPelanggan') ? $this->Pelanggan_model->getAllPelanggan() : [];
+        $data['layanan_list'] = method_exists($this->Layanan_model, 'getAllLayananByOwner') ? $this->Layanan_model->getAllLayananByOwner($id_pemilik) : [];
+        $data['karyawan_list'] = method_exists($this->Karyawan_model, 'getAllKaryawanByOwner') ? $this->Karyawan_model->getAllKaryawanByOwner($id_pemilik) : [];
+
+        $this->load->view('template/header',);
+        $this->load->view('template/sidebar',);
+        $this->load->view('pemilik/pesanan/index', $data);
         $this->load->view('template/footer');
+    }
+
+    // View detail pesanan
+    public function view($id)
+    {
+        $pesanan = $this->Pesanan_model->getPesananDetailFromView($id);
+
+        if (!$pesanan) {
+            show_404();
+            return;
+        }
+
+        $data['pesanan'] = $pesanan;
+        $data['detail_items'] = $this->Pesanan_model->getDetailPesanan($id);
+
+        $this->load->view('template/header');
+        $this->load->view('template/sidebar');
+        $this->load->view('pemilik/pesanan/detail', $data);
+        $this->load->view('template/footer');
+    }
+
+    // Update pesanan (expects POST with `id_pesanan` and fields to update)
+    public function update()
+    {
+        $id = $this->input->post('id_pesanan');
+        if (empty($id)) {
+            $resp = ['status' => 'error', 'message' => 'Missing id_pesanan'];
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode($resp));
+        }
+
+        $data = $this->input->post();
+        unset($data['id_pesanan']);
+        // pesanan table doesn't have `cabang` column; ensure we don't attempt to update it
+        if (isset($data['cabang'])) unset($data['cabang']);
+
+        $updated = $this->Pesanan_model->updatePesanan($id, $data);
+        if ($updated) {
+            $resp = ['status' => 'success', 'message' => 'Pesanan updated'];
+        } else {
+            $resp = ['status' => 'error', 'message' => 'Failed to update pesanan'];
+        }
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($resp));
+    }
+
+    // Delete pesanan (soft delete). Expects POST with `id_pesanan`.
+    public function delete()
+    {
+        $id = $this->input->post('id_pesanan');
+        if (empty($id)) {
+            $resp = ['status' => 'error', 'message' => 'Missing id_pesanan'];
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode($resp));
+        }
+
+        $deleted = $this->Pesanan_model->deletePesanan($id);
+        if ($deleted) {
+            $resp = ['status' => 'success', 'message' => 'Pesanan deleted'];
+        } else {
+            $resp = ['status' => 'error', 'message' => 'Failed to delete pesanan'];
+        }
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($resp));
+    }
+
+    public function get_pesanan_json($id)
+    {
+        $data = $this->Pesanan_model->getPesananById($id);
+
+        echo json_encode($data);
+    }
+
+    // Method get() untuk modal edit - mengembalikan format {status, data}
+    public function get($id)
+    {
+        $pesanan = $this->Pesanan_model->getPesananById($id);
+
+        if (!$pesanan) {
+            $resp = ['status' => 'error', 'message' => 'Pesanan tidak ditemukan'];
+        } else {
+            $resp = ['status' => 'success', 'data' => $pesanan];
+        }
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($resp));
+    }
+
+    // Update via JSON (expects JSON body)
+    public function update_json()
+    {
+        $raw = $this->input->raw_input_stream;
+        error_log('Raw input stream: ' . $raw);
+        $input = json_decode($raw, true);
+        error_log('Decoded input: ' . json_encode($input));
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log('JSON error: ' . json_last_error_msg());
+            return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'error', 'message' => 'Invalid JSON']));
+        }
+
+        $id = isset($input['id_pesanan']) ? $input['id_pesanan'] : null;
+        if (empty($id)) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'error', 'message' => 'Missing id_pesanan']));
+        }
+
+        // whitelist fields (do NOT include `cabang` since pesanan table has no such column)
+        $allowed = ['id_pelanggan', 'id_layanan', 'id_karyawan', 'tgl_masuk', 'total_harga', 'status_pesanan', 'jumlah_item', 'tgl_estimasi_selesai', 'catatan'];
+        $data = [];
+        foreach ($allowed as $f) {
+            if (isset($input[$f])) $data[$f] = $input[$f];
+        }
+
+        error_log('update_json - id: ' . $id . ', data: ' . json_encode($data));
+
+        // basic validation
+        if (isset($data['total_harga']) && !is_numeric($data['total_harga'])) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'error', 'message' => 'total_harga must be numeric']));
+        }
+
+        $ok = $this->Pesanan_model->updatePesanan($id, $data);
+        error_log('update_json - update result: ' . ($ok ? 'success' : 'failed'));
+        if ($ok) {
+            $updated = $this->Pesanan_model->getPesananById($id);
+            error_log('update_json - updated data: ' . json_encode($updated));
+            return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'success', 'message' => 'Updated', 'data' => $updated]));
+        }
+
+        return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'error', 'message' => 'Update failed']));
     }
 }

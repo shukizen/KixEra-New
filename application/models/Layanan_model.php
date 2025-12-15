@@ -9,8 +9,8 @@ class  Layanan_model extends CI_Model {
     }
     
     // Get all layanan by owner
-    public function getAllLayananByOwner($id_owner) {
-        $this->db->where('id_owner', $id_owner);
+    public function getAllLayananByOwner($id_pemilik) {
+        $this->db->where('id_pemilik', $id_pemilik);
         $this->db->where('deleted_at IS NULL');
         $this->db->order_by('nama_layanan', 'ASC');
         $query = $this->db->get($this->table);
@@ -18,8 +18,8 @@ class  Layanan_model extends CI_Model {
     }
     
     // Get active layanan
-    public function getActiveLayanan($id_owner) {
-        $this->db->where('id_owner', $id_owner);
+    public function getActiveLayanan($id_pemilik) {
+        $this->db->where('id_pemilik', $id_pemilik);
         $this->db->where('status', 'aktif');
         $this->db->where('deleted_at IS NULL');
         $query = $this->db->get($this->table);
@@ -55,7 +55,7 @@ class  Layanan_model extends CI_Model {
     }
     
     // Get layanan statistics
-    public function getLayananStats($id_owner) {
+    public function getLayananStats($id_pemilik) {
         $query = $this->db->query("
             SELECT 
                 l.id_layanan,
@@ -65,10 +65,10 @@ class  Layanan_model extends CI_Model {
                 SUM(p.total_harga) as total_pendapatan
             FROM layanan l
             LEFT JOIN pesanan p ON p.id_layanan = l.id_layanan AND p.deleted_at IS NULL
-            WHERE l.id_owner = ? AND l.deleted_at IS NULL
+            WHERE l.id_pemilik = ? AND l.deleted_at IS NULL
             GROUP BY l.id_layanan
             ORDER BY total_pesanan DESC
-        ", [$id_owner]);
+        ", [$id_pemilik]);
         
         return $query->result();
     }
