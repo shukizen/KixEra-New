@@ -12,7 +12,7 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Index - redirect to login
+     * Index - redirect ke login
      */
     public function index() {
         if ($this->auth_library->is_logged_in()) {
@@ -23,21 +23,21 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Login page
+     * Halaman Login
      */
     public function login() {
-        // If already logged in, redirect to dashboard
+        // Jika sudah login, redirect ke dashboard
         if ($this->auth_library->is_logged_in()) {
             $role = $this->session->userdata('role');
             redirect($this->get_dashboard_url($role));
         }
         
-        // Handle POST request (login attempt)
+        // Handle request POST (percobaan login)
         if ($this->input->method() === 'post') {
             $username = $this->input->post('username', TRUE);
             $password = $this->input->post('password', TRUE);
             
-            // Validate input
+            // Validasi input
             if (empty($username) || empty($password)) {
                 $response = [
                     'success' => false,
@@ -54,16 +54,16 @@ class Auth extends CI_Controller {
                 return;
             }
             
-            // Attempt login
+            // Coba login
             $result = $this->auth_library->login($username, $password);
             
-            // Return JSON for AJAX request
+            // Kembalikan JSON untuk request AJAX
             if ($this->input->is_ajax_request()) {
                 echo json_encode($result);
                 return;
             }
             
-            // Handle normal form submission
+            // Handle submit form normal
             if ($result['success']) {
                 $this->session->set_flashdata('success', $result['message']);
                 redirect($result['redirect']);
@@ -78,43 +78,43 @@ class Auth extends CI_Controller {
             return;
         }
         
-        // Show login view
+        // Tampilkan view login
         $data['page_title'] = 'Login - KixEra';
         $this->load->view('auth/login', $data);
     }
     
     /**
-     * Register page
+     * Halaman Register
      */
     public function register() {
-        // If already logged in, redirect
+        // Jika sudah login, redirect
         if ($this->auth_library->is_logged_in()) {
             $role = $this->session->userdata('role');
             redirect($this->get_dashboard_url($role));
         }
         
-        // Handle POST request
+        // Handle request POST
         if ($this->input->method() === 'post') {
             $this->process_registration();
             return;
         }
         
-        // Show register view
-        $data['page_title'] = 'Register - KixEra';
+        // Tampilkan view register
+        $data['page_title'] = 'Daftar - KixEra';
         $this->load->view('auth/register', $data);
     }
     
     /**
-     * Process registration
+     * Proses registrasi
      */
     private function process_registration() {
-        // Get form data
+        // Ambil data form
         $full_name = $this->input->post('fullName', TRUE);
         $email = $this->input->post('email', TRUE);
         $password = $this->input->post('password', TRUE);
         $confirm_password = $this->input->post('confirmPassword', TRUE);
         
-        // Validate
+        // Validasi
         $errors = [];
         
         if (empty($full_name)) {
@@ -133,7 +133,7 @@ class Auth extends CI_Controller {
             $errors[] = 'Password tidak cocok';
         }
         
-        // Check if email already exists
+        // Cek apakah email sudah ada
         $this->db->where('email', $email);
         if ($this->db->count_all_results('pemilik') > 0) {
             $errors[] = 'Email sudah terdaftar';
@@ -155,16 +155,16 @@ class Auth extends CI_Controller {
             return;
         }
         
-        // Generate unique username
+        // Generate username unik
         $username = $this->generate_unique_username($full_name);
         
-        // Start transaction
+        // Mulai transaksi
         $this->db->trans_start();
         
-        // Create user account
+        // Buat akun user
         $user_data = [
             'username' => $username,
-            'password' => password_hash($password, PASSWORD_DEFAULT), // Use password_hash instead of md5
+            'password' => password_hash($password, PASSWORD_DEFAULT), // Gunakan password_hash daripada md5
             'role' => 'owner',
             'status' => 'aktif',
             'created_at' => date('Y-m-d H:i:s')
@@ -173,7 +173,7 @@ class Auth extends CI_Controller {
         $this->db->insert('users', $user_data);
         $id_user = $this->db->insert_id();
         
-        // Create pemilik record
+        // Buat record pemilik
         $pemilik_data = [
             'id_user' => $id_user,
             'nama' => $full_name,
@@ -187,7 +187,7 @@ class Auth extends CI_Controller {
         $this->db->insert('pemilik', $pemilik_data);
         $id_pemilik = $this->db->insert_id();
         
-        // Create default cabang
+        // Buat cabang default
         $cabang_data = [
             'id_pemilik' => $id_pemilik,
             'nama_cabang' => 'Cabang Utama',
@@ -216,7 +216,7 @@ class Auth extends CI_Controller {
             return;
         }
         
-        // Auto login after registration
+        // Login otomatis setelah registrasi
         $login_result = $this->auth_library->login($username, $password);
         
         $response = [
@@ -234,13 +234,13 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Generate unique username
+     * Generate username unik
      */
     private function generate_unique_username($full_name) {
         $base_username = strtolower(str_replace(' ', '', $full_name));
         $username = $base_username . rand(100, 999);
         
-        // Check uniqueness
+        // Cek keunikan
         $counter = 1;
         while (true) {
             $this->db->where('username', $username);
@@ -250,7 +250,7 @@ class Auth extends CI_Controller {
             $username = $base_username . rand(1000, 9999);
             $counter++;
             
-            // Prevent infinite loop
+            // Cegah loop tak terbatas
             if ($counter > 10) {
                 $username = $base_username . uniqid();
                 break;
@@ -261,11 +261,11 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Google OAuth - Initiate
+     * Google OAuth - Inisiasi
      */
     public function google() {
         try {
-            // Check if Google OAuth library exists
+            // Cek apakah library Google OAuth ada
             if (!file_exists(APPPATH . 'libraries/Google_oauth.php')) {
                 $this->session->set_flashdata('error', 'Google OAuth belum dikonfigurasi');
                 redirect('auth/login');
@@ -274,11 +274,11 @@ class Auth extends CI_Controller {
             
             $this->load->library('google_oauth');
             
-            // Check if this is callback from Google
+            // Cek apakah ini callback dari Google
             if ($this->input->get('code')) {
                 $this->handle_google_callback();
             } else {
-                // Redirect to Google OAuth
+                // Redirect ke Google OAuth
                 $this->google_oauth->redirect();
             }
         } catch (Exception $e) {
@@ -295,7 +295,7 @@ class Auth extends CI_Controller {
         $this->load->library('google_oauth');
         
         try {
-            // Get user info from Google
+            // Dapatkan info user dari Google
             $google_user = $this->google_oauth->get_user_info();
             
             if (!$google_user) {
@@ -304,12 +304,12 @@ class Auth extends CI_Controller {
                 return;
             }
             
-            // Check if user exists by email
+            // Cek apakah user sudah ada berdasarkan email
             $this->db->where('email', $google_user['email']);
             $query = $this->db->get('pemilik');
             
             if ($query->num_rows() > 0) {
-                // User exists, login
+                // User ada, login
                 $pemilik = $query->row_array();
                 
                 $this->db->where('id_user', $pemilik['id_user']);
@@ -329,7 +329,7 @@ class Auth extends CI_Controller {
                     return;
                 }
                 
-                // Manual session setup for OAuth login
+                // Setup session manual untuk login OAuth
                 $user_details = $this->get_user_details_for_oauth($user);
                 
                 if ($user['role'] === 'owner') {
@@ -343,7 +343,7 @@ class Auth extends CI_Controller {
                 redirect($this->get_dashboard_url($user['role']));
                 
             } else {
-                // New user, create account
+                // User baru, buat akun
                 $this->register_google_user($google_user);
             }
             
@@ -355,7 +355,7 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Get user details for OAuth (without calling auth_library private method)
+     * Dapatkan detail user untuk OAuth (tanpa memanggil method private auth_library)
      */
     private function get_user_details_for_oauth($user) {
         $details = [
@@ -381,7 +381,7 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Set OAuth session
+     * Set session OAuth
      */
     private function set_oauth_session($user_details) {
         $session_data = [
@@ -409,18 +409,18 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Register user from Google OAuth
+     * Register user dari Google OAuth
      */
     private function register_google_user($google_user) {
         $this->db->trans_start();
         
-        // Generate unique username from email
+        // Generate username unik dari email
         $username = $this->generate_unique_username($google_user['name']);
         
-        // Create user
+        // Buat user
         $user_data = [
             'username' => $username,
-            'password' => password_hash(uniqid(), PASSWORD_DEFAULT), // Random password for OAuth users
+            'password' => password_hash(uniqid(), PASSWORD_DEFAULT), // Password acak untuk user OAuth
             'role' => 'owner',
             'status' => 'aktif',
             'created_at' => date('Y-m-d H:i:s')
@@ -429,7 +429,7 @@ class Auth extends CI_Controller {
         $this->db->insert('users', $user_data);
         $id_user = $this->db->insert_id();
         
-        // Create pemilik
+        // Buat pemilik
         $pemilik_data = [
             'id_user' => $id_user,
             'nama' => $google_user['name'],
@@ -443,7 +443,7 @@ class Auth extends CI_Controller {
         $this->db->insert('pemilik', $pemilik_data);
         $id_pemilik = $this->db->insert_id();
         
-        // Create default cabang
+        // Buat cabang default
         $cabang_data = [
             'id_pemilik' => $id_pemilik,
             'nama_cabang' => 'Cabang Utama',
@@ -463,7 +463,7 @@ class Auth extends CI_Controller {
             return;
         }
         
-        // Get user details and set session
+        // Dapatkan detail user dan set session
         $this->db->where('id_user', $id_user);
         $user = $this->db->get('users')->row_array();
         
@@ -488,7 +488,7 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Subscription expired page
+     * Halaman langganan berakhir
      */
     public function subscription_expired() {
         $data['page_title'] = 'Langganan Berakhir - KixEra';
@@ -496,7 +496,7 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Check session (AJAX)
+     * Cek session (AJAX)
      */
     public function check_session() {
         header('Content-Type: application/json');
@@ -508,7 +508,7 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Get dashboard URL based on role - SESUAI STRUKTUR FOLDER
+     * Dapatkan URL dashboard berdasarkan role - SESUAI STRUKTUR FOLDER
      */
     private function get_dashboard_url($role) {
         switch($role) {

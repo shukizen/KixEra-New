@@ -74,8 +74,27 @@
                             </p>
                         </div>
 
+                        <!-- Flash Messages -->
+                        <?php if($this->session->flashdata('error')): ?>
+                        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl text-sm">
+                            <?= $this->session->flashdata('error') ?>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <?php if($this->session->flashdata('info')): ?>
+                        <div class="mb-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-xl text-sm">
+                            <?= $this->session->flashdata('info') ?>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <?php if($this->session->flashdata('success')): ?>
+                        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl text-sm">
+                            <?= $this->session->flashdata('success') ?>
+                        </div>
+                        <?php endif; ?>
+
                         <!-- Login Form -->
-                        <form class="space-y-6" onsubmit="handleLogin(event)">
+                        <form class="space-y-6" method="POST" action="<?= base_url('auth/login') ?>">
                             <!-- Email Field -->
                             <div class="space-y-2">
                                 <label for="email" class="block text-sm font-medium text-gray-700" data-i18n="form.email">
@@ -308,17 +327,9 @@
         }
 
         function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const remember = document.getElementById('remember').checked;
-            
-            const message = currentLang === 'en' 
-                ? `Login functionality would be implemented here!\n\nEmail: ${email}`
-                : `Fungsi login akan diimplementasikan di sini!\n\nEmail: ${email}`;
-            
-            console.log('Login attempt:', { email, password, remember });
-            alert(message);
+            // Allow normal form submission to backend
+            // Form will be submitted to auth/login via POST
+            return true;
         }
 
         function handleGoogleLogin() {

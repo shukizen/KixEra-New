@@ -49,8 +49,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | Examples:	my-controller/index	-> my_controller/index
 |		my-controller/my-method	-> my_controller/my_method
 */
+$route['default_controller'] = 'Landingpage';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 $config['index_page'] ='';
 $route['keuangan'] = 'keuangan/index';
 $route['keuangan/(.+)'] = 'keuangan/$1';
+
+// Midtrans Webhook Routes
+$route['pembayaran/notification'] = 'pembayaran/notification';

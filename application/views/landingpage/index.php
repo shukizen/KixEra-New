@@ -216,7 +216,7 @@
                     </li>
                 </ul>
                 
-                <a href="<?= site_url('pembayaran/checkout/2') ?>" class="block w-full py-3 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-semibold transition-colors text-center">Get Started</a>
+                <a id="btn-pro-plan" href="<?= base_url('pembayaran/checkout/2') ?>" class="relative z-10 block w-full py-3 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-semibold transition-colors text-center cursor-pointer">Get Started</a>
             </div>
 
             <!-- Premium Plan -->
@@ -814,7 +814,7 @@
             <h2 class="text-4xl font-bold text-white mb-5 leading-tight">Ready to Transform Your Shoe Care Business?</h2>
             <p class="text-xl text-blue-100 mb-8">Join thousands of businesses already using KixEra to streamline their operations and increase profits.</p>
             <div class="flex justify-center gap-4">
-                <button href="<?= base_url ('auth/login') ?>" class="px-8 py-4 bg-white hover:bg-gray-100 text-emerald-500 rounded-xl font-semibold text-lg shadow-lg transition-colors">Start Free Trial</button>
+                <a href="<?= base_url ('auth/login') ?>" class="px-8 py-4 bg-white hover:bg-gray-100 text-emerald-500 rounded-xl font-semibold text-lg shadow-lg transition-colors">Start Free Trial</a>
                 <button class="px-8 py-4 border-2 border-white/30 hover:border-white/50 hover:bg-white/10 text-white rounded-xl font-semibold text-lg transition-all">Schedule Demo</button>
             </div>
         </div>
