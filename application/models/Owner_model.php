@@ -61,5 +61,16 @@ class Owner_model extends CI_Model {
         $this->db->where('id_owner', $id_owner);
         return $this->db->update($this->table, $data);
     }
+
+    // Activate subscription (update status and package)
+    public function activateSubscription($id_owner, $id_paket) {
+        $data = [
+            'status_langganan' => 'aktif',
+            'id_paket' => $id_paket,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        $this->db->where('id_owner', $id_owner);
+        return $this->db->update($this->table, $data);
+    }
 }
 ?>

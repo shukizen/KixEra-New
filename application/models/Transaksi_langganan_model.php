@@ -12,7 +12,7 @@ class Transaksi_langganan_model extends CI_Model {
      * Get semua transaksi
      */
     public function get_all() {
-        $this->db->select('tl.*, p.nama_paket, p.harga, pm.nama_pemilik');
+        $this->db->select('tl.*, p.nama_paket, p.harga, pm.nama as nama_pemilik');
         $this->db->from($this->table . ' tl');
         $this->db->join('paket_langganan p', 'tl.id_paket = p.id_paket', 'left');
         $this->db->join('pemilik pm', 'tl.id_pemilik = pm.id_pemilik', 'left');
@@ -25,7 +25,7 @@ class Transaksi_langganan_model extends CI_Model {
      * Get transaksi by ID
      */
     public function get_by_id($id) {
-        $this->db->select('tl.*, p.nama_paket, p.harga, p.deskripsi, pm.nama_pemilik, pm.email, pm.telp, pm.alamat');
+        $this->db->select('tl.*, p.nama_paket, p.harga, p.deskripsi, pm.nama as nama_pemilik, pm.email, pm.telp, pm.alamat');
         $this->db->from($this->table . ' tl');
         $this->db->join('paket_langganan p', 'tl.id_paket = p.id_paket', 'left');
         $this->db->join('pemilik pm', 'tl.id_pemilik = pm.id_pemilik', 'left');

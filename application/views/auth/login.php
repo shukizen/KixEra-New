@@ -333,12 +333,8 @@
         }
 
         function handleGoogleLogin() {
-            const message = currentLang === 'en' 
-                ? 'Google OAuth would be implemented here!'
-                : 'Google OAuth akan diimplementasikan di sini!';
-            
-            console.log('Google login clicked');
-            alert(message);
+            // Redirect to Google OAuth endpoint
+            window.location.href = '<?= base_url("auth/google_login") ?>';
         }
     </script>
 </body>

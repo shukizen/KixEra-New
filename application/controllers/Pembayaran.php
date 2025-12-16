@@ -12,6 +12,7 @@ class Pembayaran extends CI_Controller {
         // Load models
         $this->load->model('Paket_langganan_model');
         $this->load->model('Transaksi_langganan_model');
+        $this->load->model('Owner_model');
         
         // Load libraries
         $this->load->library('session');
@@ -31,6 +32,68 @@ class Pembayaran extends CI_Controller {
     }
     
     /**
+     * Debug endpoint - HAPUS SETELAH SELESAI DEBUG
+     * Akses via: /pembayaran/debug_payment
+     */
+    public function debug_payment() {
+        header('Content-Type: application/json');
+        
+        $debug_info = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'checks' => []
+        ];
+        
+        // 1. Check database connection
+        try {
+            $this->db->simple_query('SELECT 1');
+            $debug_info['checks']['database_connection'] = 'OK';
+        } catch (Exception $e) {
+            $debug_info['checks']['database_connection'] = 'FAILED: ' . $e->getMessage();
+        }
+        
+        // 2. Check if transaksi_langganan table exists
+        $table_exists = $this->db->table_exists('transaksi_langganan');
+        $debug_info['checks']['table_transaksi_langganan'] = $table_exists ? 'EXISTS' : 'NOT EXISTS';
+        
+        // 3. Check table columns if exists
+        if ($table_exists) {
+            $fields = $this->db->list_fields('transaksi_langganan');
+            $debug_info['checks']['table_columns'] = $fields;
+            
+            // Check required columns
+            $required_columns = ['id_pemilik', 'id_paket', 'tgl_transaksi', 'jumlah_bayar', 
+                                 'metode_pembayaran', 'status_pembayaran', 'kode_pembayaran',
+                                 'tgl_mulai_langganan', 'tgl_akhir_langganan'];
+            $missing = array_diff($required_columns, $fields);
+            $debug_info['checks']['missing_columns'] = empty($missing) ? 'NONE' : $missing;
+        }
+        
+        // 4. Check paket_langganan table
+        $paket_exists = $this->db->table_exists('paket_langganan');
+        $debug_info['checks']['table_paket_langganan'] = $paket_exists ? 'EXISTS' : 'NOT EXISTS';
+        
+        // 5. Check pemilik table
+        $pemilik_exists = $this->db->table_exists('pemilik');
+        $debug_info['checks']['table_pemilik'] = $pemilik_exists ? 'EXISTS' : 'NOT EXISTS';
+        
+        // 6. Check if paket with id=1 exists (for testing)
+        if ($paket_exists) {
+            $test_paket = $this->Paket_langganan_model->get_by_id(1);
+            $debug_info['checks']['paket_id_1'] = $test_paket ? 'EXISTS' : 'NOT EXISTS';
+        }
+        
+        // 7. Check Midtrans config
+        $debug_info['checks']['midtrans_server_key'] = $this->config->item('midtrans_server_key') ? 'SET' : 'NOT SET';
+        $debug_info['checks']['midtrans_client_key'] = $this->config->item('midtrans_client_key') ? 'SET' : 'NOT SET';
+        $debug_info['checks']['midtrans_api_url'] = $this->config->item('midtrans_api_url') ?: 'NOT SET';
+        
+        // 8. Check if curl is available
+        $debug_info['checks']['curl_available'] = function_exists('curl_init') ? 'YES' : 'NO';
+        
+        echo json_encode($debug_info, JSON_PRETTY_PRINT);
+    }
+    
+    /**
      * Halaman checkout untuk paket tertentu
      * @param int $id_paket
      */
@@ -45,14 +108,12 @@ class Pembayaran extends CI_Controller {
         // CEK LOGIN - DINONAKTIFKAN SEMENTARA UNTUK TESTING MIDTRANS
         // Uncomment kode di bawah setelah login system siap
         // ================================================================
-        /*
         if (!$this->session->userdata('logged_in')) {
             // Simpan intended URL untuk redirect setelah login
             $this->session->set_userdata('intended_url', current_url());
             $this->session->set_flashdata('info', 'Silakan login terlebih dahulu untuk melanjutkan pembelian paket.');
             redirect('auth/login');
         }
-        */
         
         // Ambil data paket dari database
         $paket = $this->Paket_langganan_model->get_by_id($id_paket);
@@ -88,107 +149,120 @@ class Pembayaran extends CI_Controller {
      * (Called via AJAX)
      */
     public function create_snap_token() {
-        // Validasi request method
-        if ($this->input->method() !== 'post') {
-            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-            return;
-        }
+        // Set JSON header
+        header('Content-Type: application/json');
         
-        // Cek login - DINONAKTIFKAN SEMENTARA UNTUK TESTING
-        /*
-        if (!$this->session->userdata('logged_in')) {
-            echo json_encode(['success' => false, 'message' => 'Silakan login terlebih dahulu']);
-            return;
-        }
-        */
-        
-        // Ambil data dari form
-        $id_paket = $this->input->post('id_paket');
-        $durasi_bulan = $this->input->post('durasi_bulan') ?: 1;
-        
-        // Ambil data paket
-        $paket = $this->Paket_langganan_model->get_by_id($id_paket);
-        
-        if (!$paket) {
-            echo json_encode(['success' => false, 'message' => 'Paket tidak ditemukan']);
-            return;
-        }
-        
-        // Hitung total harga
-        $harga = floatval($paket->harga);
-        $total = $harga * intval($durasi_bulan);
-        
-        // Generate unique order ID
-        $order_id = 'KIX-' . date('YmdHis') . '-' . mt_rand(1000, 9999);
-        
-        // Simpan transaksi pending ke database
-        // Untuk testing, gunakan id_pemilik = 1 jika belum login
-        $data_transaksi = [
-            'id_pemilik' => $this->session->userdata('id_pemilik') ?: 1,
-            'id_paket' => $id_paket,
-            'tgl_transaksi' => date('Y-m-d H:i:s'),
-            'jumlah_bayar' => $total,
-            'metode_pembayaran' => 'midtrans',
-            'status_pembayaran' => 'pending',
-            'kode_pembayaran' => $order_id,
-            'tgl_mulai_langganan' => date('Y-m-d'),
-            'tgl_akhir_langganan' => date('Y-m-d', strtotime("+{$durasi_bulan} months"))
-        ];
-        
-        $id_transaksi = $this->Transaksi_langganan_model->insert($data_transaksi);
-        
-        if (!$id_transaksi) {
-            echo json_encode(['success' => false, 'message' => 'Gagal membuat transaksi']);
-            return;
-        }
-        
-        // Siapkan data customer
-        $customer = $this->get_customer_data();
-        
-        // Transaction details untuk Midtrans
-        $transaction_details = [
-            'order_id' => $order_id,
-            'gross_amount' => intval($total) // Midtrans requires integer
-        ];
-        
-        // Customer details untuk Midtrans
-        $customer_details = [
-            'first_name' => $customer['nama'],
-            'email' => $customer['email'],
-            'phone' => $customer['telp']
-        ];
-        
-        // Item details untuk Midtrans
-        $item_details = [
-            [
-                'id' => 'PKT-' . $id_paket,
-                'price' => intval($harga),
-                'quantity' => intval($durasi_bulan),
-                'name' => $paket->nama_paket . ' (' . $durasi_bulan . ' Bulan)'
-            ]
-        ];
-        
-        // Get Snap Token dari Midtrans
-        $snap_response = $this->midtrans_lib->get_snap_token(
-            $transaction_details,
-            $customer_details,
-            $item_details
-        );
-        
-        if ($snap_response['success']) {
-            echo json_encode([
-                'success' => true,
-                'snap_token' => $snap_response['snap_token'],
-                'order_id' => $order_id,
-                'id_transaksi' => $id_transaksi
-            ]);
-        } else {
-            // Rollback - hapus transaksi yang sudah dibuat
-            $this->Transaksi_langganan_model->delete($id_transaksi);
+        try {
+            // Validasi request method
+            if ($this->input->method() !== 'post') {
+                echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+                return;
+            }
             
+            if (!$this->session->userdata('logged_in')) {
+                echo json_encode(['success' => false, 'message' => 'Silakan login terlebih dahulu']);
+                return;
+            }
+            
+            // Ambil data dari form
+            $id_paket = $this->input->post('id_paket');
+            $durasi_bulan = $this->input->post('durasi_bulan') ?: 1;
+            
+            // Ambil data paket
+            $paket = $this->Paket_langganan_model->get_by_id($id_paket);
+            
+            if (!$paket) {
+                echo json_encode(['success' => false, 'message' => 'Paket tidak ditemukan']);
+                return;
+            }
+            
+            // Hitung total harga
+            $harga = floatval($paket->harga);
+            $total = $harga * intval($durasi_bulan);
+            
+            // Generate unique order ID
+            $order_id = 'KIX-' . date('YmdHis') . '-' . mt_rand(1000, 9999);
+            
+            // Simpan transaksi pending ke database
+            // Untuk testing, gunakan id_pemilik = 1 jika belum login
+            $data_transaksi = [
+                'id_pemilik' => $this->session->userdata('id_pemilik'),
+                'id_paket' => $id_paket,
+                'tgl_transaksi' => date('Y-m-d H:i:s'),
+                'jumlah_bayar' => $total,
+                'metode_pembayaran' => 'midtrans',
+                'status_pembayaran' => 'pending',
+                'kode_pembayaran' => $order_id,
+                'tgl_mulai_langganan' => date('Y-m-d'),
+                'tgl_akhir_langganan' => date('Y-m-d', strtotime("+{$durasi_bulan} months")),
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            
+            $id_transaksi = $this->Transaksi_langganan_model->insert($data_transaksi);
+            
+            if (!$id_transaksi) {
+                echo json_encode(['success' => false, 'message' => 'Gagal membuat transaksi']);
+                return;
+            }
+            
+            // Siapkan data customer
+            $customer = $this->get_customer_data();
+            
+            // Transaction details untuk Midtrans
+            $transaction_details = [
+                'order_id' => $order_id,
+                'gross_amount' => intval($total) // Midtrans requires integer
+            ];
+            
+            // Customer details untuk Midtrans
+            $customer_details = [
+                'first_name' => $customer['nama'],
+                'email' => $customer['email'],
+                'phone' => $customer['telp']
+            ];
+            
+            // Item details untuk Midtrans
+            $item_details = [
+                [
+                    'id' => 'PKT-' . $id_paket,
+                    'price' => intval($harga),
+                    'quantity' => intval($durasi_bulan),
+                    'name' => $paket->nama_paket . ' (' . $durasi_bulan . ' Bulan)'
+                ]
+            ];
+            
+            // Get Snap Token dari Midtrans
+            $snap_response = $this->midtrans_lib->get_snap_token(
+                $transaction_details,
+                $customer_details,
+                $item_details
+            );
+            
+            if ($snap_response['success']) {
+                echo json_encode([
+                    'success' => true,
+                    'snap_token' => $snap_response['snap_token'],
+                    'order_id' => $order_id,
+                    'id_transaksi' => $id_transaksi
+                ]);
+            } else {
+                // Rollback - hapus transaksi yang sudah dibuat
+                $this->Transaksi_langganan_model->delete($id_transaksi);
+                
+                $error_msg = isset($snap_response['error']) && is_array($snap_response['error']) 
+                    ? implode(', ', $snap_response['error']) 
+                    : 'Unknown error';
+                
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Gagal membuat pembayaran: ' . $error_msg
+                ]);
+            }
+        } catch (Exception $e) {
+            log_message('error', 'create_snap_token error: ' . $e->getMessage());
             echo json_encode([
                 'success' => false,
-                'message' => 'Gagal membuat pembayaran: ' . implode(', ', $snap_response['error'])
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ]);
         }
     }
@@ -231,6 +305,12 @@ class Pembayaran extends CI_Controller {
             // Update status transaksi
             $this->Transaksi_langganan_model->update_status($transaksi->id_transaksi_langganan, $status);
             
+            // Jika pembayaran sukses, aktifkan langganan user
+            if ($status == 'sukses') {
+                $this->Owner_model->activateSubscription($transaksi->id_pemilik, $transaksi->id_paket);
+                log_message('info', "Subscription activated for Owner ID: {$transaksi->id_pemilik}, Paket ID: {$transaksi->id_paket}");
+            }
+
             // Log untuk debugging
             log_message('info', "Midtrans notification: Order {$order_id} status {$status}");
         }

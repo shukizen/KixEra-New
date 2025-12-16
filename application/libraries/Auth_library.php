@@ -156,17 +156,58 @@ class Auth_library {
     
     /**
      * Login user dan set session
+     * Support login dengan username atau email
      */
-    public function login($username, $password) {
-        // Validasi user
-        $this->CI->db->where('username', $username);
-        $this->CI->db->where('status', 'aktif');
-        $query = $this->CI->db->get('users');
+    public function login($username_or_email, $password) {
+        // Cek apakah input adalah email (mengandung @)
+        $is_email = strpos($username_or_email, '@') !== false;
+        
+        if ($is_email) {
+            // Login dengan email - cari dari tabel role yang sesuai
+            // Coba cari di semua tabel role (admin, pemilik, karyawan)
+            
+            // 1. Cek di tabel admin
+            $this->CI->db->select('u.*');
+            $this->CI->db->from('users u');
+            $this->CI->db->join('admin a', 'u.id_user = a.id_user');
+            $this->CI->db->where('a.email', $username_or_email);
+            $this->CI->db->where('u.status', 'aktif');
+            $this->CI->db->where('a.deleted_at IS NULL');
+            $query = $this->CI->db->get();
+            
+            // 2. Jika tidak ketemu, cek di tabel pemilik
+            if ($query->num_rows() == 0) {
+                $this->CI->db->select('u.*');
+                $this->CI->db->from('users u');
+                $this->CI->db->join('pemilik p', 'u.id_user = p.id_user');
+                $this->CI->db->where('p.email', $username_or_email);
+                $this->CI->db->where('u.status', 'aktif');
+                $this->CI->db->where('p.deleted_at IS NULL');
+                $query = $this->CI->db->get();
+            }
+            
+            // 3. Jika tidak ketemu, cek di tabel karyawan
+            if ($query->num_rows() == 0) {
+                $this->CI->db->select('u.*');
+                $this->CI->db->from('users u');
+                $this->CI->db->join('karyawan k', 'u.id_user = k.id_user');
+                $this->CI->db->where('k.email', $username_or_email);
+                $this->CI->db->where('u.status', 'aktif');
+                $this->CI->db->where('k.deleted_at IS NULL');
+                $query = $this->CI->db->get();
+            }
+        } else {
+            // Login dengan username
+            $this->CI->db->where('username', $username_or_email);
+            $this->CI->db->where('status', 'aktif');
+            $this->CI->db->where('deleted_at IS NULL');
+            $query = $this->CI->db->get('users');
+        }
         
         if ($query->num_rows() == 0) {
             return [
                 'success' => false,
-                'message' => 'Username tidak ditemukan atau tidak aktif'
+                'message' => $is_email ? 'Email tidak ditemukan atau tidak aktif' : 'Username tidak ditemukan atau tidak aktif'
             ];
         }
         

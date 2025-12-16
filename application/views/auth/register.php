@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KixEra - Register Your Account</title>
+    <title><?= isset($page_title) ? $page_title : 'KixEra - Register Your Account' ?></title>
     <meta name="description" content="Create your KixEra account and start managing your shoe care business digitally.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +12,13 @@
     <style>
         * {
             font-family: 'Inter', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -50,7 +57,7 @@
                     <div class="absolute inset-0 bg-emerald-500/10 rounded-full -z-10 scale-110"></div>
                     <div class="bg-white rounded-2xl shadow-2xl p-4">
                         <img 
-                            src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop" 
+                            src="<?= base_url('assets/img/konten/dashbd.png') ?>" 
                             alt="Dashboard preview showing business analytics" 
                             class="w-full h-auto object-cover rounded-lg"
                         />
@@ -105,8 +112,31 @@
                             </p>
                         </header>
 
+                        <!-- Alert Messages -->
+                        <?php if($this->session->flashdata('success')): ?>
+                        <div id="alert-success" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg fade-in">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span><?= $this->session->flashdata('success') ?></span>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if($this->session->flashdata('error')): ?>
+                        <div id="alert-error" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg fade-in">
+                            <div class="flex items-start gap-2">
+                                <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                                <span><?= $this->session->flashdata('error') ?></span>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
                         <!-- Registration Form -->
-                        <form class="space-y-4" onsubmit="handleRegister(event)">
+                        <form id="registerForm" class="space-y-4" onsubmit="handleRegister(event)">
                             <!-- Full Name -->
                             <div class="space-y-2">
                                 <label for="fullName" class="block text-sm font-medium text-gray-700" data-i18n="form.fullName">
@@ -122,6 +152,41 @@
                                     autocomplete="name"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
                                 />
+                                <p class="text-xs text-red-600 hidden" id="fullName-error"></p>
+                            </div>
+
+                            <!-- Business Name -->
+                            <div class="space-y-2">
+                                <label for="businessName" class="block text-sm font-medium text-gray-700" data-i18n="form.businessName">
+                                    Business Name
+                                </label>
+                                <input
+                                    type="text"
+                                    id="businessName"
+                                    name="businessName"
+                                    data-i18n-placeholder="form.businessNamePlaceholder"
+                                    placeholder="Enter your business name"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                                />
+                                <p class="text-xs text-red-600 hidden" id="businessName-error"></p>
+                            </div>
+
+                            <!-- Phone Number -->
+                            <div class="space-y-2">
+                                <label for="phoneNumber" class="block text-sm font-medium text-gray-700" data-i18n="form.phoneNumber">
+                                    Phone Number
+                                </label>
+                                <input
+                                    type="tel"
+                                    id="phoneNumber"
+                                    name="phoneNumber"
+                                    data-i18n-placeholder="form.phoneNumberPlaceholder"
+                                    placeholder="Enter your phone number"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                                />
+                                <p class="text-xs text-red-600 hidden" id="phoneNumber-error"></p>
                             </div>
 
                             <!-- Email -->
@@ -139,6 +204,7 @@
                                     autocomplete="email"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
                                 />
+                                <p class="text-xs text-red-600 hidden" id="email-error"></p>
                             </div>
 
                             <!-- Password -->
@@ -156,7 +222,7 @@
                                         required
                                         autocomplete="new-password"
                                         minlength="8"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition pr-12"
                                     />
                                     <button
                                         type="button"
@@ -170,6 +236,7 @@
                                     </button>
                                 </div>
                                 <p class="text-xs text-gray-500" data-i18n="form.passwordHint">Minimum 8 characters</p>
+                                <p class="text-xs text-red-600 hidden" id="password-error"></p>
                             </div>
 
                             <!-- Confirm Password -->
@@ -187,7 +254,7 @@
                                         required
                                         autocomplete="new-password"
                                         minlength="8"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition pr-12"
                                     />
                                     <button
                                         type="button"
@@ -200,47 +267,24 @@
                                         </svg>
                                     </button>
                                 </div>
+                                <p class="text-xs text-red-600 hidden" id="confirmPassword-error"></p>
                             </div>
 
                             <!-- Register Button -->
                             <button
                                 type="submit"
-                                class="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition mt-6"
+                                id="registerBtn"
+                                class="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
                                 data-i18n="register.registerButton"
                             >
                                 Register
-                            </button>
-
-                            <!-- Divider -->
-                            <div class="relative">
-                                <div class="absolute inset-0 flex items-center">
-                                    <div class="w-full border-t border-gray-300"></div>
-                                </div>
-                                <div class="relative flex justify-center text-sm">
-                                    <span class="px-4 bg-white text-gray-500" data-i18n="register.or">or</span>
-                                </div>
-                            </div>
-
-                            <!-- Google Register Button -->
-                            <button
-                                type="button"
-                                onclick="handleGoogleRegister()"
-                                class="w-full bg-white hover:bg-gray-50 active:bg-gray-100 border border-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-3"
-                            >
-                                <svg class="w-5 h-5" viewBox="0 0 24 24">
-                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                                </svg>
-                                <span data-i18n="register.googleRegister">Register with Google</span>
                             </button>
                         </form>
 
                         <!-- Login Link -->
                         <footer class="mt-8 text-center space-y-1">
                             <p class="text-sm text-gray-600" data-i18n="register.hasAccount">Already have an account?</p>
-                            <a href="<?= base_url ('auth/login') ?>" class="text-teal-700 hover:text-teal-800 font-semibold hover:underline transition" data-i18n="register.loginHere">
+                            <a href="<?= base_url('auth/login') ?>" class="text-teal-700 hover:text-teal-800 font-semibold hover:underline transition" data-i18n="register.loginHere">
                                 Login here
                             </a>
                         </footer>
@@ -267,14 +311,16 @@
                     title: "Create Your KixEra Account",
                     subtitle: "Start managing your shoe care business digitally.",
                     registerButton: "Register",
-                    or: "or",
-                    googleRegister: "Register with Google",
                     hasAccount: "Already have an account?",
                     loginHere: "Login here"
                 },
                 form: {
                     fullName: "Full Name",
                     fullNamePlaceholder: "Enter your full name",
+                    businessName: "Business Name",
+                    businessNamePlaceholder: "Enter your business name",
+                    phoneNumber: "Phone Number",
+                    phoneNumberPlaceholder: "e.g. 08123456789",
                     email: "Email Address",
                     emailPlaceholder: "Enter your email",
                     password: "Password",
@@ -286,8 +332,9 @@
                 messages: {
                     passwordMismatch: "Passwords do not match!",
                     passwordTooShort: "Password must be at least 8 characters long!",
+                    registering: "Creating your account...",
                     registrationSuccess: "Registration successful!",
-                    googleOAuth: "Google OAuth registration would be implemented here!"
+                    registrationError: "Registration failed. Please try again."
                 }
             },
             id: {
@@ -304,14 +351,16 @@
                     title: "Buat Akun KixEra Anda",
                     subtitle: "Mulai kelola bisnis perawatan sepatu Anda secara digital.",
                     registerButton: "Daftar",
-                    or: "atau",
-                    googleRegister: "Daftar dengan Google",
                     hasAccount: "Sudah punya akun?",
                     loginHere: "Masuk di sini"
                 },
                 form: {
                     fullName: "Nama Lengkap",
                     fullNamePlaceholder: "Masukkan nama lengkap Anda",
+                    businessName: "Nama Usaha",
+                    businessNamePlaceholder: "Masukkan nama usaha Anda",
+                    phoneNumber: "No. Telepon",
+                    phoneNumberPlaceholder: "contoh: 08123456789",
                     email: "Alamat Email",
                     emailPlaceholder: "Masukkan email Anda",
                     password: "Password",
@@ -323,8 +372,9 @@
                 messages: {
                     passwordMismatch: "Password tidak cocok!",
                     passwordTooShort: "Password harus minimal 8 karakter!",
+                    registering: "Membuat akun Anda...",
                     registrationSuccess: "Pendaftaran berhasil!",
-                    googleOAuth: "Pendaftaran Google OAuth akan diimplementasikan di sini!"
+                    registrationError: "Pendaftaran gagal. Silakan coba lagi."
                 }
             }
         };
@@ -374,8 +424,17 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             applyTranslations(currentLang);
+            
+            // Auto-hide alerts after 5 seconds
+            setTimeout(() => {
+                const successAlert = document.getElementById('alert-success');
+                const errorAlert = document.getElementById('alert-error');
+                if (successAlert) successAlert.style.display = 'none';
+                if (errorAlert) errorAlert.style.display = 'none';
+            }, 5000);
         });
 
+        // Toggle password visibility
         function togglePasswordField(fieldId) {
             const field = document.getElementById(fieldId);
             const eyeIcon = document.getElementById(fieldId + '-eye');
@@ -394,38 +453,149 @@
             }
         }
 
-        function handleRegister(event) {
-            event.preventDefault();
-            
-            const fullName = document.getElementById('fullName').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            // Validate passwords match
-            if (password !== confirmPassword) {
-                alert(translations[currentLang].messages.passwordMismatch);
-                return;
+        // Clear field errors
+        function clearFieldError(fieldId) {
+            const field = document.getElementById(fieldId);
+            const error = document.getElementById(fieldId + '-error');
+            field.classList.remove('border-red-500');
+            if (error) {
+                error.classList.add('hidden');
+                error.textContent = '';
             }
-            
-            // Validate password length
-            if (password.length < 8) {
-                alert(translations[currentLang].messages.passwordTooShort);
-                return;
-            }
-            
-            console.log('Registration attempt:', { fullName, email, password });
-            
-            const message = currentLang === 'en'
-                ? `${translations[currentLang].messages.registrationSuccess}\n\nName: ${fullName}\nEmail: ${email}`
-                : `${translations[currentLang].messages.registrationSuccess}\n\nNama: ${fullName}\nEmail: ${email}`;
-            
-            alert(message);
         }
 
-        function handleGoogleRegister() {
-            console.log('Google registration clicked');
-            alert(translations[currentLang].messages.googleOAuth);
+        // Show field error
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const error = document.getElementById(fieldId + '-error');
+            field.classList.add('border-red-500');
+            if (error) {
+                error.classList.remove('hidden');
+                error.textContent = message;
+            }
+        }
+
+        // Handle registration
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            // Clear previous errors
+            ['fullName', 'businessName', 'phoneNumber', 'email', 'password', 'confirmPassword'].forEach(clearFieldError);
+            
+            const fullName = document.getElementById('fullName').value.trim();
+            const businessName = document.getElementById('businessName').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const registerBtn = document.getElementById('registerBtn');
+            
+            // Client-side validation
+            let hasError = false;
+            
+            if (fullName.length < 3) {
+                showFieldError('fullName', 'Name must be at least 3 characters');
+                hasError = true;
+            }
+            
+            if (businessName.length < 3) {
+                showFieldError('businessName', 'Business name must be at least 3 characters');
+                hasError = true;
+            }
+            
+            if (phoneNumber.length < 10) {
+                showFieldError('phoneNumber', 'Phone number invalid');
+                hasError = true;
+            }
+            
+            if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                showFieldError('email', 'Please enter a valid email address');
+                hasError = true;
+            }
+            
+            if (password.length < 8) {
+                showFieldError('password', translations[currentLang].messages.passwordTooShort);
+                hasError = true;
+            }
+            
+            if (password !== confirmPassword) {
+                showFieldError('confirmPassword', translations[currentLang].messages.passwordMismatch);
+                hasError = true;
+            }
+            
+            if (hasError) return;
+            
+            // Disable button and show loading
+            registerBtn.disabled = true;
+            const originalText = registerBtn.textContent;
+            registerBtn.textContent = translations[currentLang].messages.registering;
+            
+            try {
+                const formData = new FormData();
+                formData.append('fullName', fullName);
+                formData.append('businessName', businessName);
+                formData.append('phoneNumber', phoneNumber);
+                formData.append('email', email);
+                formData.append('password', password);
+                formData.append('confirmPassword', confirmPassword);
+                
+                console.log('Sending registration request...');
+                
+                const response = await fetch('<?= base_url("auth/register") ?>', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers.get('content-type'));
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const textResponse = await response.text();
+                    console.error('Non-JSON response received:', textResponse.substring(0, 500));
+                    
+                    // Show more detailed error
+                    alert('Server Error: Received HTML instead of JSON. Check browser console for details.\n\nThis usually means:\n1. PHP error occurred\n2. Wrong URL or routing\n3. Model/Controller not found\n\nCheck application/logs/ for detailed errors.');
+                    
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = originalText;
+                    return;
+                }
+                
+                const result = await response.json();
+                console.log('Response data:', result);
+                
+                if (result.success) {
+                    // Show success message
+                    alert(result.message);
+                    // Redirect to dashboard
+                    window.location.href = result.redirect;
+                } else {
+                    // Show error message
+                    alert(result.message || translations[currentLang].messages.registrationError);
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                
+                // More detailed error message
+                let errorMsg = 'Registration failed:\n\n';
+                errorMsg += error.message + '\n\n';
+                errorMsg += 'Please check:\n';
+                errorMsg += '1. Browser console for details\n';
+                errorMsg += '2. Network tab for server response\n';
+                errorMsg += '3. application/logs/ folder for PHP errors';
+                
+                alert(errorMsg);
+                
+                registerBtn.disabled = false;
+                registerBtn.textContent = originalText;
+            }
         }
 
         // Real-time password match validation
@@ -434,11 +604,21 @@
             const confirmPassword = this.value;
             
             if (confirmPassword && password !== confirmPassword) {
-                this.setCustomValidity(translations[currentLang].messages.passwordMismatch);
-                this.classList.add('border-red-500');
+                showFieldError('confirmPassword', translations[currentLang].messages.passwordMismatch);
             } else {
-                this.setCustomValidity('');
-                this.classList.remove('border-red-500');
+                clearFieldError('confirmPassword');
+            }
+        });
+
+        // Clear errors on input
+        ['fullName', 'businessName', 'phoneNumber', 'email', 'password', 'confirmPassword'].forEach(fieldId => {
+            const el = document.getElementById(fieldId);
+            if(el) {
+                el.addEventListener('input', function() {
+                    if (fieldId !== 'confirmPassword') {
+                        clearFieldError(fieldId);
+                    }
+                });
             }
         });
     </script>

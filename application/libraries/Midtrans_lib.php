@@ -164,7 +164,14 @@ class Midtrans_lib {
     private function _request_snap_token($params) {
         $url = $this->api_url . '/snap/v1/transactions';
         
+        // Log request untuk debugging
+        log_message('info', 'Midtrans Request URL: ' . $url);
+        log_message('info', 'Midtrans Request Params: ' . json_encode($params));
+        
         $response = $this->_curl_request($url, $params, 'POST');
+        
+        // Log response untuk debugging
+        log_message('info', 'Midtrans Response: ' . json_encode($response));
         
         if ($response && isset($response->token)) {
             return [
@@ -174,9 +181,21 @@ class Midtrans_lib {
             ];
         }
         
+        // Handle berbagai jenis error
+        $error_messages = [];
+        if ($response === null) {
+            $error_messages[] = 'Tidak dapat terhubung ke server Midtrans. Periksa koneksi internet.';
+        } elseif (isset($response->error_messages) && is_array($response->error_messages)) {
+            $error_messages = $response->error_messages;
+        } elseif (isset($response->status_message)) {
+            $error_messages[] = $response->status_message;
+        } else {
+            $error_messages[] = 'Unknown error from Midtrans';
+        }
+        
         return [
             'success' => false,
-            'error' => $response->error_messages ?? ['Unknown error'],
+            'error' => $error_messages,
             'raw_response' => $response
         ];
     }
@@ -190,11 +209,19 @@ class Midtrans_lib {
      * @return object|null Response dari API
      */
     private function _curl_request($url, $data = null, $method = 'POST') {
+        // Cek apakah cURL tersedia
+        if (!function_exists('curl_init')) {
+            log_message('info', 'Midtrans: cURL not available, using file_get_contents fallback');
+            return $this->_stream_request($url, $data, $method);
+        }
+        
         $ch = curl_init();
         
         // Set URL
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30); // 30 second timeout
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // 10 second connection timeout
         
         // Set headers
         $headers = [
@@ -208,29 +235,119 @@ class Midtrans_lib {
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
             if ($data) {
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                $json_data = json_encode($data);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
+                log_message('debug', 'Midtrans POST Data: ' . $json_data);
             }
         }
         
-        // SSL verification (disable for development)
-        if (!$this->is_production) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        // SSL verification - tetap aktif untuk keamanan, tapi gunakan CA bundle
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        
+        // Jika ada masalah SSL di Windows/XAMPP, gunakan ini:
+        $cacert_path = APPPATH . 'third_party/cacert.pem';
+        if (file_exists($cacert_path)) {
+            curl_setopt($ch, CURLOPT_CAINFO, $cacert_path);
+        } else {
+            // Fallback: disable SSL verify untuk development (tidak disarankan untuk production)
+            if (!$this->is_production) {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            }
         }
         
         // Execute request
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
+        $errno = curl_errno($ch);
         
         curl_close($ch);
         
+        // Log detail untuk debugging
+        log_message('info', "Midtrans cURL HTTP Code: {$http_code}");
+        
         if ($error) {
-            log_message('error', 'Midtrans cURL Error: ' . $error);
+            log_message('error', "Midtrans cURL Error ({$errno}): {$error}");
+            log_message('error', "URL: {$url}");
             return null;
         }
         
-        return json_decode($response);
+        if (empty($response)) {
+            log_message('error', 'Midtrans: Empty response from server');
+            return null;
+        }
+        
+        $decoded = json_decode($response);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            log_message('error', 'Midtrans: Invalid JSON response: ' . $response);
+            return null;
+        }
+        
+        return $decoded;
+    }
+    
+    /**
+     * Fallback: HTTP request menggunakan file_get_contents dengan stream context
+     * Digunakan jika cURL tidak tersedia
+     * 
+     * @param string $url API URL
+     * @param array|null $data Request body
+     * @param string $method HTTP method
+     * @return object|null Response dari API
+     */
+    private function _stream_request($url, $data = null, $method = 'POST') {
+        $headers = [
+            'Content-Type: application/json',
+            'Accept: application/json',
+            'Authorization: Basic ' . base64_encode($this->server_key . ':')
+        ];
+        
+        $options = [
+            'http' => [
+                'method' => $method,
+                'header' => implode("\r\n", $headers),
+                'timeout' => 30,
+                'ignore_errors' => true // Get response even on HTTP errors
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            ]
+        ];
+        
+        if ($data && $method === 'POST') {
+            $json_data = json_encode($data);
+            $options['http']['content'] = $json_data;
+            $options['http']['header'] .= "\r\nContent-Length: " . strlen($json_data);
+            log_message('debug', 'Midtrans Stream POST Data: ' . $json_data);
+        }
+        
+        $context = stream_context_create($options);
+        
+        log_message('info', 'Midtrans Stream Request to: ' . $url);
+        
+        $response = @file_get_contents($url, false, $context);
+        
+        if ($response === false) {
+            $error = error_get_last();
+            log_message('error', 'Midtrans Stream Error: ' . ($error['message'] ?? 'Unknown error'));
+            return null;
+        }
+        
+        log_message('info', 'Midtrans Stream Response: ' . $response);
+        
+        $decoded = json_decode($response);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            log_message('error', 'Midtrans Stream: Invalid JSON response: ' . $response);
+            return null;
+        }
+        
+        return $decoded;
     }
     
     /**
