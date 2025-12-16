@@ -8,11 +8,12 @@ class Karyawan_model extends CI_Model {
         parent::__construct();
     }
 
-     public function getAllKaryawanByOwner($id_cabang) {
-        $this->db->select('karyawan.*, users.username, users.status');
+     public function getAllKaryawanByOwner($id_pemilik) {
+        $this->db->select('karyawan.*, users.username, users.status, cabang.nama_cabang');
         $this->db->from($this->table);
         $this->db->join('users', 'users.id_user = karyawan.id_user', 'left');
-        $this->db->where('karyawan.id_cabang', $id_cabang);
+        $this->db->join('cabang', 'cabang.id_cabang = karyawan.id_cabang', 'left');
+        $this->db->where('cabang.id_pemilik', $id_pemilik);
         $this->db->where('karyawan.deleted_at IS NULL');
         $query = $this->db->get();
         return $query->result();

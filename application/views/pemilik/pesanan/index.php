@@ -82,10 +82,11 @@
                                     <div>
                                         <label class="text-sm text-gray-600">Status</label>
                                         <select id="edit-status_pesanan" name="status_pesanan" class="w-full px-4 py-2 border rounded-xl">
-                                            <option value="menunggu">Menunggu</option>
                                             <option value="diterima">Diterima</option>
                                             <option value="dalam_proses">Dalam Proses</option>
                                             <option value="selesai">Selesai</option>
+                                            <option value="siap_diambil">Siap Diambil</option>
+                                            <option value="sudah_diambil">Sudah Diambil</option>
                                             <option value="dibatalkan">Dibatalkan</option>
                                         </select>
                                     </div>
@@ -282,7 +283,7 @@
                                     <?php if (!empty($pesanan)) : ?>
                                         <?php foreach ($pesanan as $p) : ?>
                                             <tr class="border-b border-gray-100 hover:bg-gray-50">
-                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->id_pesanan); ?></td>
+                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nomor_pesanan ?? '-'); ?></td>
                                                 <td class="text-center py-4 px-2"><?php echo date('d/m/Y', strtotime($p->tgl_masuk)); ?></td>
                                                 <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_pelanggan ?? '-'); ?></td>
                                                 <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_cabang ?? '-'); ?></td>
@@ -292,17 +293,26 @@
                                                     <?php
                                                     $status = strtolower($p->status_pesanan ?? '');
                                                     $badge = 'bg-gray-100 text-gray-700';
-                                                    if ($status === 'selesai' || $status === 'diambil') {
+                                                    $status_label = ucfirst(str_replace('_', ' ', $status));
+                                                    
+                                                    if ($status === 'sudah_diambil') {
                                                         $badge = 'bg-emerald-500/10 text-emerald-500';
-                                                    } elseif ($status === 'diterima' || $status === 'dalam_proses') {
-                                                        $badge = 'bg-emerald-400/10 text-emerald-400';
-                                                    } elseif ($status === 'menunggu') {
+                                                        $status_label = 'Sudah Diambil';
+                                                    } elseif ($status === 'siap_diambil') {
+                                                        $badge = 'bg-green-500/10 text-green-500';
+                                                        $status_label = 'Siap Diambil';
+                                                    } elseif ($status === 'selesai') {
+                                                        $badge = 'bg-teal-500/10 text-teal-500';
+                                                    } elseif ($status === 'dalam_proses') {
                                                         $badge = 'bg-yellow-500/10 text-yellow-600';
+                                                        $status_label = 'Dalam Proses';
+                                                    } elseif ($status === 'diterima') {
+                                                        $badge = 'bg-blue-500/10 text-blue-500';
                                                     } elseif ($status === 'dibatalkan') {
                                                         $badge = 'bg-red-500/10 text-red-500';
                                                     }
                                                     ?>
-                                                    <span class="<?php echo $badge; ?> px-3 py-1 rounded-full text-xs font-medium"><?php echo htmlspecialchars($p->status_pesanan ?? '-'); ?></span>
+                                                    <span class="<?php echo $badge; ?> px-3 py-1 rounded-full text-xs font-medium"><?php echo htmlspecialchars($status_label ?: '-'); ?></span>
                                                 </td>
                                                 <td class="text-center py-4 px-2">
                                                     <div class="flex items-center justify-center gap-2">
@@ -312,10 +322,10 @@
                                                             title="Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
-                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->id_pesanan); ?>" class="text-blue-500 hover:text-blue-600 btn-edit" title="Edit">
+                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan ?? $p->id_pesanan); ?>" class="text-blue-500 hover:text-blue-600 btn-edit" title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
-                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->id_pesanan); ?>" class="text-red-500 hover:text-red-600 btn-delete" title="Delete">
+                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan ?? $p->id_pesanan); ?>" class="text-red-500 hover:text-red-600 btn-delete" title="Delete">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </div>

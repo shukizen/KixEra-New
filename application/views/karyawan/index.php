@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <?php $this->load->view('template/header'); ?>
 </head>
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
+        
+        <?php $this->load->view('template/sidebarkaryawan'); ?>
 
         <!-- Main Content -->
-        <main class="flex-1 ml-64">
+        <main class="flex-1 lg:ml-64">
             <!-- Dashboard Content -->
             <div class="p-6">
                 <!-- Stats Cards -->
@@ -184,72 +187,71 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Footer -->
-        </main>
-    </div>
-    
+
     <script>
         // Jumlah Pesanan Per Hari - Bar Chart
-        const orderCtx = document.getElementById('orderChart').getContext('2d');
-        new Chart(orderCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-                datasets: [{
-                    label: 'Jumlah Pesanan',
-                    data: [15, 22, 18, 25, 20, 12, 8],
-                    backgroundColor: function(context) {
-                        const chart = context.chart;
-                        const {ctx, chartArea} = chart;
-                        if (!chartArea) {
-                            return null;
-                        }
-                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        gradient.addColorStop(0, '#a7f3d0');
-                        gradient.addColorStop(1, '#10b981');
-                        return gradient;
-                    },
-                    borderRadius: 8,
-                    borderWidth: 1,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        if (document.getElementById('orderChart')) {
+            const orderCtx = document.getElementById('orderChart').getContext('2d');
+            new Chart(orderCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                    datasets: [{
+                        label: 'Jumlah Pesanan',
+                        data: [15, 22, 18, 25, 20, 12, 8],
+                        backgroundColor: function(context) {
+                            const chart = context.chart;
+                            const {ctx, chartArea} = chart;
+                            if (!chartArea) {
+                                return null;
+                            }
+                            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                            gradient.addColorStop(0, '#a7f3d0');
+                            gradient.addColorStop(1, '#10b981');
+                            return gradient;
+                        },
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: '#fff'
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 30,
-                        ticks: {
-                            stepSize: 5,
-                            font: {
-                                size: 10
-                            }
-                        },
-                        grid: {
-                            color: '#e5e7eb'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
                         }
                     },
-                    x: {
-                        ticks: {
-                            font: {
-                                size: 10
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 30,
+                            ticks: {
+                                stepSize: 5,
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            grid: {
+                                color: '#e5e7eb'
                             }
                         },
-                        grid: {
-                            display: false
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     </script>
-</body>
-</html>
+
+    <!-- Footer now handles closing tags -->
+    <?php $this->load->view('template/footer'); ?>

@@ -8,9 +8,6 @@ class Pesanan extends CI_Controller {
 
     public function index()
     {
-        $this->load->view('template/header', );
-        $this->load->view('template/sidebarkaryawan', );
-        $this->load->view('karyawan/pesanan/index', );
-        $this->load->view('template/footer');
+        $this->load->view('karyawan/pesanan/index');
     }
 }

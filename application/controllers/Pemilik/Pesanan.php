@@ -33,10 +33,11 @@ class Pesanan extends CI_Controller
         }
 
         $data['status_list'] = [
-            'menunggu' => 'Menunggu',
             'diterima' => 'Diterima',
             'dalam_proses' => 'Dalam Proses',
             'selesai' => 'Selesai',
+            'siap_diambil' => 'Siap Diambil',
+            'sudah_diambil' => 'Sudah Diambil',
             'dibatalkan' => 'Dibatalkan',
         ];
 

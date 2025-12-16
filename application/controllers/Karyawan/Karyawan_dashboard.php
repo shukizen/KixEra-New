@@ -8,8 +8,8 @@ class Karyawan_dashboard extends CI_Controller {
         $this->load->library('auth_library');
         $this->load->library('session');
         
-        // // Require karyawan role
-        // $this->auth_library->require_role('karyawan');
+        // Require karyawan role
+        $this->auth_library->require_role('karyawan');
     }
     
     public function index() {
@@ -28,10 +28,8 @@ class Karyawan_dashboard extends CI_Controller {
         // Get recent orders for this branch
         $data['recent_orders'] = $this->get_recent_orders($id_cabang);
         
-        $this->load->view('template/header', $data);
-        $this->load->view('template/sidebarkaryawan', $data);
+        // Load the main view which will handle the layout structure
         $this->load->view('karyawan/index', $data);
-        $this->load->view('template/footer');
     }
     
     private function get_cabang_info($id_cabang) {
