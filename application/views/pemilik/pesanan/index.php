@@ -282,7 +282,7 @@
                                     <?php if (!empty($pesanan)) : ?>
                                         <?php foreach ($pesanan as $p) : ?>
                                             <tr class="border-b border-gray-100 hover:bg-gray-50">
-                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nomor_pesanan); ?></td>
+                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->id_pesanan); ?></td>
                                                 <td class="text-center py-4 px-2"><?php echo date('d/m/Y', strtotime($p->tgl_masuk)); ?></td>
                                                 <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_pelanggan ?? '-'); ?></td>
                                                 <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_cabang ?? '-'); ?></td>
@@ -307,15 +307,15 @@
                                                 <td class="text-center py-4 px-2">
                                                     <div class="flex items-center justify-center gap-2">
                                                         <button data-id="<?php echo $p->id_pesanan; ?>"
-                                                            data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan); ?>"
+                                                            data-nomor="<?php echo htmlspecialchars($p->id_pesanan); ?>"
                                                             class="text-emerald-500 hover:text-emerald-600 btn-view"
                                                             title="Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
-                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan); ?>" class="text-blue-500 hover:text-blue-600 btn-edit" title="Edit">
+                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->id_pesanan); ?>" class="text-blue-500 hover:text-blue-600 btn-edit" title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
-                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan); ?>" class="text-red-500 hover:text-red-600 btn-delete" title="Delete">
+                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->id_pesanan); ?>" class="text-red-500 hover:text-red-600 btn-delete" title="Delete">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </div>
