@@ -8,8 +8,8 @@ class Karyawan_dashboard extends CI_Controller {
         $this->load->library('auth_library');
         $this->load->library('session');
         
-        // Require karyawan role
-        $this->auth_library->require_role('karyawan');
+        // // Require karyawan role
+        // $this->auth_library->require_role('karyawan');
     }
     
     public function index() {

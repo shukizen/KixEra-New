@@ -507,4 +507,13 @@ class User_model extends CI_Model {
         $query = $this->db->get();
         return $query->result_array();
     }
+
+    public function getUserById($id_user)
+{
+    $this->db->where('id_user', $id_user);
+    $this->db->where('deleted_at IS NULL');
+    $query = $this->db->get('users');
+    return $query->row_array();
+}
+
 }
