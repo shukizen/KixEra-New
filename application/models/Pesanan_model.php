@@ -81,7 +81,9 @@ class Pesanan_model extends CI_Model
     public function deletePesanan($id_pesanan)
     {
         $this->db->where('id_pesanan', $id_pesanan);
-        return $this->db->delete($this->table);
+        return $this->db->update($this->table, [
+            'deleted_at' => date('Y-m-d H:i:s')
+        ]);
     }
 
     public function getPesananById($id_pesanan)
