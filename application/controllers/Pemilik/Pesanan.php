@@ -70,6 +70,7 @@ class Pesanan extends CI_Controller
 
         $data['pesanan'] = $pesanan;
         $data['detail_items'] = $this->Pesanan_model->getDetailPesanan($id);
+        $data['progres_list'] = $this->Pesanan_model->getProgresPesanan($id);
 
         $this->load->view('template/header');
         $this->load->view('template/sidebar');
@@ -93,8 +94,18 @@ class Pesanan extends CI_Controller
         // pesanan table doesn't have `cabang` column; ensure we don't attempt to update it
         if (isset($data['cabang'])) unset($data['cabang']);
 
+        // Check if status is being changed
+        $new_status = isset($data['status_pesanan']) ? $data['status_pesanan'] : null;
+        $old_status = $this->Pesanan_model->getCurrentStatus($id);
+
         $updated = $this->Pesanan_model->updatePesanan($id, $data);
+        
         if ($updated) {
+            // If status changed, add progress record
+            if ($new_status && $new_status !== $old_status) {
+                $id_karyawan = $this->session->userdata('id_karyawan');
+                $this->Pesanan_model->insertProgres($id, $new_status, null, $id_karyawan);
+            }
             $resp = ['status' => 'success', 'message' => 'Pesanan updated'];
         } else {
             $resp = ['status' => 'error', 'message' => 'Failed to update pesanan'];
@@ -155,11 +166,9 @@ class Pesanan extends CI_Controller
     public function update_json()
     {
         $raw = $this->input->raw_input_stream;
-        error_log('Raw input stream: ' . $raw);
         $input = json_decode($raw, true);
-        error_log('Decoded input: ' . json_encode($input));
+        
         if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log('JSON error: ' . json_last_error_msg());
             return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'error', 'message' => 'Invalid JSON']));
         }
 
@@ -175,18 +184,25 @@ class Pesanan extends CI_Controller
             if (isset($input[$f])) $data[$f] = $input[$f];
         }
 
-        error_log('update_json - id: ' . $id . ', data: ' . json_encode($data));
-
         // basic validation
         if (isset($data['total_harga']) && !is_numeric($data['total_harga'])) {
             return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'error', 'message' => 'total_harga must be numeric']));
         }
 
+        // Check if status is being changed (BEFORE update)
+        $new_status = isset($data['status_pesanan']) ? $data['status_pesanan'] : null;
+        $old_status = $this->Pesanan_model->getCurrentStatus($id);
+
         $ok = $this->Pesanan_model->updatePesanan($id, $data);
-        error_log('update_json - update result: ' . ($ok ? 'success' : 'failed'));
+        
         if ($ok) {
+            // If status changed, add progress record
+            if ($new_status && $new_status !== $old_status) {
+                $id_karyawan = isset($input['id_karyawan']) ? $input['id_karyawan'] : null;
+                $this->Pesanan_model->insertProgres($id, $new_status, null, $id_karyawan);
+            }
+            
             $updated = $this->Pesanan_model->getPesananById($id);
-            error_log('update_json - updated data: ' . json_encode($updated));
             return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'success', 'message' => 'Updated', 'data' => $updated]));
         }
 

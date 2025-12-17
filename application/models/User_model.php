@@ -17,33 +17,73 @@ class User_model extends CI_Model {
      */
     public function validate_login($username_or_email, $password)
     {
-        $this->db->select('u.*');
-        $this->db->from('users u');
+        $user = null;
         
         // Cek apakah menggunakan email atau username
         if (filter_var($username_or_email, FILTER_VALIDATE_EMAIL)) {
-            // Login menggunakan email, cari di tabel pemilik dulu
-            // Note: Idealnya kita join ke semua role table jika ingin login email universal
-            $this->db->select('p.email as email_pemilik');
-            $this->db->join('pemilik p', 'u.id_user = p.id_user', 'left');
+            // Login menggunakan email - cari di semua tabel role
             
-            $this->db->group_start();
-            $this->db->where('p.email', $username_or_email);
-            $this->db->or_where('u.username', $username_or_email);
-            $this->db->group_end();
+            // 1. Cek di tabel admin
+            $this->db->select('u.*');
+            $this->db->from('users u');
+            $this->db->join('admin a', 'u.id_user = a.id_user');
+            $this->db->where('a.email', $username_or_email);
+            $this->db->where('u.status', 'aktif');
+            $this->db->where('u.deleted_at IS NULL');
+            $this->db->where('a.deleted_at IS NULL');
+            $query = $this->db->get();
+            
+            if ($query->num_rows() == 1) {
+                $user = $query->row_array();
+            }
+            
+            // 2. Jika tidak ketemu, cek di tabel pemilik
+            if (!$user) {
+                $this->db->select('u.*');
+                $this->db->from('users u');
+                $this->db->join('pemilik p', 'u.id_user = p.id_user');
+                $this->db->where('p.email', $username_or_email);
+                $this->db->where('u.status', 'aktif');
+                $this->db->where('u.deleted_at IS NULL');
+                $this->db->where('p.deleted_at IS NULL');
+                $query = $this->db->get();
+                
+                if ($query->num_rows() == 1) {
+                    $user = $query->row_array();
+                }
+            }
+            
+            // 3. Jika tidak ketemu, cek di tabel karyawan
+            if (!$user) {
+                $this->db->select('u.*');
+                $this->db->from('users u');
+                $this->db->join('karyawan k', 'u.id_user = k.id_user');
+                $this->db->where('k.email', $username_or_email);
+                $this->db->where('u.status', 'aktif');
+                $this->db->where('u.deleted_at IS NULL');
+                $this->db->where('k.deleted_at IS NULL');
+                $query = $this->db->get();
+                
+                if ($query->num_rows() == 1) {
+                    $user = $query->row_array();
+                }
+            }
         } else {
             // Login menggunakan username
+            $this->db->select('u.*');
+            $this->db->from('users u');
             $this->db->where('u.username', $username_or_email);
+            $this->db->where('u.status', 'aktif');
+            $this->db->where('u.deleted_at IS NULL');
+            $query = $this->db->get();
+            
+            if ($query->num_rows() == 1) {
+                $user = $query->row_array();
+            }
         }
         
-        $this->db->where('u.status', 'aktif');
-        $this->db->where('u.deleted_at IS NULL');
-        
-        $query = $this->db->get();
-        
-        if ($query->num_rows() == 1) {
-            $user = $query->row_array();
-            
+        // Jika user ditemukan, verifikasi password
+        if ($user) {
             // Verifikasi password menggunakan password_verify untuk password hash
             // atau md5 untuk backward compatibility
             if (password_verify($password, $user['password']) || md5($password) === $user['password']) {

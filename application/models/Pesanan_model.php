@@ -130,4 +130,53 @@ class Pesanan_model extends CI_Model
         $this->db->where('deleted_at IS NULL');
         return $this->db->get('detail_pesanan')->result();
     }
+
+    // Get progress/timeline for a pesanan
+    public function getProgresPesanan($id_pesanan)
+    {
+        $this->db->select('progres_pesanan.*, karyawan.nama as nama_karyawan');
+        $this->db->from('progres_pesanan');
+        $this->db->join('karyawan', 'karyawan.id_karyawan = progres_pesanan.id_karyawan', 'left');
+        $this->db->where('progres_pesanan.id_pesanan', $id_pesanan);
+        $this->db->where('progres_pesanan.deleted_at IS NULL');
+        $this->db->order_by('progres_pesanan.tgl_update', 'ASC');
+        return $this->db->get()->result();
+    }
+
+    // Insert new progress record
+    public function insertProgres($id_pesanan, $status, $deskripsi = null, $id_karyawan = null)
+    {
+        $data = [
+            'id_pesanan' => $id_pesanan,
+            'status' => $status,
+            'deskripsi' => $deskripsi ?? $this->getStatusDescription($status),
+            'id_karyawan' => $id_karyawan,
+            'tgl_update' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        return $this->db->insert('progres_pesanan', $data);
+    }
+
+    // Get default description for status
+    private function getStatusDescription($status)
+    {
+        $descriptions = [
+            'diterima' => 'Pesanan diterima',
+            'dalam_proses' => 'Pesanan sedang diproses',
+            'selesai' => 'Pesanan selesai dikerjakan',
+            'siap_diambil' => 'Pesanan siap untuk diambil',
+            'sudah_diambil' => 'Pesanan sudah diambil oleh pelanggan',
+            'dibatalkan' => 'Pesanan dibatalkan'
+        ];
+        return $descriptions[$status] ?? 'Status diperbarui';
+    }
+
+    // Get current status of a pesanan
+    public function getCurrentStatus($id_pesanan)
+    {
+        $this->db->select('status_pesanan');
+        $this->db->where('id_pesanan', $id_pesanan);
+        $row = $this->db->get('pesanan')->row();
+        return $row ? $row->status_pesanan : null;
+    }
 }

@@ -227,6 +227,68 @@
                             </div>
                         </div>
 
+                        <!-- Detail Status Pesanan (Timeline) -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-6">Detail Status Pesanan</h3>
+                            
+                            <?php if (!empty($progres_list)): ?>
+                                <?php 
+                                // Reverse the list to show newest first
+                                $reversed_progres = array_reverse($progres_list);
+                                ?>
+                                <div class="relative">
+                                    <?php foreach ($reversed_progres as $idx => $progres): ?>
+                                        <?php
+                                        $status = strtolower($progres->status);
+                                        $is_first = ($idx === 0);
+                                        $is_last = ($idx === count($reversed_progres) - 1);
+                                        
+                                        // Determine icon based on status
+                                        $icon = 'fa-circle-dot';
+                                        if ($status === 'diterima') $icon = 'fa-calendar-check';
+                                        elseif ($status === 'dalam_proses') $icon = 'fa-gear';
+                                        elseif ($status === 'selesai') $icon = 'fa-check-double';
+                                        elseif ($status === 'siap_diambil') $icon = 'fa-box-open';
+                                        elseif ($status === 'sudah_diambil') $icon = 'fa-handshake';
+                                        elseif ($status === 'dibatalkan') $icon = 'fa-ban';
+                                        
+                                        $status_label = ucfirst(str_replace('_', ' ', $status));
+                                        $dot_color = $is_first ? 'bg-blue-500' : 'bg-gray-300';
+                                        $text_color = $is_first ? 'text-blue-600' : 'text-gray-700';
+                                        ?>
+                                        <div class="flex gap-4 <?php echo !$is_last ? 'pb-6' : ''; ?>">
+                                            <!-- Timeline dot and line -->
+                                            <div class="flex flex-col items-center">
+                                                <div class="w-3 h-3 rounded-full <?php echo $dot_color; ?> flex-shrink-0"></div>
+                                                <?php if (!$is_last): ?>
+                                                    <div class="w-0.5 flex-1 bg-gray-200 mt-1"></div>
+                                                <?php endif; ?>
+                                            </div>
+                                            
+                                            <!-- Content -->
+                                            <div class="flex-1 -mt-1">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <i class="fas <?php echo $icon; ?> text-gray-400 text-sm"></i>
+                                                    <span class="font-semibold <?php echo $text_color; ?>"><?php echo $status_label; ?></span>
+                                                </div>
+                                                <p class="text-sm text-gray-500 mb-2">
+                                                    <?php echo date('d M Y H:i', strtotime($progres->tgl_update)); ?>
+                                                </p>
+                                                <?php if (!empty($progres->deskripsi)): ?>
+                                                    <p class="text-sm text-gray-600"><?php echo htmlspecialchars($progres->deskripsi); ?></p>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="text-center py-6 text-gray-500">
+                                    <i class="fas fa-clock text-3xl mb-2 text-gray-300"></i>
+                                    <p class="text-sm">Belum ada progres</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
                         <!-- Action Buttons -->
                         <div class="bg-white rounded-xl shadow-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Aksi</h3>
