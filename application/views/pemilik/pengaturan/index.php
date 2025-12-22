@@ -13,7 +13,7 @@
         <!-- Sidebar -->
         
         <!-- Main Content -->
-        <main class="flex-1 ml-64">
+        <main class="flex-1 lg:ml-64">
             <!-- Dashboard Content -->
             <div class="p-6">
                 <!-- Pengaturan Profile -->
@@ -43,7 +43,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
                             <input type="text" id="nama_lengkap" name="nama_lengkap" 
-                                   value="<?= htmlspecialchars($pemilik->nama) ?>"
+                                   value="<?= htmlspecialchars($pemilik->nama ?? '') ?>"
                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
                         </div>
                         
@@ -51,7 +51,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                             <input type="email" id="email" name="email" 
-                                   value="<?= htmlspecialchars($pemilik->email) ?>"
+                                   value="<?= htmlspecialchars($pemilik->email ?? '') ?>"
                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
                         </div>
                         
@@ -59,7 +59,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Telepon</label>
                             <input type="tel" id="telepon" name="telepon" 
-                                   value="<?= htmlspecialchars($pemilik->no_telp) ?>"
+                                   value="<?= htmlspecialchars($pemilik->no_telp ?? '') ?>"
                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
                         </div>
                         

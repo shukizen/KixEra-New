@@ -18,7 +18,7 @@ $segment2 = $CI->uri->segment(2);
     <!-- Logo Area -->
     <div class="h-24 border-b border-teal-600 flex items-center justify-between px-6">
         <div class="flex items-center gap-2">
-            <img src="<?= base_url('assets/img/logo/logoPutih.svg') ?>" alt="KixEra Logo" class="h-30 w-auto">
+            <img src="<?= base_url('assets/img/logo/logoPutih.svg') ?>" alt="KixEra Logo" class="h-24 w-auto">
         </div>
         <!-- Close button untuk mobile -->
         <button id="closeSidebarBtn" class="lg:hidden text-white text-2xl hover:text-teal-200 transition-colors">

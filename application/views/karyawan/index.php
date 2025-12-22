@@ -12,6 +12,25 @@
         <main class="flex-1 lg:ml-64">
             <!-- Dashboard Content -->
             <div class="p-6">
+                <!-- Flash Messages -->
+                <?php if($this->session->flashdata('success')): ?>
+                <div id="alert-success" class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl text-sm relative fade-in">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-check-circle"></i>
+                        <span><?= $this->session->flashdata('success') ?></span>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <?php if($this->session->flashdata('error')): ?>
+                <div id="alert-error" class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl text-sm relative fade-in">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span><?= $this->session->flashdata('error') ?></span>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <!-- Pesanan Hari Ini -->
@@ -189,6 +208,14 @@
             </div>
 
     <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            const successAlert = document.getElementById('alert-success');
+            const errorAlert = document.getElementById('alert-error');
+            if (successAlert) successAlert.style.display = 'none';
+            if (errorAlert) errorAlert.style.display = 'none';
+        }, 5000);
+
         // Jumlah Pesanan Per Hari - Bar Chart
         if (document.getElementById('orderChart')) {
             const orderCtx = document.getElementById('orderChart').getContext('2d');

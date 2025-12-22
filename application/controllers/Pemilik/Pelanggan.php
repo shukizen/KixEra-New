@@ -7,11 +7,31 @@ class Pelanggan extends CI_Controller {
     {
         parent::__construct();
         $this->load->model('Pelanggan_model');
+        $this->load->library('auth_library');
+        $this->load->library('session');
+        
+        // Require owner role
+        $this->auth_library->require_role('owner');
+    }
+
+    // Helper to get id_pemilik
+    private function get_id_pemilik() {
+        $id_pemilik = $this->session->userdata('id_pemilik');
+        if (empty($id_pemilik)) {
+             $user_id = $this->session->userdata('user_id');
+             if ($user_id) {
+                 $this->load->model('Owner_model');
+                 $owner = $this->Owner_model->getOwnerByUserId($user_id);
+                 if ($owner) return $owner->id_pemilik;
+             }
+        }
+        return $id_pemilik;
     }
 
     public function index()
     {
-        $data['pelanggan'] = $this->Pelanggan_model->getAllPelanggan();
+        $id_pemilik = $this->get_id_pemilik();
+        $data['pelanggan'] = $this->Pelanggan_model->getAllPelanggan($id_pemilik);
 
         $this->load->view('template/header');
         $this->load->view('template/sidebar');
@@ -21,6 +41,19 @@ class Pelanggan extends CI_Controller {
 
     public function edit($id)
     {
+        $id_pemilik = $this->get_id_pemilik();
+        
+        // RBAC Check
+        // Allow if customer has relationship with owner OR if customer is global? 
+        // For safety, let's restrict to customers with relationship, 
+        // OR simply fetch by ID and if logic permits. 
+        // BUT current update logic checks verify_customer_access?
+        // Let's implement checkAccess here.
+        if (!$this->Pelanggan_model->checkAccess($id, $id_pemilik)) {
+             echo json_encode(['error' => 'Akses ditolak']);
+             return;
+        }
+
         $pelanggan = $this->Pelanggan_model->getPelangganById($id);
         
         if(!$pelanggan) {
@@ -33,6 +66,20 @@ class Pelanggan extends CI_Controller {
 
     public function update($id)
     {
+        $id_pemilik = $this->get_id_pemilik();
+        
+        // RBAC Check
+        if (!$this->Pelanggan_model->checkAccess($id, $id_pemilik)) {
+             $msg = 'Akses ditolak';
+             if ($this->input->is_ajax_request()) {
+                 echo json_encode(['success' => false, 'message' => $msg]);
+             } else {
+                 $this->session->set_flashdata('error', $msg);
+                 redirect('pelanggan');
+             }
+             return;
+        }
+
         // Check if AJAX request
         $is_ajax = $this->input->is_ajax_request();
         
@@ -92,6 +139,20 @@ class Pelanggan extends CI_Controller {
 
     public function delete($id)
     {
+        $id_pemilik = $this->get_id_pemilik();
+        
+        // RBAC Check
+        if (!$this->Pelanggan_model->checkAccess($id, $id_pemilik)) {
+             $msg = 'Akses ditolak';
+             if ($this->input->is_ajax_request()) {
+                 echo json_encode(['success' => false, 'message' => $msg]);
+             } else {
+                 $this->session->set_flashdata('error', $msg);
+                 redirect('pelanggan');
+             }
+             return;
+        }
+
         // Check if AJAX request
         $is_ajax = $this->input->is_ajax_request();
         
@@ -121,7 +182,7 @@ class Pelanggan extends CI_Controller {
             if($is_ajax) {
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Pelanggan tidak dapat dihapus karena memiliki riwayat pesanan'
+                    'message' => 'Data pelanggan ini tidak bisa dihapus karena memiliki data pesanan'
                 ]);
                 return;
             } else {
@@ -145,10 +206,11 @@ class Pelanggan extends CI_Controller {
 
     public function search()
     {
+        $id_pemilik = $this->get_id_pemilik();
         $keyword = $this->input->get('keyword', true);
         $pelanggan = empty($keyword) ? 
-            $this->Pelanggan_model->getAllPelanggan() : 
-            $this->Pelanggan_model->searchPelanggan($keyword);
+            $this->Pelanggan_model->getAllPelanggan($id_pemilik) : 
+            $this->Pelanggan_model->searchPelanggan($keyword, $id_pemilik);
         
         // Return JSON response
         echo json_encode([
@@ -159,13 +221,14 @@ class Pelanggan extends CI_Controller {
 
     public function grafik()
     {
+        $id_pemilik = $this->get_id_pemilik();
         // Get period parameter (default 6 months)
         $period = $this->input->get('period', true);
         $period = intval($period) ?: 6;
         
-        $distribusi = $this->Pelanggan_model->grafikCabang();
-        $top = $this->Pelanggan_model->topPelanggan();
-        $growth = $this->Pelanggan_model->pertumbuhanBulanan($period);
+        $distribusi = $this->Pelanggan_model->grafikCabang($id_pemilik);
+        $top = $this->Pelanggan_model->topPelanggan($id_pemilik);
+        $growth = $this->Pelanggan_model->pertumbuhanBulanan($period, $id_pemilik);
         
         header('Content-Type: application/json');
         echo json_encode([

@@ -187,14 +187,15 @@ class Auth extends CI_Controller {
      * Proses registrasi
      */
     private function process_registration() {
-        // CRITICAL: Set JSON header FIRST before any processing
-        $this->output->set_content_type('application/json');
+        // Cek apakah ini AJAX request
+        $is_ajax = $this->input->is_ajax_request() || 
+                    $this->input->get_request_header('X-Requested-With') === 'XMLHttpRequest';
+        
+        if ($is_ajax) {
+             $this->output->set_content_type('application/json');
+        }
         
         try {
-            // Cek apakah ini AJAX request
-            $is_ajax = $this->input->is_ajax_request() || 
-                       $this->input->get_request_header('X-Requested-With') === 'XMLHttpRequest';
-            
             // Ambil data form
             $full_name = trim($this->input->post('fullName', TRUE));
             $email = trim($this->input->post('email', TRUE));
@@ -244,14 +245,16 @@ class Auth extends CI_Controller {
             
             // Jika ada error
             if (!empty($errors)) {
-                $response = [
-                    'success' => false,
-                    'errors' => $errors,
-                    'message' => implode(', ', $errors)
-                ];
+                $error_msg = implode(', ', $errors);
                 
-                echo json_encode($response);
-                return;
+                if ($is_ajax) {
+                    echo json_encode(['success' => false, 'errors' => $errors, 'message' => $error_msg]);
+                    return;
+                } else {
+                    $this->session->set_flashdata('error', $error_msg);
+                    redirect('auth/register');
+                    return;
+                }
             }
             
             // Proses registrasi
@@ -275,39 +278,51 @@ class Auth extends CI_Controller {
                     // Log activity
                     $this->user_model->log_activity($user['id_user'], 'Register', 'User mendaftar akun baru');
                     
-                    $response = [
-                        'success' => true,
-                        'message' => 'Registrasi berhasil! Selamat datang di KixEra. Anda mendapat trial 7 hari gratis.',
-                        'redirect' => base_url($this->get_dashboard_url($user['role']))
-                    ];
+                    $msg = 'Registrasi berhasil! Selamat datang di KixEra. Anda mendapat trial 7 hari gratis.';
+                    $redirect_url = base_url($this->get_dashboard_url($user['role']));
                     
-                    echo json_encode($response);
-                    return;
+                    if ($is_ajax) {
+                        echo json_encode(['success' => true, 'message' => $msg, 'redirect' => $redirect_url]);
+                        return;
+                    } else {
+                        $this->session->set_flashdata('success', $msg);
+                        redirect($redirect_url);
+                        return;
+                    }
                 }
             }
             
             // Jika gagal
-            $response = [
-                'success' => false,
-                'message' => $result['message'] ?? 'Gagal membuat akun. Silakan coba lagi.'
-            ];
+            $fail_msg = $result['message'] ?? 'Gagal membuat akun. Silakan coba lagi.';
             
-            echo json_encode($response);
-            return;
+            if ($is_ajax) {
+                echo json_encode(['success' => false, 'message' => $fail_msg]);
+                return;
+            } else {
+                $this->session->set_flashdata('error', $fail_msg);
+                redirect('auth/register');
+                return;
+            }
             
         } catch (Exception $e) {
             // Log error
             log_message('error', 'Registration error: ' . $e->getMessage());
             log_message('error', 'Stack trace: ' . $e->getTraceAsString());
             
-            $response = [
-                'success' => false,
-                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage(),
-                'error_detail' => ENVIRONMENT === 'development' ? $e->getTraceAsString() : null
-            ];
+            $sys_err = 'Terjadi kesalahan sistem: ' . $e->getMessage();
             
-            echo json_encode($response);
-            return;
+            if ($is_ajax) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => $sys_err,
+                    'error_detail' => ENVIRONMENT === 'development' ? $e->getTraceAsString() : null
+                ]);
+                return;
+            } else {
+                 $this->session->set_flashdata('error', $sys_err);
+                 redirect('auth/register');
+                 return;
+            }
         }
     }
     
@@ -376,12 +391,10 @@ class Auth extends CI_Controller {
             $this->user_model->log_activity($id_user, 'Logout', 'User logout dari sistem');
         }
         
-        $this->session->unset_userdata([
-            'id_user', 'username', 'role', 'logged_in', 'login_time',
-            'id_pemilik', 'id_admin', 'id_karyawan', 'nama', 'email',
-            'nama_usaha', 'status_langganan', 'paket', 'id_cabang', 'nama_cabang'
-        ]);
+        // Destroy session sepenuhnya
+        $this->session->sess_destroy();
         
+        // Set flashdata setelah destroy (akan dibuat session baru khusus untuk flashdata)
         $this->session->set_flashdata('success', 'Anda telah keluar dari sistem');
         redirect('auth/login');
     }
@@ -427,6 +440,444 @@ class Auth extends CI_Controller {
                 return 'karyawan/karyawan_dashboard';
             default:
                 return 'auth/login';
+        }
+    }
+    
+    // ========================================
+    // GOOGLE OAUTH METHODS
+    // ========================================
+    
+    /**
+     * Google Login - Redirect ke Google OAuth
+     */
+    public function google_login() {
+        // Load library Google OAuth
+        $this->load->library('google_oauth');
+        
+        // Redirect ke Google OAuth page
+        $this->google_oauth->redirect();
+    }
+    
+    /**
+     * Google Callback - Handle callback dari Google setelah user authorize
+     */
+    public function google_callback() {
+        // Ambil parameter dari URL
+        $code = $this->input->get('code');
+        $state = $this->input->get('state');
+        $error = $this->input->get('error');
+        
+        // Cek apakah user cancel authorization
+        if ($error) {
+            $this->session->set_flashdata('error', 'Login dengan Google dibatalkan');
+            redirect('auth/login');
+            return;
+        }
+        
+        // Cek apakah ada code
+        if (!$code) {
+            $this->session->set_flashdata('error', 'Kode authorization tidak valid');
+            redirect('auth/login');
+            return;
+        }
+        
+        // Load library
+        $this->load->library('google_oauth');
+        
+        // Authenticate dan dapatkan user info
+        $google_user = $this->google_oauth->authenticate($code, $state);
+        
+        if (!$google_user) {
+            log_message('error', 'Google OAuth failed: Unable to get user info');
+            $this->session->set_flashdata('error', 'Gagal login dengan Google. Silakan coba lagi.');
+            redirect('auth/login');
+            return;
+        }
+        
+        // Cek apakah email terverifikasi
+        if (!$google_user['verified_email']) {
+            $this->session->set_flashdata('error', 'Email Google Anda belum terverifikasi');
+            redirect('auth/login');
+            return;
+        }
+        
+        // Cek apakah user sudah terdaftar (by google_id)
+        $existing_user = $this->user_model->get_user_by_google_id($google_user['google_id']);
+        
+        if ($existing_user) {
+            // User sudah ada, login langsung
+            
+            // Cek status user
+            if ($existing_user['status'] !== 'aktif') {
+                $this->session->set_flashdata('error', 'Akun Anda tidak aktif. Hubungi administrator.');
+                redirect('auth/login');
+                return;
+            }
+            
+            // Cek langganan untuk owner
+            if ($existing_user['role'] === 'owner') {
+                $subscription_valid = $this->check_subscription($existing_user);
+                if (!$subscription_valid) {
+                    $this->session->set_flashdata('error', 'Langganan Anda telah berakhir. Silakan perpanjang langganan.');
+                    redirect('auth/subscription_expired');
+                    return;
+                }
+            }
+            
+            // Set session
+            $this->set_user_session($existing_user);
+            
+            // Log activity
+            $this->user_model->log_activity($existing_user['id_user'], 'Login', 'User login via Google OAuth');
+            
+            // Redirect ke dashboard
+            $this->session->set_flashdata('success', 'Selamat datang kembali, ' . $existing_user['nama']);
+            redirect($this->get_dashboard_url($existing_user['role']));
+            
+        } else {
+            // User belum terdaftar, cek apakah email sudah terdaftar dengan metode lain
+            $user_by_email = $this->user_model->get_user_by_email($google_user['email']);
+            
+            if ($user_by_email) {
+                // Email sudah terdaftar dengan metode tradisional
+                // Option 1: Link Google account ke akun existing (recommended untuk keamanan)
+                // Option 2: Auto-merge (lebih convenient tapi kurang aman)
+                
+                // Gunakan Option 2: Auto-merge jika user login dengan email yang sama
+                // Update akun existing dengan Google ID
+                $link_result = $this->user_model->link_google_account($user_by_email['id_user'], $google_user);
+                
+                if ($link_result['success']) {
+                    // Login sebagai user existing
+                    $updated_user = $this->user_model->get_user_by_id($user_by_email['id_user']);
+                    $this->set_user_session($updated_user);
+                    
+                    $this->session->set_flashdata('success', 'Akun Google Anda berhasil dihubungkan!');
+                    redirect($this->get_dashboard_url($updated_user['role']));
+                } else {
+                    $this->session->set_flashdata('error', $link_result['message']);
+                    redirect('auth/login');
+                }
+                
+            } else {
+                // User benar-benar baru, buat akun baru
+                $new_user = $this->user_model->create_user_from_google($google_user);
+                
+                if ($new_user) {
+                    // Set session
+                    $this->set_user_session($new_user);
+                    
+                    // Log activity
+                    $this->user_model->log_activity($new_user['id_user'], 'Register', 'User mendaftar via Google OAuth');
+                    
+                    // Redirect ke dashboard dengan welcome message
+                    $this->session->set_flashdata('success', 'Selamat datang di KixEra, ' . $new_user['nama'] . '! Akun Anda telah dibuat. Anda mendapat trial 7 hari gratis.');
+                    redirect($this->get_dashboard_url($new_user['role']));
+                    
+                } else {
+                    log_message('error', 'Failed to create user from Google data');
+                    $this->session->set_flashdata('error', 'Gagal membuat akun. Silakan coba lagi atau hubungi administrator.');
+                    redirect('auth/login');
+                }
+            }
+        }
+    }
+    
+    /**
+     * Link Google Account (Optional)
+     * Untuk user yang sudah login dan ingin menghubungkan akun Google
+     */
+    public function link_google() {
+        // Cek apakah user sudah login
+        if (!$this->is_logged_in()) {
+            redirect('auth/login');
+            return;
+        }
+        
+        // Load library
+        $this->load->library('google_oauth');
+        
+        // Jika ini adalah callback dari Google
+        $code = $this->input->get('code');
+        if ($code) {
+            $state = $this->input->get('state');
+            $google_user = $this->google_oauth->authenticate($code, $state);
+            
+            if ($google_user) {
+                $id_user = $this->session->userdata('id_user');
+                $result = $this->user_model->link_google_account($id_user, $google_user);
+                
+                $this->session->set_flashdata(
+                    $result['success'] ? 'success' : 'error',
+                    $result['message']
+                );
+            } else {
+                $this->session->set_flashdata('error', 'Gagal menghubungkan akun Google');
+            }
+            
+            redirect('pemilik/profile'); // Sesuaikan dengan halaman profile Anda
+            return;
+        }
+        
+        // Redirect ke Google OAuth
+        $this->google_oauth->redirect();
+    }
+    
+    // ========================================
+    // FORGOT PASSWORD METHODS
+    // ========================================
+    
+    /**
+     * Forgot Password - Request reset token
+     */
+    public function forgot_password()
+    {
+        // If already logged in, redirect
+        if ($this->is_logged_in()) {
+            $role = $this->session->userdata('role');
+            redirect($this->get_dashboard_url($role));
+        }
+        
+        // Handle POST request
+        if ($this->input->method() === 'post') {
+            $this->process_forgot_password();
+            return;
+        }
+        
+        // Show forgot password form
+        $data['page_title'] = 'Forgot Password - KixEra';
+        $this->load->view('auth/forgot_password', $data);
+    }
+    
+    /**
+     * Process forgot password request
+     */
+    private function process_forgot_password()
+    {
+        $email = $this->input->post('email', TRUE);
+        
+        // Validate email
+        if (empty($email)) {
+            $response = [
+                'success' => false,
+                'message' => 'Email harus diisi'
+            ];
+            
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode($response));
+                return;
+            }
+            
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('auth/forgot_password');
+            return;
+        }
+        
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $response = [
+                'success' => false,
+                'message' => 'Format email tidak valid'
+            ];
+            
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode($response));
+                return;
+            }
+            
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('auth/forgot_password');
+            return;
+        }
+        
+        // Create reset token
+        $token_data = $this->user_model->create_reset_token($email);
+        
+        if ($token_data) {
+            // Generate reset link
+            $reset_link = base_url('auth/reset_password/' . $token_data['token']);
+            
+            // Log activity
+            $this->user_model->log_activity(0, 'Forgot Password', 'Password reset requested for: ' . $email);
+            
+            $response = [
+                'success' => true,
+                'message' => 'Reset link berhasil dibuat',
+                'reset_link' => $reset_link,
+                'expires_at' => $token_data['expires_at'],
+                'email' => $email
+            ];
+            
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode($response));
+                return;
+            }
+            
+            // Store in session for display
+            $this->session->set_flashdata('reset_link', $reset_link);
+            $this->session->set_flashdata('success', 'Reset link berhasil dibuat');
+            redirect('auth/forgot_password');
+            
+        } else {
+            // Don't reveal if email exists or not (security)
+            $response = [
+                'success' => true,
+                'message' => 'Jika email terdaftar, link reset password akan ditampilkan'
+            ];
+            
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode($response));
+                return;
+            }
+            
+            $this->session->set_flashdata('info', $response['message']);
+            redirect('auth/forgot_password');
+        }
+    }
+    
+    /**
+     * Reset Password - Using token
+     */
+    public function reset_password($token = null)
+    {
+        // If already logged in, redirect
+        if ($this->is_logged_in()) {
+            $role = $this->session->userdata('role');
+            redirect($this->get_dashboard_url($role));
+        }
+        
+        if (!$token) {
+            $this->session->set_flashdata('error', 'Token reset tidak valid');
+            redirect('auth/login');
+            return;
+        }
+        
+        // Validate token
+        $token_data = $this->user_model->validate_reset_token($token);
+        
+        if (!$token_data) {
+            $this->session->set_flashdata('error', 'Token tidak valid, sudah digunakan, atau kadaluarsa');
+            redirect('auth/login');
+            return;
+        }
+        
+        // Handle POST request (password reset submission)
+        if ($this->input->method() === 'post') {
+            $this->process_reset_password($token);
+            return;
+        }
+        
+        // Show reset password form
+        $data['page_title'] = 'Reset Password - KixEra';
+        $data['token'] = $token;
+        $data['email'] = $token_data['email'];
+        $data['username'] = $token_data['username'];
+        $this->load->view('auth/reset_password', $data);
+    }
+    
+    /**
+     * Process password reset
+     */
+    private function process_reset_password($token)
+    {
+        $password = $this->input->post('password');
+        $confirm_password = $this->input->post('confirm_password');
+        
+        // Validate
+        if (empty($password) || empty($confirm_password)) {
+            $response = [
+                'success' => false,
+                'message' => 'Password dan konfirmasi password harus diisi'
+            ];
+            
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode($response));
+                return;
+            }
+            
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('auth/reset_password/' . $token);
+            return;
+        }
+        
+        if ($password !== $confirm_password) {
+            $response = [
+                'success' => false,
+                'message' => 'Password dan konfirmasi password tidak cocok'
+            ];
+            
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode($response));
+                return;
+            }
+            
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('auth/reset_password/' . $token);
+            return;
+        }
+        
+        if (strlen($password) < 8) {
+            $response = [
+                'success' => false,
+                'message' => 'Password minimal 8 karakter'
+            ];
+            
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode($response));
+                return;
+            }
+            
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('auth/reset_password/' . $token);
+            return;
+        }
+        
+        // Reset password
+        if ($this->user_model->reset_password_with_token($token, $password)) {
+            $response = [
+                'success' => true,
+                'message' => 'Password berhasil direset. Silakan login dengan password baru Anda.',
+                'redirect' => base_url('auth/login')
+            ];
+            
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode($response));
+                return;
+            }
+            
+            $this->session->set_flashdata('success', 'Password berhasil direset. Silakan login dengan password baru Anda.');
+            redirect('auth/login');
+            
+        } else {
+            $response = [
+                'success' => false,
+                'message' => 'Gagal mereset password. Token mungkin sudah tidak valid.'
+            ];
+            
+            if ($this->input->is_ajax_request()) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode($response));
+                return;
+            }
+            
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('auth/login');
         }
     }
 

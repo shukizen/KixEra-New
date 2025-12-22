@@ -114,7 +114,7 @@
 
                         <!-- Alert Messages -->
                         <?php if($this->session->flashdata('success')): ?>
-                        <div id="alert-success" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg fade-in">
+                        <div id="alert-success" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl text-sm fade-in">
                             <div class="flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -125,7 +125,7 @@
                         <?php endif; ?>
 
                         <?php if($this->session->flashdata('error')): ?>
-                        <div id="alert-error" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg fade-in">
+                        <div id="alert-error" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl text-sm fade-in">
                             <div class="flex items-start gap-2">
                                 <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -136,7 +136,7 @@
                         <?php endif; ?>
 
                         <!-- Registration Form -->
-                        <form id="registerForm" class="space-y-4" onsubmit="handleRegister(event)">
+                        <form id="registerForm" class="space-y-4" method="POST" action="<?= base_url('auth/register') ?>" onsubmit="validateAndSubmit(event)">
                             <!-- Full Name -->
                             <div class="space-y-2">
                                 <label for="fullName" class="block text-sm font-medium text-gray-700" data-i18n="form.fullName">
@@ -280,6 +280,7 @@
                                 Register
                             </button>
                         </form>
+
 
                         <!-- Login Link -->
                         <footer class="mt-8 text-center space-y-1">
@@ -475,8 +476,8 @@
             }
         }
 
-        // Handle registration
-        async function handleRegister(event) {
+        // Handle registration validation and submit
+        function validateAndSubmit(event) {
             event.preventDefault();
             
             // Clear previous errors
@@ -525,77 +526,13 @@
             
             if (hasError) return;
             
-            // Disable button and show loading
+            // Disable button and show loading (Submit form)
             registerBtn.disabled = true;
             const originalText = registerBtn.textContent;
             registerBtn.textContent = translations[currentLang].messages.registering;
             
-            try {
-                const formData = new FormData();
-                formData.append('fullName', fullName);
-                formData.append('businessName', businessName);
-                formData.append('phoneNumber', phoneNumber);
-                formData.append('email', email);
-                formData.append('password', password);
-                formData.append('confirmPassword', confirmPassword);
-                
-                console.log('Sending registration request...');
-                
-                const response = await fetch('<?= base_url("auth/register") ?>', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-                
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers.get('content-type'));
-                
-                // Check if response is JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const textResponse = await response.text();
-                    console.error('Non-JSON response received:', textResponse.substring(0, 500));
-                    
-                    // Show more detailed error
-                    alert('Server Error: Received HTML instead of JSON. Check browser console for details.\n\nThis usually means:\n1. PHP error occurred\n2. Wrong URL or routing\n3. Model/Controller not found\n\nCheck application/logs/ for detailed errors.');
-                    
-                    registerBtn.disabled = false;
-                    registerBtn.textContent = originalText;
-                    return;
-                }
-                
-                const result = await response.json();
-                console.log('Response data:', result);
-                
-                if (result.success) {
-                    // Show success message
-                    alert(result.message);
-                    // Redirect to dashboard
-                    window.location.href = result.redirect;
-                } else {
-                    // Show error message
-                    alert(result.message || translations[currentLang].messages.registrationError);
-                    registerBtn.disabled = false;
-                    registerBtn.textContent = originalText;
-                }
-            } catch (error) {
-                console.error('Registration error:', error);
-                
-                // More detailed error message
-                let errorMsg = 'Registration failed:\n\n';
-                errorMsg += error.message + '\n\n';
-                errorMsg += 'Please check:\n';
-                errorMsg += '1. Browser console for details\n';
-                errorMsg += '2. Network tab for server response\n';
-                errorMsg += '3. application/logs/ folder for PHP errors';
-                
-                alert(errorMsg);
-                
-                registerBtn.disabled = false;
-                registerBtn.textContent = originalText;
-            }
+            // Submit the form
+            event.target.submit();
         }
 
         // Real-time password match validation

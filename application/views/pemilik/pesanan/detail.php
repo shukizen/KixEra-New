@@ -8,7 +8,7 @@
     <div class="flex min-h-screen">
         <!-- Sidebar -->
         <!-- Main Content -->
-        <main class="flex-1 ml-64">
+        <main class="flex-1 lg:ml-64">
             <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-6 py-6">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

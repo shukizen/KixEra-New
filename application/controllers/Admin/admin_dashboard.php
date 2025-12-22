@@ -7,6 +7,7 @@ class Admin_dashboard extends CI_Controller {
         parent::__construct();
         $this->load->library('auth_library');
         $this->load->library('session');
+        $this->load->model('Admin_model');
         
         // Require admin role
         $this->auth_library->require_role('admin');
@@ -16,11 +17,15 @@ class Admin_dashboard extends CI_Controller {
         $data['page_title'] = 'Admin Dashboard - KixEra';
         $data['user'] = $this->auth_library->get_user();
         
-        // Get statistics
-        $data['total_pemilik'] = $this->get_total_pemilik();
-        $data['total_pesanan'] = $this->get_total_pesanan();
-        $data['total_revenue'] = $this->get_total_revenue();
-        $data['active_subscriptions'] = $this->get_active_subscriptions();
+        // Call model methods for data
+        $data['stats'] = $this->Admin_model->get_main_statistics();
+        $data['subscription_stats'] = $this->Admin_model->get_subscription_analytics();
+        $data['revenue_data'] = $this->Admin_model->get_revenue_data();
+        $data['recent_transactions'] = $this->Admin_model->get_recent_transactions(10);
+        $data['system_alerts'] = $this->Admin_model->get_system_alerts();
+        $data['top_owners'] = $this->Admin_model->get_top_owners(5);
+        $data['monthly_growth'] = $this->Admin_model->get_monthly_growth();
+        $data['package_distribution'] = $this->Admin_model->get_package_distribution();
         
         $this->load->view('template/header', $data);
         $this->load->view('template/sidebar_admin', $data);
@@ -28,25 +33,4 @@ class Admin_dashboard extends CI_Controller {
         $this->load->view('template/footer');
     }
     
-    private function get_total_pemilik() {
-        return $this->db->count_all('pemilik');
-    }
-    
-    private function get_total_pesanan() {
-        return $this->db->count_all('pesanan');
-    }
-    
-    private function get_total_revenue() {
-        $this->db->select_sum('harga');
-        $this->db->from('transaksi_langganan');
-        $this->db->where('status_pembayaran', 'sukses');
-        $query = $this->db->get();
-        $result = $query->row();
-        return $result->harga ?? 0;
-    }
-    
-    private function get_active_subscriptions() {
-        $this->db->where('status_langganan', 'aktif');
-        return $this->db->count_all_results('pemilik');
-    }
 }

@@ -279,14 +279,19 @@ class Keuangan_model extends CI_Model {
     // GRAFIK & CHART DATA
     // =============================================
 
-    public function get_grafik_pemasukan($tahun, $id_cabang = null) {
+    public function get_grafik_pemasukan($tahun, $id_cabang = null, $id_pemilik = null) {
         $this->db->select('MONTH(tgl_transaksi) as bulan, SUM(jumlah) as total, COUNT(*) as jumlah_transaksi');
         $this->db->from('pemasukan');
+        $this->db->join('cabang', 'cabang.id_cabang = pemasukan.id_cabang', 'left'); // Add join for owner check
         $this->db->where('YEAR(tgl_transaksi)', $tahun);
-        $this->db->where('deleted_at IS NULL');
+        $this->db->where('pemasukan.deleted_at IS NULL');
         
         if ($id_cabang) {
-            $this->db->where('id_cabang', $id_cabang);
+            $this->db->where('pemasukan.id_cabang', $id_cabang);
+        }
+
+        if ($id_pemilik) {
+            $this->db->where('cabang.id_pemilik', $id_pemilik);
         }
         
         $this->db->group_by('MONTH(tgl_transaksi)');
@@ -295,14 +300,19 @@ class Keuangan_model extends CI_Model {
         return $this->db->get()->result();
     }
 
-    public function get_grafik_pengeluaran($tahun, $id_cabang = null) {
+    public function get_grafik_pengeluaran($tahun, $id_cabang = null, $id_pemilik = null) {
         $this->db->select('MONTH(tgl_transaksi) as bulan, SUM(jumlah) as total, COUNT(*) as jumlah_transaksi');
         $this->db->from('pengeluaran');
+        $this->db->join('cabang', 'cabang.id_cabang = pengeluaran.id_cabang', 'left'); // Add join for owner check
         $this->db->where('YEAR(tgl_transaksi)', $tahun);
-        $this->db->where('deleted_at IS NULL');
+        $this->db->where('pengeluaran.deleted_at IS NULL');
         
         if ($id_cabang) {
-            $this->db->where('id_cabang', $id_cabang);
+            $this->db->where('pengeluaran.id_cabang', $id_cabang);
+        }
+
+        if ($id_pemilik) {
+            $this->db->where('cabang.id_pemilik', $id_pemilik);
         }
         
         $this->db->group_by('MONTH(tgl_transaksi)');
@@ -340,11 +350,18 @@ class Keuangan_model extends CI_Model {
     // CABANG
     // =============================================
 
-    public function get_all_cabang() {
+    // =============================================
+    // CABANG
+    // =============================================
+
+    public function get_all_cabang($id_pemilik = null) {
         $this->db->select('*');
         $this->db->from('cabang');
         $this->db->where('deleted_at IS NULL');
         $this->db->where('status', 'aktif');
+        if ($id_pemilik) {
+            $this->db->where('id_pemilik', $id_pemilik);
+        }
         $this->db->order_by('nama_cabang', 'ASC');
         return $this->db->get()->result();
     }
@@ -413,6 +430,12 @@ class Keuangan_model extends CI_Model {
     private function apply_transaksi_filters($table_alias, $filters) {
         $prefix = $table_alias ? $table_alias . '.' : '';
         
+        // RBAC: If id_pemilik is set in filters, restrict query to owner's branches
+        if (isset($filters['id_pemilik']) && !empty($filters['id_pemilik'])) {
+             // Subquery to get branches owned by this user
+            $this->db->where($prefix . 'id_cabang IN (SELECT id_cabang FROM cabang WHERE id_pemilik = ' . $this->db->escape($filters['id_pemilik']) . ')', NULL, FALSE);
+        }
+
         if (isset($filters['id_cabang']) && !empty($filters['id_cabang'])) {
             $this->db->where($prefix . 'id_cabang', $filters['id_cabang']);
         }

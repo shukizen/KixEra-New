@@ -13,6 +13,13 @@
         * {
             font-family: 'Inter', sans-serif;
         }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-emerald-100 via-white to-emerald-300">
@@ -76,19 +83,19 @@
 
                         <!-- Flash Messages -->
                         <?php if($this->session->flashdata('error')): ?>
-                        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl text-sm">
+                        <div id="alert-error" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl text-sm fade-in">
                             <?= $this->session->flashdata('error') ?>
                         </div>
                         <?php endif; ?>
                         
                         <?php if($this->session->flashdata('info')): ?>
-                        <div class="mb-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-xl text-sm">
+                        <div id="alert-info" class="mb-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-xl text-sm fade-in">
                             <?= $this->session->flashdata('info') ?>
                         </div>
                         <?php endif; ?>
                         
                         <?php if($this->session->flashdata('success')): ?>
-                        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl text-sm">
+                        <div id="alert-success" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl text-sm fade-in">
                             <?= $this->session->flashdata('success') ?>
                         </div>
                         <?php endif; ?>
@@ -155,7 +162,7 @@
                                     />
                                     <span class="text-sm text-gray-600" data-i18n="login.rememberMe">Remember Me</span>
                                 </label>
-                                <a href="#" class="text-sm text-teal-700 hover:text-teal-800 hover:underline transition" data-i18n="login.forgotPassword">
+                                <a href="<?= base_url('auth/forgot_password') ?>" class="text-sm text-emerald-600 hover:text-emerald-700 hover:underline transition" data-i18n="login.forgotPassword">
                                     Forgot Password?
                                 </a>
                             </div>
@@ -336,6 +343,16 @@
             // Redirect to Google OAuth endpoint
             window.location.href = '<?= base_url("auth/google_login") ?>';
         }
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            const successAlert = document.getElementById('alert-success');
+            const errorAlert = document.getElementById('alert-error');
+            const infoAlert = document.getElementById('alert-info');
+            
+            if (successAlert) successAlert.style.display = 'none';
+            if (errorAlert) errorAlert.style.display = 'none';
+            if (infoAlert) infoAlert.style.display = 'none';
+        }, 5000);
     </script>
 </body>
 </html>

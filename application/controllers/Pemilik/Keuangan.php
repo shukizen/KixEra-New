@@ -9,16 +9,52 @@ class Keuangan extends CI_Controller {
         $this->load->library('form_validation');
         $this->load->helper('url');
         $this->load->database();
+        $this->load->library('auth_library');
+        $this->load->library('session');
+        
+        // Require owner role
+        $this->auth_library->require_role('owner');
+    }
+
+    // Helper to get id_pemilik
+    private function get_id_pemilik() {
+        $id_pemilik = $this->session->userdata('id_pemilik');
+        if (empty($id_pemilik)) {
+            // Fallback for testing or if session structure is different
+             $user_id = $this->session->userdata('user_id');
+             if ($user_id) {
+                 $this->load->model('Owner_model');
+                 $owner = $this->Owner_model->getOwnerByUserId($user_id);
+                 if ($owner) return $owner->id_pemilik;
+             }
+        }
+        return $id_pemilik;
+    }
+
+    // Helper to verify branch ownership
+    private function verify_branch_ownership($id_cabang, $id_pemilik) {
+        if (!$id_pemilik) return false;
+        
+        // Optimize: could cache this or use a specific model method
+        // For now, fetch valid branches and check ID
+        $valid_branches = $this->Keuangan_model->get_all_cabang($id_pemilik);
+        foreach ($valid_branches as $branch) {
+            if ($branch->id_cabang == $id_cabang) return true;
+        }
+        return false;
     }
 
     // ========== MAIN INDEX ==========
     public function index() {
+        $id_pemilik = $this->get_id_pemilik();
+        
         // Default ke tahun ini, tapi tidak filter bulan (tampilkan semua bulan dalam tahun)
         $tahun = $this->input->get('tahun') ? $this->input->get('tahun') : date('Y');
         $bulan = $this->input->get('bulan') ? $this->input->get('bulan') : null; // Ubah ke null
         
         $filters = array(
-            'tahun' => $tahun
+            'tahun' => $tahun,
+            'id_pemilik' => $id_pemilik // Enforce owner filter
         );
         
         // Hanya tambahkan bulan jika user memilih bulan tertentu
@@ -27,7 +63,11 @@ class Keuangan extends CI_Controller {
         }
         
         if ($this->input->get('id_cabang')) {
-            $filters['id_cabang'] = $this->input->get('id_cabang');
+            $id_cabang = $this->input->get('id_cabang');
+            // Check ownership
+             if ($this->verify_branch_ownership($id_cabang, $id_pemilik)) {
+                 $filters['id_cabang'] = $id_cabang;
+             }
         }
         
         if ($this->input->get('kategori')) {
@@ -42,7 +82,7 @@ class Keuangan extends CI_Controller {
         $data['tahun_list'] = $this->Keuangan_model->get_tahun_list();
         $data['selected_tahun'] = $tahun;
         $data['selected_bulan'] = $bulan;
-        $data['cabang_list'] = $this->Keuangan_model->get_all_cabang();
+        $data['cabang_list'] = $this->Keuangan_model->get_all_cabang($id_pemilik);
 
         $this->load->view('template/header');
         $this->load->view('template/sidebar');
@@ -55,6 +95,7 @@ class Keuangan extends CI_Controller {
     public function add_pemasukan() {
         header('Content-Type: application/json');
         
+        $id_pemilik = $this->get_id_pemilik();
         $this->form_validation->set_rules('id_cabang', 'Cabang', 'required|numeric');
         $this->form_validation->set_rules('nama_transaksi', 'Nama Transaksi', 'required|trim');
         $this->form_validation->set_rules('kategori', 'Kategori', 'required');
@@ -68,9 +109,15 @@ class Keuangan extends CI_Controller {
             ]);
             return;
         }
+
+        $id_cabang = $this->input->post('id_cabang');
+        if (!$this->verify_branch_ownership($id_cabang, $id_pemilik)) {
+            echo json_encode(['success' => false, 'message' => 'Cabang tidak valid']);
+            return;
+        }
         
         $data = [
-            'id_cabang' => $this->input->post('id_cabang'),
+            'id_cabang' => $id_cabang,
             'nama_transaksi' => $this->input->post('nama_transaksi'),
             'kategori' => $this->input->post('kategori'),
             'jumlah' => $this->input->post('jumlah'),
@@ -110,9 +157,17 @@ class Keuangan extends CI_Controller {
     
     public function get_pemasukan($id) {
         header('Content-Type: application/json');
+        
         $item = $this->Keuangan_model->get_pemasukan_by_id($id);
         
         if ($item) {
+            // Verify ownership via branch
+            $id_pemilik = $this->get_id_pemilik();
+            if (!$this->verify_branch_ownership($item->id_cabang, $id_pemilik)) {
+                 echo json_encode(['success' => false, 'message' => 'Akses ditolak']);
+                 return;
+            }
+
             // Get bukti transaksi
             $bukti = $this->Keuangan_model->get_bukti_by_pemasukan($id);
             $item->bukti_transaksi = $bukti;
@@ -132,6 +187,15 @@ class Keuangan extends CI_Controller {
     public function update_pemasukan($id) {
         header('Content-Type: application/json');
         
+        $id_pemilik = $this->get_id_pemilik();
+        
+        // Verify exist & ownership
+        $existing = $this->Keuangan_model->get_pemasukan_by_id($id);
+        if (!$existing || !$this->verify_branch_ownership($existing->id_cabang, $id_pemilik)) {
+            echo json_encode(['success' => false, 'message' => 'Akses ditolak atau data tidak ditemukan']);
+            return;
+        }
+
         $this->form_validation->set_rules('id_cabang', 'Cabang', 'required|numeric');
         $this->form_validation->set_rules('nama_transaksi', 'Nama Transaksi', 'required|trim');
         $this->form_validation->set_rules('kategori', 'Kategori', 'required');
@@ -145,9 +209,15 @@ class Keuangan extends CI_Controller {
             ]);
             return;
         }
+
+        $id_cabang = $this->input->post('id_cabang');
+        if (!$this->verify_branch_ownership($id_cabang, $id_pemilik)) {
+            echo json_encode(['success' => false, 'message' => 'Cabang tujuan tidak valid']);
+            return;
+        }
         
         $data = [
-            'id_cabang' => $this->input->post('id_cabang'),
+            'id_cabang' => $id_cabang,
             'nama_transaksi' => $this->input->post('nama_transaksi'),
             'kategori' => $this->input->post('kategori'),
             'jumlah' => $this->input->post('jumlah'),
@@ -178,6 +248,14 @@ class Keuangan extends CI_Controller {
     public function delete_pemasukan($id) {
         header('Content-Type: application/json');
         
+        $id_pemilik = $this->get_id_pemilik();
+        // Verify exist & ownership
+        $existing = $this->Keuangan_model->get_pemasukan_by_id($id);
+        if (!$existing || !$this->verify_branch_ownership($existing->id_cabang, $id_pemilik)) {
+            echo json_encode(['success' => false, 'message' => 'Akses ditolak atau data tidak ditemukan']);
+            return;
+        }
+        
         if ($this->Keuangan_model->delete_pemasukan($id)) {
             echo json_encode([
                 'success' => true,
@@ -196,6 +274,7 @@ class Keuangan extends CI_Controller {
     public function add_pengeluaran() {
         header('Content-Type: application/json');
         
+        $id_pemilik = $this->get_id_pemilik();
         $this->form_validation->set_rules('id_cabang', 'Cabang', 'required|numeric');
         $this->form_validation->set_rules('nama_transaksi', 'Nama Transaksi', 'required|trim');
         $this->form_validation->set_rules('kategori', 'Kategori', 'required');
@@ -210,8 +289,14 @@ class Keuangan extends CI_Controller {
             return;
         }
         
+        $id_cabang = $this->input->post('id_cabang');
+        if (!$this->verify_branch_ownership($id_cabang, $id_pemilik)) {
+            echo json_encode(['success' => false, 'message' => 'Cabang tidak valid']);
+            return;
+        }
+
         $data = [
-            'id_cabang' => $this->input->post('id_cabang'),
+            'id_cabang' => $id_cabang,
             'nama_transaksi' => $this->input->post('nama_transaksi'),
             'kategori' => $this->input->post('kategori'),
             'jumlah' => $this->input->post('jumlah'),
@@ -253,6 +338,13 @@ class Keuangan extends CI_Controller {
         $item = $this->Keuangan_model->get_pengeluaran_by_id($id);
         
         if ($item) {
+             // Verify ownership via branch
+            $id_pemilik = $this->get_id_pemilik();
+            if (!$this->verify_branch_ownership($item->id_cabang, $id_pemilik)) {
+                 echo json_encode(['success' => false, 'message' => 'Akses ditolak']);
+                 return;
+            }
+
             // Get bukti transaksi
             $bukti = $this->Keuangan_model->get_bukti_by_pengeluaran($id);
             $item->bukti_transaksi = $bukti;
@@ -272,6 +364,14 @@ class Keuangan extends CI_Controller {
     public function update_pengeluaran($id) {
         header('Content-Type: application/json');
         
+        $id_pemilik = $this->get_id_pemilik();
+        // Verify exist & ownership
+        $existing = $this->Keuangan_model->get_pengeluaran_by_id($id);
+        if (!$existing || !$this->verify_branch_ownership($existing->id_cabang, $id_pemilik)) {
+            echo json_encode(['success' => false, 'message' => 'Akses ditolak atau data tidak ditemukan']);
+            return;
+        }
+
         $this->form_validation->set_rules('id_cabang', 'Cabang', 'required|numeric');
         $this->form_validation->set_rules('nama_transaksi', 'Nama Transaksi', 'required|trim');
         $this->form_validation->set_rules('kategori', 'Kategori', 'required');
@@ -286,8 +386,14 @@ class Keuangan extends CI_Controller {
             return;
         }
         
+        $id_cabang = $this->input->post('id_cabang');
+        if (!$this->verify_branch_ownership($id_cabang, $id_pemilik)) {
+            echo json_encode(['success' => false, 'message' => 'Cabang tujuan tidak valid']);
+            return;
+        }
+
         $data = [
-            'id_cabang' => $this->input->post('id_cabang'),
+            'id_cabang' => $id_cabang,
             'nama_transaksi' => $this->input->post('nama_transaksi'),
             'kategori' => $this->input->post('kategori'),
             'jumlah' => $this->input->post('jumlah'),
@@ -317,6 +423,14 @@ class Keuangan extends CI_Controller {
     public function delete_pengeluaran($id) {
         header('Content-Type: application/json');
         
+        $id_pemilik = $this->get_id_pemilik();
+        // Verify exist & ownership
+        $existing = $this->Keuangan_model->get_pengeluaran_by_id($id);
+        if (!$existing || !$this->verify_branch_ownership($existing->id_cabang, $id_pemilik)) {
+            echo json_encode(['success' => false, 'message' => 'Akses ditolak atau data tidak ditemukan']);
+            return;
+        }
+
         if ($this->Keuangan_model->delete_pengeluaran($id)) {
             echo json_encode([
                 'success' => true,
@@ -329,7 +443,7 @@ class Keuangan extends CI_Controller {
             ]);
         }
     }
-
+    
     // ========== BUKTI TRANSAKSI ==========
     
     private function upload_bukti_transaksi($tipe, $id_transaksi) {
@@ -381,18 +495,38 @@ class Keuangan extends CI_Controller {
         
         return ['success' => true];
     }
-
+    
     // ========== GRAFIK & CHART DATA ==========
 
     public function get_grafik_gabungan() {
         header('Content-Type: application/json');
         
         try {
+            $id_pemilik = $this->get_id_pemilik();
             $tahun = $this->input->get('tahun') ? $this->input->get('tahun') : date('Y');
             $id_cabang = $this->input->get('id_cabang') ? $this->input->get('id_cabang') : null;
             
-            $pemasukan = $this->Keuangan_model->get_grafik_pemasukan($tahun, $id_cabang);
-            $pengeluaran = $this->Keuangan_model->get_grafik_pengeluaran($tahun, $id_cabang);
+            // Validate branch
+            if ($id_cabang && !$this->verify_branch_ownership($id_cabang, $id_pemilik)) {
+                 $id_cabang = null; // Ignore invalid branch filter, fallback to all owned branches
+            }
+
+            // Filters logic in model will handle empty id_cabang but MUST respect id_pemilik not explicitly passed to this method!
+            // Wait, Keuangan_model::get_grafik_pemasukan DOES NOT accept id_pemilik natively. 
+            // I need to update get_grafik_pemasukan in Keuangan_model first or pass it there?
+            // Actually I missed updating get_grafik_pemasukan/pengeluaran in the Model step.
+            // But I can simulate it by passing $id_cabang if user selected one, 
+            // OR if user selected NONE, I must pass a list of valid branches?
+            // Cleaner way: Update model to accept id_pemilik or verify ownership inside.
+            
+            // Let's assume I will fix model in next step or use what I have.
+            // Model methods `get_grafik_pemasukan` currently only take `id_cabang`.
+            // If `id_cabang` is null, it returns GLOBAL data. THIS IS A BUG.
+            // I need to patch `get_grafik_pemasukan` in model too.
+            // For now, I will proceed with controller update, and then go back to model to fix the chart methods.
+            
+            $pemasukan = $this->Keuangan_model->get_grafik_pemasukan($tahun, $id_cabang, $id_pemilik);
+            $pengeluaran = $this->Keuangan_model->get_grafik_pengeluaran($tahun, $id_cabang, $id_pemilik);
             
             $grafik_data = array();
             for ($i = 1; $i <= 12; $i++) {
@@ -441,12 +575,22 @@ class Keuangan extends CI_Controller {
         header('Content-Type: application/json');
         
         try {
+            $id_pemilik = $this->get_id_pemilik();
             $tahun = $this->input->get('tahun') ? $this->input->get('tahun') : date('Y');
             $bulan = $this->input->get('bulan') ? $this->input->get('bulan') : null;
             $id_cabang = $this->input->get('id_cabang') ? $this->input->get('id_cabang') : null;
             $tipe = $this->input->get('tipe') ? $this->input->get('tipe') : 'pengeluaran';
             
-            $filters = array('tahun' => $tahun);
+            // Validate branch
+             if ($id_cabang && !$this->verify_branch_ownership($id_cabang, $id_pemilik)) {
+                 $id_cabang = null;
+            }
+            
+            $filters = array(
+                'tahun' => $tahun,
+                'id_pemilik' => $id_pemilik // This works because get_summary_by_kategori uses apply_transaksi_filters
+            );
+            
             if ($bulan) $filters['bulan'] = $bulan;
             if ($id_cabang) $filters['id_cabang'] = $id_cabang;
             

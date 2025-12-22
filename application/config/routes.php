@@ -58,3 +58,4 @@ $route['keuangan/(.+)'] = 'keuangan/$1';
 
 // Midtrans Webhook Routes
 $route['pembayaran/notification'] = 'pembayaran/notification';
+$route['admin/dashboard'] = 'admin/admin_dashboard';

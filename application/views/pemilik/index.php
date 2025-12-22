@@ -6,7 +6,7 @@
     <div class="flex min-h-screen">
         
         <!-- Main Content -->
-        <main class="flex-1 ml-64">
+        <main class="flex-1 lg:ml-64">
             <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
@@ -32,7 +32,7 @@
                             </div>
                             <div>
                                 <div class="text-sm font-medium text-gray-800">
-                                    <?php echo $this->session->userdata('nama') ? $this->session->userdata('nama') : 'Syafrudin'; ?>
+                                    <?php echo $this->session->userdata('nama') ? $this->session->userdata('nama') : 'Owner'; ?>
                                 </div>
                                 <div class="text-xs text-gray-500">Owner</div>
                             </div>
@@ -43,6 +43,25 @@
             
             <!-- Dashboard Content -->
             <div class="p-6">
+                <!-- Flash Messages -->
+                <?php if($this->session->flashdata('success')): ?>
+                <div id="alert-success" class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl text-sm relative fade-in">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-check-circle"></i>
+                        <span><?= $this->session->flashdata('success') ?></span>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <?php if($this->session->flashdata('error')): ?>
+                <div id="alert-error" class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl text-sm relative fade-in">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span><?= $this->session->flashdata('error') ?></span>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <!-- Total Pesanan -->
@@ -50,8 +69,7 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Total Pesanan Hari ini</p>
-                                <h3 class="text-3xl font-bold text-gray-800 mt-2">127</h3>
-                                <p class="text-sm text-emerald-500 mt-2">+12% from yesterday</p>
+                                <h3 class="text-3xl font-bold text-gray-800 mt-2"><?php echo number_format($total_orders_today); ?></h3>
                             </div>
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
                                 <i class="fas fa-shopping-cart text-emerald-500 text-xl"></i>
@@ -64,8 +82,10 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Pendapatan Bulanan</p>
-                                <h3 class="text-3xl font-bold text-gray-800 mt-2">Rp 45.000</h3>
-                                <p class="text-sm text-emerald-500 mt-2">+8% from last month</p>
+                                <h3 class="text-3xl font-bold text-gray-800 mt-2">Rp <?php echo number_format($monthly_revenue, 0, ',', '.'); ?></h3>
+                                <p class="text-sm text-emerald-500 mt-2">
+                                    <?php echo ($revenue_growth >= 0 ? '+' : '') . number_format($revenue_growth, 1); ?>% from last month
+                                </p>
                             </div>
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
                                 <i class="fas fa-dollar-sign text-emerald-500 text-xl"></i>
@@ -78,8 +98,7 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Pelanggan Aktif</p>
-                                <h3 class="text-3xl font-bold text-gray-800 mt-2">1,842</h3>
-                                <p class="text-sm text-emerald-500 mt-2">+15% this month</p>
+                                <h3 class="text-3xl font-bold text-gray-800 mt-2"><?php echo number_format($active_customers); ?></h3>
                             </div>
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
                                 <i class="fas fa-users text-emerald-500 text-xl"></i>
@@ -92,8 +111,10 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Pending Pickups</p>
-                                <h3 class="text-3xl font-bold text-gray-800 mt-2">23</h3>
-                                <p class="text-sm text-yellow-600 mt-2">Requires attention</p>
+                                <h3 class="text-3xl font-bold text-gray-800 mt-2"><?php echo number_format($pending_pickups); ?></h3>
+                                <?php if($pending_pickups > 0): ?>
+                                    <p class="text-sm text-yellow-600 mt-2">Requires attention</p>
+                                <?php endif; ?>
                             </div>
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
                                 <i class="fas fa-truck text-emerald-500 text-xl"></i>
@@ -131,8 +152,12 @@
                         <div class="bg-emerald-100 rounded-xl p-4">
                             <p class="text-sm font-bold text-gray-700 mb-2">Recommendation:</p>
                             <p class="text-sm text-gray-700 mb-4">
-                                Retention by offering a loyalty discount this month. Based on customer behavior, 
-                                a 15% discount could boost retention by 23%.
+                                <?php if($pending_pickups > 5): ?>
+                                    High number of pending pickups. Consider sending reminder SMS to customers to free up space.
+                                <?php else: ?>
+                                    Retention by offering a loyalty discount this month. Based on customer behavior, 
+                                    a 15% discount could boost retention by 23%.
+                                <?php endif; ?>
                             </p>
                             <button onclick="window.location='<?= base_url('pemilik/rekomendasi') ?>'" 
                                     class="w-full bg-emerald-500 text-white py-2 rounded-lg hover:bg-emerald-600 transition">
@@ -146,7 +171,7 @@
                 <!-- Monthly Revenue Trend -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Monthly Revenue Trend</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Monthly Revenue Trend (<?php echo date('Y'); ?>)</h2>
                         <div class="h-80">
                             <canvas id="revenueChart"></canvas>
                         </div>
@@ -178,33 +203,33 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr class="border-b border-gray-100">
-                                        <td class="text-center py-4">Hatta Pramana</td>
-                                        <td class="text-center py-4">Deep Cleaning</td>
-                                        <td class="text-center py-4">
-                                            <span class="bg-emerald-500 text-white px-4 py-1 rounded-full text-sm">Completed</span>
-                                        </td>
-                                        <td class="text-center py-4">Rp 45.000</td>
-                                        <td class="text-center py-4">Oct 28, 2025</td>
-                                    </tr>
-                                    <tr class="border-b border-gray-100">
-                                        <td class="text-center py-4">Rayan</td>
-                                        <td class="text-center py-4">Whitening</td>
-                                        <td class="text-center py-4">
-                                            <span class="bg-yellow-500 text-white px-4 py-1 rounded-full text-sm">In Progress</span>
-                                        </td>
-                                        <td class="text-center py-4">Rp 35.000</td>
-                                        <td class="text-center py-4">Oct 28, 2025</td>
-                                    </tr>
-                                    <tr class="border-b border-gray-100">
-                                        <td class="text-center py-4">Rizki Pangestu</td>
-                                        <td class="text-center py-4">Repair</td>
-                                        <td class="text-center py-4">
-                                            <span class="bg-gray-500 text-white px-4 py-1 rounded-full text-sm">Waiting</span>
-                                        </td>
-                                        <td class="text-center py-4">Rp 60.000</td>
-                                        <td class="text-center py-4">Oct 27, 2025</td>
-                                    </tr>
+                                    <?php if(!empty($recent_orders)): ?>
+                                        <?php foreach($recent_orders as $order): ?>
+                                        <tr class="border-b border-gray-100">
+                                            <td class="text-center py-4"><?php echo htmlspecialchars($order->nama_pelanggan); ?></td>
+                                            <td class="text-center py-4"><?php echo htmlspecialchars($order->nama_layanan); ?></td>
+                                            <td class="text-center py-4">
+                                                <span class="px-4 py-1 rounded-full text-sm text-white" 
+                                                      style="background-color: <?php 
+                                                          switch($order->status_pesanan) {
+                                                              case 'selesai': echo '#10b981'; break;
+                                                              case 'dalam_proses': echo '#eab308'; break;
+                                                              case 'siap_diambil': echo '#3b82f6'; break;
+                                                              default: echo '#6b7280';
+                                                          }
+                                                      ?>">
+                                                    <?php echo ucwords(str_replace('_', ' ', $order->status_pesanan)); ?>
+                                                </span>
+                                            </td>
+                                            <td class="text-center py-4">Rp <?php echo number_format($order->total_harga, 0, ',', '.'); ?></td>
+                                            <td class="text-center py-4"><?php echo date('M d, Y', strtotime($order->tgl_masuk)); ?></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-gray-500">Belum ada pesanan terbaru.</td>
+                                        </tr>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -213,33 +238,15 @@
                     <!-- Right Column -->
                     <div class="space-y-6">
                         <!-- Notifications & Alerts -->
-                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                         <div class="bg-white rounded-2xl shadow-lg p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Notifications & Alerts</h2>
                             <div class="space-y-4">
                                 <!-- Alert 1 -->
                                 <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
                                     <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
                                     <div>
-                                        <p class="text-sm font-medium text-red-800">Low cleaning stock</p>
-                                        <p class="text-xs text-red-600">Premium cleaner running low</p>
-                                    </div>
-                                </div>
-                                
-                                <!-- Alert 2 -->
-                                <div class="bg-emerald-100 border border-emerald-500 rounded-xl p-4 flex items-start gap-3">
-                                    <i class="fas fa-user-plus text-emerald-500 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-800">New customer subscribed</p>
-                                        <p class="text-xs text-gray-600">Premium plan - Alex Rodriguez</p>
-                                    </div>
-                                </div>
-                                
-                                <!-- Alert 3 -->
-                                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
-                                    <i class="fas fa-clock text-yellow-600 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-medium text-yellow-800">Order delayed</p>
-                                        <p class="text-xs text-yellow-700">Order #1247 needs attention</p>
+                                        <p class="text-sm font-medium text-red-800">System Update</p>
+                                        <p class="text-xs text-red-600">Dashboard kini menampilkan data real-time.</p>
                                     </div>
                                 </div>
                             </div>
@@ -249,17 +256,13 @@
                         <div class="bg-white rounded-2xl shadow-lg p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
                             <div class="space-y-3">
-                                <button class="w-full bg-emerald-500 text-white py-3 rounded-xl hover:bg-emerald-600 transition flex items-center justify-center gap-2">
+                                <button onclick="window.location='<?= base_url('pemilik/pesanan/add') ?>'" class="w-full bg-emerald-500 text-white py-3 rounded-xl hover:bg-emerald-600 transition flex items-center justify-center gap-2">
                                     <i class="fas fa-plus"></i>
                                     Tambah Pesanan
                                 </button>
-                                <button class="w-full border border-emerald-500 text-emerald-500 py-3 rounded-xl hover:bg-emerald-50 transition flex items-center justify-center gap-2">
+                                <button onclick="window.location='<?= base_url('pemilik/pelanggan/add') ?>'" class="w-full border border-emerald-500 text-emerald-500 py-3 rounded-xl hover:bg-emerald-50 transition flex items-center justify-center gap-2">
                                     <i class="fas fa-user-plus"></i>
                                     Tambah Pelanggan
-                                </button>
-                                <button class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-50 transition flex items-center justify-center gap-2">
-                                    <i class="fas fa-download"></i>
-                                    Export Report
                                 </button>
                             </div>
                         </div>
@@ -269,16 +272,31 @@
         </main>
     </div>
     
+    <!-- Pass PHP data to JS -->
     <script>
-        // Branch Performance Pie Chart
+        var branchData = <?php echo json_encode($branch_performance); ?>;
+        var serviceData = <?php echo json_encode($service_volume); ?>;
+        var revenueData = <?php echo json_encode($revenue_trend); ?>;
+    </script>
+
+    <script>
+        // Utilities
+        function formatRupiah(num) {
+            return 'Rp ' + num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+        }
+
+        // 1. Branch Performance Pie Chart
         const branchCtx = document.getElementById('branchChart').getContext('2d');
+        const branchLabels = branchData.map(item => item.label);
+        const branchValues = branchData.map(item => item.value);
+        
         new Chart(branchCtx, {
             type: 'pie',
             data: {
-                labels: ['Seturan: 45.0%', 'Condongcatur: 30.0%', 'Gejayan: 25.0%'],
+                labels: branchLabels,
                 datasets: [{
-                    data: [45, 30, 25],
-                    backgroundColor: ['#10b981', '#34d399', '#6ee7b7'],
+                    data: branchValues,
+                    backgroundColor: ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0'],
                     borderWidth: 2,
                     borderColor: '#fff'
                 }]
@@ -289,55 +307,81 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: {
-                            font: { size: 12, family: 'Inter' },
-                            padding: 15
-                        }
+                        labels: { font: { size: 12, family: 'Inter' }, padding: 15 }
+                    },
+                    tooltip: {
+                         callbacks: {
+                             label: function(context) {
+                                 let label = context.label || '';
+                                 if (label) { label += ': '; }
+                                 if (context.parsed !== null) {
+                                     label += formatRupiah(context.parsed);
+                                 }
+                                 return label;
+                             }
+                         }
                     }
                 }
             }
         });
         
-        // Service Volume Bar Chart
+        // 2. Service Volume Bar Chart
         const serviceCtx = document.getElementById('serviceChart').getContext('2d');
+        const serviceLabels = serviceData.map(item => item.nama_layanan);
+        const serviceValues = serviceData.map(item => item.total);
+
         new Chart(serviceCtx, {
             type: 'bar',
             data: {
-                labels: ['Cleaning', 'Whitening', 'Repair', 'Protection'],
+                labels: serviceLabels,
                 datasets: [{
-                    data: [45, 32, 18, 25],
-                    backgroundColor: ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0'],
+                    data: serviceValues,
+                    backgroundColor: ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#059669'],
                     borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
-                plugins: {
-                    legend: { display: false }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 50,
-                        grid: { color: '#f3f4f6' }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
+                    y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                    x: { grid: { display: false } }
                 }
             }
         });
         
-        // Revenue Trend Line Chart
+        // 3. Revenue Trend Line Chart
         const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        // Need to process revenueData (month/total) to full array
+        // Assuming revenueData is array of objects {bulan: "1", total: "50000", ...}
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let revLabels = [];
+        let revValues = [];
+        
+        // Initialize 12 months with 0
+        let monthlyTotals = new Array(12).fill(0);
+        
+        if (revenueData && Array.isArray(revenueData)) {
+            revenueData.forEach(item => {
+                let monthIdx = parseInt(item.bulan) - 1;
+                if (monthIdx >= 0 && monthIdx < 12) {
+                    monthlyTotals[monthIdx] = parseInt(item.total);
+                }
+            });
+        }
+        
+        // Use up to current month or full year? Let's show full year
+        revLabels = monthNames;
+        revValues = monthlyTotals;
+
         new Chart(revenueCtx, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                labels: revLabels,
                 datasets: [{
                     label: 'Revenue',
-                    data: [8000, 9500, 10200, 10000, 12000, 13200],
+                    data: revValues,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     tension: 0.4,
@@ -352,41 +396,45 @@
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: { size: 12, family: 'Inter', weight: 'bold' }
-                        }
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                         callbacks: {
+                             label: function(context) {
+                                 return 'Revenue: ' + formatRupiah(context.parsed.y);
+                             }
+                         }
                     }
                 },
                 scales: {
                     y: {
-                        beginAtZero: false,
-                        min: 6000,
-                        max: 14000,
+                        beginAtZero: true,
                         ticks: {
-                            callback: function(value) {
-                                return value/1000 + 'k';
-                            }
+                            callback: function(value) { return value/1000 + 'k'; }
                         },
                         grid: { color: '#f3f4f6' }
                     },
-                    x: {
-                        grid: { display: false }
-                    }
+                    x: { grid: { display: false } }
                 }
             }
         });
         
-        // Service Distribution Pie Chart
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            const successAlert = document.getElementById('alert-success');
+            const errorAlert = document.getElementById('alert-error');
+            if (successAlert) successAlert.style.display = 'none';
+            if (errorAlert) errorAlert.style.display = 'none';
+        }, 5000);
+
+        // 4. Service Distribution Pie Chart (Using same data as Service Volume)
         const distributionCtx = document.getElementById('distributionChart').getContext('2d');
         new Chart(distributionCtx, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
-                labels: ['Cleaning: 45.0%', 'Whitening: 30.0%', 'Repair: 25.0%'],
+                labels: serviceLabels,
                 datasets: [{
-                    data: [45, 30, 25],
-                    backgroundColor: ['#10b981', '#6ee7b7', '#34d399'],
+                    data: serviceValues,
+                    backgroundColor: ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#059669'],
                     borderWidth: 2,
                     borderColor: '#fff'
                 }]
@@ -397,10 +445,7 @@
                 plugins: {
                     legend: {
                         position: 'right',
-                        labels: {
-                            font: { size: 11, family: 'Inter' },
-                            padding: 10
-                        }
+                        labels: { font: { size: 11, family: 'Inter' }, padding: 10 }
                     }
                 }
             }

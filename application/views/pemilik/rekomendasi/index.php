@@ -88,13 +88,50 @@
                         </div>
                         <div>
                             <h2 class="text-xl font-semibold text-gray-800">KixEra AI Assistant</h2>
-                            <p class="text-sm text-gray-500">Powered by ChatGPT</p>
+                            <p class="text-sm text-gray-500">Powered by Google Gemini</p>
                         </div>
                     </div>
                     
-                    <button id="generateBtn" onclick="generateRecommendation()" class="gradient-emerald text-white px-6 py-3 rounded-xl hover:opacity-90 transition flex items-center gap-2 font-medium shadow-lg">
+                </div>
+                
+                <!-- Mode Toggle & Custom Prompt Section -->
+                <div class="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Mode Analisis</h3>
+                    </div>
+                    <div class="flex gap-3 mb-4">
+                        <button id="autoModeBtn" class="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 bg-emerald-500 text-white shadow-md">
+                            <i class="fas fa-chart-line mr-2"></i>Auto Analysis
+                        </button>
+                        <button id="customModeBtn" class="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 bg-gray-100 text-gray-600 hover:bg-gray-200">
+                            <i class="fas fa-comment-dots mr-2"></i>Custom Prompt
+                        </button>
+                    </div>
+                    
+                    <!-- Custom Prompt Section (Hidden by default) -->
+                    <div id="customPromptSection" class="hidden mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Tanyakan apa saja tentang bisnis Anda:
+                        </label>
+                        <textarea 
+                            id="customPromptInput" 
+                            class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none" 
+                            rows="4" 
+                            maxlength="1000"
+                            placeholder="Contoh: Bagaimana cara meningkatkan customer retention di bulan depan? Atau: Analisis peluang untuk membuka cabang baru berdasarkan data saat ini."
+                        ></textarea>
+                        <div class="flex justify-between items-center mt-2">
+                            <span class="text-xs text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>AI akan menjawab dengan konteks data bisnis Anda
+                            </span>
+                            <span id="charCount" class="text-xs text-gray-500">0/1000</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Generate Button -->
+                    <button id="generateBtn" onclick="generateRecommendation()" class="w-full gradient-emerald text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 mt-6">
                         <i class="fas fa-magic"></i>
-                        Generate New Recommendation
+                        <span>Generate Recommendation</span>
                     </button>
                 </div>
                 
@@ -209,31 +246,84 @@
                 
             </div>
             
-            <!-- Include Footer disini -->
-            <?php include 'footer.php'; ?>
-            
         </main>
     </div>
     
     <script>
-        // Simulated business data - replace with actual data from your backend
-        const businessData = {
-            totalOrders: 127,
-            monthlyRevenue: 45000000,
-            activeCustomers: 1842,
-            pendingPickups: 23,
-            topServices: ['Deep Cleaning', 'Whitening', 'Repair'],
-            branches: ['Seturan', 'Condongcatur', 'Gejayan']
-        };
+        // Real business data from PHP
+        const businessData = <?php echo json_encode($business_data ?? []); ?>;
         
         let currentRecommendation = null;
         let impactChartInstance = null;
+        let currentMode = 'auto'; // 'auto' or 'custom'
         
-        // Function to call ChatGPT API
+        // Mode Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Rekomendasi Script Loaded v' + Date.now());
+            
+            const autoModeBtn = document.getElementById('autoModeBtn');
+            const customModeBtn = document.getElementById('customModeBtn');
+            const customPromptSection = document.getElementById('customPromptSection');
+            const customPromptInput = document.getElementById('customPromptInput');
+            const charCount = document.getElementById('charCount');
+            
+            // Auto Mode Click
+            if (autoModeBtn) {
+                autoModeBtn.addEventListener('click', function() {
+                    currentMode = 'auto';
+                    autoModeBtn.classList.remove('bg-gray-100','text-gray-600');
+                    autoModeBtn.classList.add('bg-emerald-500', 'text-white', 'shadow-md');
+                    
+                    if (customModeBtn) {
+                        customModeBtn.classList.remove('bg-emerald-500', 'text-white', 'shadow-md');
+                        customModeBtn.classList.add('bg-gray-100', 'text-gray-600');
+                    }
+                    if (customPromptSection) customPromptSection.classList.add('hidden');
+                });
+            }
+            
+            // Custom Mode Click
+            if (customModeBtn) {
+                customModeBtn.addEventListener('click', function() {
+                    currentMode = 'custom';
+                    customModeBtn.classList.remove('bg-gray-100', 'text-gray-600');
+                    customModeBtn.classList.add('bg-emerald-500', 'text-white', 'shadow-md');
+                    
+                    if (autoModeBtn) {
+                        autoModeBtn.classList.remove('bg-emerald-500', 'text-white', 'shadow-md');
+                        autoModeBtn.classList.add('bg-gray-100', 'text-gray-600');
+                    }
+                    if (customPromptSection) customPromptSection.classList.remove('hidden');
+                    if (customPromptInput) customPromptInput.focus();
+                });
+            }
+            
+            // Character Counter
+            if (customPromptInput && charCount) {
+                customPromptInput.addEventListener('input', function() {
+                    const length = this.value.length;
+                    charCount.textContent = length + '/1000';
+                    
+                    if (length > 900) {
+                        charCount.classList.add('text-orange-500', 'font-semibold');
+                    } else {
+                        charCount.classList.remove('text-orange-500', 'font-semibold');
+                    }
+                });
+            }
+        });
+        
         async function generateRecommendation() {
             const generateBtn = document.getElementById('generateBtn');
             const loadingState = document.getElementById('loadingState');
             const recommendationCard = document.getElementById('recommendationCard');
+            
+            // Null checks
+            if (!generateBtn || !loadingState) {
+                console.error('Required elements not found');
+                alert('Error: Page elements not loaded properly. Please refresh the page.');
+                return;
+            }
             
             // Show loading state
             generateBtn.disabled = true;
@@ -241,129 +331,126 @@
             loadingState.classList.remove('hidden');
             
             try {
-                // Prepare prompt for ChatGPT
-                const prompt = `Sebagai AI business consultant untuk bisnis laundry sepatu "KixEra", analisis data berikut dan berikan rekomendasi strategis:
-
-Data Bisnis:
-- Total pesanan hari ini: ${businessData.totalOrders}
-- Pendapatan bulanan: Rp ${businessData.monthlyRevenue.toLocaleString('id-ID')}
-- Pelanggan aktif: ${businessData.activeCustomers}
-- Pending pickups: ${businessData.pendingPickups}
-- Layanan terpopuler: ${businessData.topServices.join(', ')}
-- Cabang: ${businessData.branches.join(', ')}
-
-Berikan:
-1. Rekomendasi strategis (2-3 paragraf)
-2. 3 Key insights dengan format bullet point
-3. Prediksi dampak dalam persentase (revenue increase, customer retention, efficiency)
-
-Format response dalam JSON:
-{
-  "recommendation": "text...",
-  "insights": ["insight 1", "insight 2", "insight 3"],
-  "impact": {
-    "revenue": 15,
-    "retention": 23,
-    "efficiency": 18
-  }
-}`;
+                // Prepare request body
+                const requestBody = {};
                 
-                // Call ChatGPT API
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                // Debug logging
+                console.log('Current Mode:', currentMode);
+                
+                // If custom mode, validate and add custom prompt
+                if (currentMode === 'custom') {
+                    const customPromptInput = document.getElementById('customPromptInput');
+                    const customPrompt = customPromptInput ? customPromptInput.value.trim() : '';
+                    
+                    console.log('Custom Prompt Input Element:', customPromptInput);
+                    console.log('Custom Prompt Value:', customPrompt);
+                    
+                    if (!customPrompt) {
+                        alert('Mohon masukkan pertanyaan atau prompt Anda.');
+                        generateBtn.disabled = false;
+                        generateBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>Generate New Recommendation';
+                        loadingState.classList.add('hidden');
+                        return;
+                    }
+                    
+                    requestBody.custom_prompt = customPrompt;
+                    console.log('Sending custom_prompt:', customPrompt);
+                } else {
+                    console.log('Using AUTO mode - no custom prompt');
+                }
+                
+                console.log('Request Body:', requestBody);
+                
+                // Call backend API
+                const response = await fetch('<?= base_url("pemilik/rekomendasi/generate") ?>', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer YOUR_OPENAI_API_KEY_HERE' // Replace with your API key
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({
-                        model: 'gpt-3.5-turbo',
-                        messages: [
-                            {
-                                role: 'system',
-                                content: 'You are a business intelligence AI assistant specializing in laundry and shoe cleaning business optimization.'
-                            },
-                            {
-                                role: 'user',
-                                content: prompt
-                            }
-                        ],
-                        temperature: 0.7,
-                        max_tokens: 1000
-                    })
+                    body: JSON.stringify(requestBody)
                 });
                 
                 if (!response.ok) {
-                    throw new Error('API request failed');
+                    const errorText = await response.text();
+                    console.error('API Response Error:', errorText);
+                    throw new Error('API request failed with status: ' + response.status);
                 }
                 
-                const data = await response.json();
-                const aiResponse = JSON.parse(data.choices[0].message.content);
+                const result = await response.json();
+                console.log('API Response:', result);
                 
-                // Display recommendation
-                displayRecommendation(aiResponse);
+                if (result.success) {
+                    displayRecommendation(result.data);
+                } else {
+                    throw new Error(result.message || 'Failed to generate recommendation');
+                }
                 
             } catch (error) {
                 console.error('Error:', error);
+                alert('Gagal generate rekomendasi: ' + error.message + '\n\nSilakan cek console untuk detail error atau hubungi administrator.');
+            } finally {
+                // Hide loading state safely
+                const loadingState = document.getElementById('loadingState');
+                if (loadingState) {
+                    loadingState.classList.add('hidden');
+                }
                 
-                // Fallback: Use demo recommendation if API fails
-                const demoRecommendation = {
-                    recommendation: `Berdasarkan analisis data bisnis KixEra, terdapat beberapa peluang strategis yang dapat dioptimalkan. 
-
-Pertama, dengan total 127 pesanan hari ini dan 23 pending pickups, terdapat indikasi bahwa kapasitas operasional sedang dalam tekanan. Disarankan untuk mengimplementasikan sistem penjadwalan otomatis dan menambah 1-2 kurir di jam sibuk (10:00-14:00) untuk mengurangi pending pickups hingga maksimal 10 per hari.
-
-Kedua, dengan pendapatan bulanan Rp 45 juta dan 1,842 pelanggan aktif, ada peluang untuk meningkatkan customer lifetime value melalui program loyalitas bertingkat. Berdasarkan pola pembelian, pelanggan yang menggunakan layanan Deep Cleaning cenderung repeat order 3x lebih sering. Rekomendasi: tawarkan paket bundling "Premium Care Package" dengan diskon 15% untuk komitmen 3 bulan, yang berpotensi meningkatkan retention hingga 23% dan revenue 15%.`,
-                    insights: [
-                        "Pending pickups 23 unit mengindikasikan bottleneck di proses logistik - optimasi scheduling dapat meningkatkan efisiensi 18%",
-                        "Deep Cleaning service memiliki repeat rate tertinggi - fokus marketing ke segment ini dapat boost revenue 15%",
-                        "Customer aktif 1,842 dengan revenue Rp 45jt = Average Order Value Rp 24,400 - ada peluang upselling ke premium services"
-                    ],
-                    impact: {
-                        revenue: 15,
-                        retention: 23,
-                        efficiency: 18
-                    }
-                };
-                
-                displayRecommendation(demoRecommendation);
+                const generateBtn = document.getElementById('generateBtn');
+                if (generateBtn) {
+                    generateBtn.disabled = false;
+                    const btnText = document.getElementById('generateBtnText'); // Try to find text span if exists
+                     if (btnText) {
+                        btnText.textContent = 'Generate Recommendation';
+                     } else {
+                        generateBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>Generate New Recommendation';
+                     }
+                }
             }
-            
-            // Hide loading state
-            loadingState.classList.add('hidden');
-            generateBtn.disabled = false;
-            generateBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>Generate New Recommendation';
         }
         
         function displayRecommendation(data) {
             currentRecommendation = data;
             
             // Update date
-            const now = new Date();
-            document.getElementById('recommendationDate').textContent = 
-                now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const dateEl = document.getElementById('recommendationDate');
+            if (dateEl) {
+                const now = new Date();
+                dateEl.textContent = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
             
             // Update content
             const content = document.getElementById('recommendationContent');
-            content.innerHTML = `
-                <h4 class="text-sm font-bold text-gray-700 mb-3">Recommendation:</h4>
-                <div class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">${data.recommendation}</div>
-            `;
+            if (content) {
+                content.innerHTML = `
+                    <h4 class="text-sm font-bold text-gray-700 mb-3">Recommendation:</h4>
+                    <div class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">${data.recommendation}</div>
+                `;
+            }
             
-            // Show action buttons
-            document.getElementById('actionButtons').classList.remove('hidden');
+            // Show action buttons safely
+            const actionButtons = document.getElementById('actionButtons');
+            if (actionButtons) {
+                actionButtons.classList.remove('hidden');
+            }
             
             // Display insights
             const insightsContainer = document.getElementById('keyInsights');
-            insightsContainer.innerHTML = data.insights.map((insight, index) => `
-                <div class="flex items-start gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                    <div class="w-8 h-8 gradient-emerald rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span class="text-white font-bold text-sm">${index + 1}</span>
+            if (insightsContainer && data.insights) {
+                insightsContainer.innerHTML = data.insights.map((insight, index) => `
+                    <div class="flex items-start gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                        <div class="w-8 h-8 gradient-emerald rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-bold text-sm">${index + 1}</span>
+                        </div>
+                        <p class="text-sm text-gray-700 leading-relaxed">${insight}</p>
                     </div>
-                    <p class="text-sm text-gray-700 leading-relaxed">${insight}</p>
-                </div>
-            `).join('');
+                `).join('');
+            }
             
             // Update impact chart
-            updateImpactChart(data.impact);
+            if (data.impact) {
+                updateImpactChart(data.impact);
+            }
             
             // Add to history
             addToHistory(data);
@@ -456,8 +543,33 @@ Kedua, dengan pendapatan bulanan Rp 45 juta dan 1,842 pelanggan aktif, ada pelua
             alert('Fitur implement akan mengarahkan ke halaman action plan atau workflow automation');
         }
         
-        function saveRecommendation() {
-            alert('Recommendation saved successfully!');
+        async function saveRecommendation() {
+            if (!currentRecommendation || !currentRecommendation.id_rekomendasi) {
+                alert('No recommendation to save');
+                return;
+            }
+            
+            try {
+                const response = await fetch('<?= base_url("pemilik/rekomendasi/save") ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: `id_rekomendasi=${currentRecommendation.id_rekomendasi}`
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Recommendation saved successfully!');
+                } else {
+                    alert('Failed to save: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to save recommendation');
+            }
         }
         
         function shareRecommendation() {

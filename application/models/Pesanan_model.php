@@ -86,7 +86,7 @@ class Pesanan_model extends CI_Model
         ]);
     }
 
-    public function getPesananById($id_pesanan)
+    public function getPesananById($id_pesanan, $id_pemilik = null)
     {
         $this->db->select('
             pesanan.*,
@@ -104,8 +104,23 @@ class Pesanan_model extends CI_Model
 
         $this->db->where('pesanan.id_pesanan', $id_pesanan);
         $this->db->where('pesanan.deleted_at IS NULL');
+        
+        if ($id_pemilik) {
+            $this->db->where('cabang.id_pemilik', $id_pemilik);
+        }
 
         return $this->db->get()->row();
+    }
+    
+    // Verify ownership helper
+    public function verify_ownership($id_pesanan, $id_pemilik) {
+        $this->db->select('pesanan.id_pesanan');
+        $this->db->from('pesanan');
+        $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
+        $this->db->where('pesanan.id_pesanan', $id_pesanan);
+        $this->db->where('cabang.id_pemilik', $id_pemilik);
+        $query = $this->db->get();
+        return $query->num_rows() > 0;
     }
 
     // Get pesanan detail from view (includes all joins)
@@ -178,5 +193,78 @@ class Pesanan_model extends CI_Model
         $this->db->where('id_pesanan', $id_pesanan);
         $row = $this->db->get('pesanan')->row();
         return $row ? $row->status_pesanan : null;
+    }
+    // =============================================
+    // DASHBOARD STATISTICS
+    // =============================================
+
+    public function countOrdersToday($id_pemilik)
+    {
+        $this->db->from($this->table);
+        $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
+        $this->db->where('cabang.id_pemilik', $id_pemilik);
+        $this->db->where('DATE(pesanan.tgl_masuk)', date('Y-m-d'));
+        $this->db->where('pesanan.deleted_at IS NULL');
+        return $this->db->count_all_results();
+    }
+
+    public function countOrdersThisMonth($id_pemilik)
+    {
+        $this->db->from($this->table);
+        $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
+        $this->db->where('cabang.id_pemilik', $id_pemilik);
+        $this->db->where('YEAR(pesanan.tgl_masuk)', date('Y'));
+        $this->db->where('MONTH(pesanan.tgl_masuk)', date('m'));
+        $this->db->where('pesanan.deleted_at IS NULL');
+        return $this->db->count_all_results();
+    }
+
+
+    public function countPendingPickups($id_pemilik)
+    {
+        $this->db->from($this->table);
+        $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
+        $this->db->where('cabang.id_pemilik', $id_pemilik);
+        $this->db->where('pesanan.status_pesanan', 'siap_diambil');
+        $this->db->where('pesanan.deleted_at IS NULL');
+        return $this->db->count_all_results();
+    }
+
+    public function getRecentOrders($limit, $id_pemilik)
+    {
+        $this->db->select('
+            pesanan.*,
+            pelanggan.nama AS nama_pelanggan,
+            layanan.nama_layanan
+        ');
+        $this->db->from($this->table);
+        $this->db->join('pelanggan', 'pelanggan.id_pelanggan = pesanan.id_pelanggan', 'left');
+        $this->db->join('layanan', 'layanan.id_layanan = pesanan.id_layanan', 'left');
+        $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
+        
+        $this->db->where('cabang.id_pemilik', $id_pemilik);
+        $this->db->where('pesanan.deleted_at IS NULL');
+        
+        $this->db->order_by('pesanan.tgl_masuk', 'DESC');
+        $this->db->limit($limit);
+        
+        return $this->db->get()->result();
+    }
+
+    public function getServiceVolume($id_pemilik)
+    {
+        $this->db->select('layanan.nama_layanan, COUNT(pesanan.id_pesanan) as total');
+        $this->db->from($this->table);
+        $this->db->join('layanan', 'layanan.id_layanan = pesanan.id_layanan', 'left');
+        $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
+        
+        $this->db->where('cabang.id_pemilik', $id_pemilik);
+        $this->db->where('pesanan.deleted_at IS NULL');
+        
+        $this->db->group_by('layanan.id_layanan, layanan.nama_layanan');
+        $this->db->order_by('total', 'DESC');
+        $this->db->limit(5); // Top 5 services
+        
+        return $this->db->get()->result();
     }
 }

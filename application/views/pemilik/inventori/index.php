@@ -14,7 +14,7 @@
         <!-- Sidebar (gunakan sidebar yang sudah ada) -->
         
         <!-- Main Content -->
-        <main class="flex-1 ml-64">
+        <main class="flex-1 lg:ml-64">
             <!-- Header -->
             <header class="bg-white border-b border-gray-100 shadow-sm px-6 py-4">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

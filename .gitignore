@@ -30,3 +30,8 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 *.sublime-project
 /tests/tests/
 /tests/results/
+
+# API Keys & Sensitive Config
+#-------------------------
+application/config/gemini.php
+application/config/google_config.php

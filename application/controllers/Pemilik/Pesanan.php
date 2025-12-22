@@ -9,28 +9,30 @@ class Pesanan extends CI_Controller
         $this->load->model('Pesanan_model');
         $this->load->model('Owner_model');
         $this->load->library('session');
+        $this->load->library('auth_library');
+        
+        // Require owner role
+        $this->auth_library->require_role('owner');
+    }
+
+    // Helper to get id_pemilik
+    private function get_id_pemilik() {
+        $id_pemilik = $this->session->userdata('id_pemilik');
+        if (empty($id_pemilik)) {
+             $user_id = $this->session->userdata('user_id');
+             if ($user_id) {
+                 $this->load->model('Owner_model');
+                 $owner = $this->Owner_model->getOwnerByUserId($user_id);
+                 if ($owner) return $owner->id_pemilik;
+             }
+        }
+        return $id_pemilik;
     }
 
     public function index()
     {
         // Determine pemilik id from session or user mapping
-        $user_id = $this->session->userdata('user_id');
-        $id_pemilik = $this->session->userdata('id_pemilik');
-        if (empty($id_pemilik) && !empty($user_id)) {
-            $owner = $this->Owner_model->getOwnerByUserId($user_id);
-            if ($owner) {
-                $id_pemilik = isset($owner->id_pemilik) ? $owner->id_pemilik : (isset($owner->id_owner) ? $owner->id_owner : null);
-            }
-        }
-
-        // Fallback: Jika belum ada id_pemilik, ambil pemilik pertama (untuk testing)
-        if (empty($id_pemilik)) {
-            $this->load->model('Owner_model');
-            $first_owner = $this->db->get('pemilik')->row();
-            if ($first_owner) {
-                $id_pemilik = isset($first_owner->id_pemilik) ? $first_owner->id_pemilik : null;
-            }
-        }
+        $id_pemilik = $this->get_id_pemilik();
 
         $data['status_list'] = [
             'diterima' => 'Diterima',
@@ -61,6 +63,13 @@ class Pesanan extends CI_Controller
     // View detail pesanan
     public function view($id)
     {
+        $id_pemilik = $this->get_id_pemilik();
+        // Access Control Check
+        if (!$this->Pesanan_model->verify_ownership($id, $id_pemilik)) {
+            show_error('Anda tidak memiliki akses ke pesanan ini', 403);
+            return;
+        }
+
         $pesanan = $this->Pesanan_model->getPesananDetailFromView($id);
 
         if (!$pesanan) {
@@ -82,11 +91,19 @@ class Pesanan extends CI_Controller
     public function update()
     {
         $id = $this->input->post('id_pesanan');
+        $id_pemilik = $this->get_id_pemilik();
+        
         if (empty($id)) {
             $resp = ['status' => 'error', 'message' => 'Missing id_pesanan'];
             return $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode($resp));
+        }
+
+        // Access Control Check
+        if (!$this->Pesanan_model->verify_ownership($id, $id_pemilik)) {
+             $resp = ['status' => 'error', 'message' => 'Akses ditolak'];
+             return $this->output->set_content_type('application/json')->set_output(json_encode($resp));
         }
 
         $data = $this->input->post();
@@ -120,11 +137,19 @@ class Pesanan extends CI_Controller
     public function delete()
     {
         $id = $this->input->post('id_pesanan');
+        $id_pemilik = $this->get_id_pemilik();
+        
         if (empty($id)) {
             $resp = ['status' => 'error', 'message' => 'Missing id_pesanan'];
             return $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode($resp));
+        }
+        
+        // Access Control Check
+        if (!$this->Pesanan_model->verify_ownership($id, $id_pemilik)) {
+             $resp = ['status' => 'error', 'message' => 'Akses ditolak'];
+             return $this->output->set_content_type('application/json')->set_output(json_encode($resp));
         }
 
         $deleted = $this->Pesanan_model->deletePesanan($id);
@@ -141,7 +166,14 @@ class Pesanan extends CI_Controller
 
     public function get_pesanan_json($id)
     {
-        $data = $this->Pesanan_model->getPesananById($id);
+        $id_pemilik = $this->get_id_pemilik();
+        // Access Control Check implicit in getPesananById with parameter
+        $data = $this->Pesanan_model->getPesananById($id, $id_pemilik);
+        
+        if (!$data) {
+             echo json_encode(['error' => 'Not found or access denied']);
+             return;
+        }
 
         echo json_encode($data);
     }
@@ -149,10 +181,11 @@ class Pesanan extends CI_Controller
     // Method get() untuk modal edit - mengembalikan format {status, data}
     public function get($id)
     {
-        $pesanan = $this->Pesanan_model->getPesananById($id);
+        $id_pemilik = $this->get_id_pemilik();
+        $pesanan = $this->Pesanan_model->getPesananById($id, $id_pemilik);
 
         if (!$pesanan) {
-            $resp = ['status' => 'error', 'message' => 'Pesanan tidak ditemukan'];
+            $resp = ['status' => 'error', 'message' => 'Pesanan tidak ditemukan atau akses ditolak'];
         } else {
             $resp = ['status' => 'success', 'data' => $pesanan];
         }
@@ -175,6 +208,12 @@ class Pesanan extends CI_Controller
         $id = isset($input['id_pesanan']) ? $input['id_pesanan'] : null;
         if (empty($id)) {
             return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'error', 'message' => 'Missing id_pesanan']));
+        }
+        
+        $id_pemilik = $this->get_id_pemilik();
+        // Access Control Check
+        if (!$this->Pesanan_model->verify_ownership($id, $id_pemilik)) {
+             return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'error', 'message' => 'Akses ditolak']));
         }
 
         // whitelist fields (do NOT include `cabang` since pesanan table has no such column)

@@ -13,11 +13,11 @@ $CI =& get_instance();
 $segment2 = $CI->uri->segment(2);
 // Mengambil segment ke-2 dari URL
 ?>
-<aside id="sidebar" class="sidebar w-64 bg-teal-700 min-h-screen flex flex-col fixed left-0 top-0 z-40 transition-all duration-300 ease-in-out transform -translate-x-full lg:translate-x-0">
+<aside id="sidebar" class="sidebar w-64 bg-teal-700 h-screen flex flex-col fixed left-0 top-0 z-40 transition-all duration-300 ease-in-out transform -translate-x-full lg:translate-x-0 overflow-hidden">
     <!-- Logo Area -->
     <div class="h-24 border-b border-teal-600 flex items-center justify-between px-6">
         <div class="flex items-center gap-2">
-            <img src="<?= base_url('assets/img/logo/logoPutih.svg') ?>" alt="KixEra Logo" class="h-30 w-auto">
+            <img src="<?= base_url('assets/img/logo/logoPutih.svg') ?>" alt="KixEra Logo" class="h-25 w-auto">
         </div>
         <!-- Close button untuk mobile -->
         <button id="closeSidebarBtn" class="lg:hidden text-white text-2xl hover:text-teal-200 transition-colors">
@@ -26,7 +26,7 @@ $segment2 = $CI->uri->segment(2);
     </div>
     
     <!-- Navigation Menu -->
-    <nav class="flex-1 px-4 py-6 overflow-y-auto">
+    <nav class="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar">
         <!-- Dashboard -->
         <a href="<?= base_url('pemilik/pemilik_dashboard') ?>" 
            class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'pemilik_dashboard') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">

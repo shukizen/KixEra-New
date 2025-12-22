@@ -1,0 +1,194 @@
+<!-- Mobile Menu Button (Hamburger) -->
+<button id="mobileMenuBtn" class="lg:hidden fixed top-6 left-4 z-50 bg-teal-700 text-white p-3 rounded-lg shadow-lg hover:bg-teal-600 transition-colors">
+    <i class="fas fa-bars text-xl"></i>
+</button>
+
+<!-- Overlay untuk mobile -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
+
+<!-- Sidebar -->
+<?php 
+// Get current URI segment untuk menentukan menu aktif
+$CI =& get_instance();
+$segment2 = $CI->uri->segment(2);
+// Mengambil segment ke-2 dari URL
+?>
+<aside id="sidebar" class="sidebar w-64 bg-teal-700 h-screen flex flex-col fixed left-0 top-0 z-40 transition-all duration-300 ease-in-out transform -translate-x-full lg:translate-x-0 overflow-hidden">
+    <!-- Logo Area -->
+    <div class="h-24 border-b border-teal-600 flex items-center justify-between px-6">
+        <div class="flex items-center gap-2">
+            <img src="<?= base_url('assets/img/logo/logoPutih.svg') ?>" alt="KixEra Logo" class="h-30 w-auto">
+        </div>
+        <!-- Close button untuk mobile -->
+        <button id="closeSidebarBtn" class="lg:hidden text-white text-2xl hover:text-teal-200 transition-colors">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <!-- Navigation Menu -->
+    <nav class="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar">
+        <!-- Dashboard -->
+        <a href="<?= base_url('admin/dashboard') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'dashboard') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-chart-line mr-3"></i>
+            Dashboard
+        </a>
+        
+        <!-- Manajemen Pengguna -->
+        <a href="<?= base_url('admin/manajemen_pengguna') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'manajemen_pengguna') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-users-cog mr-3"></i>
+            Manajemen Pengguna
+        </a>
+        
+        <!-- Paket Langganan -->
+        <a href="<?= base_url('admin/paket_langganan') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'paket_langganan') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-box mr-3"></i>
+            Paket Langganan
+        </a>
+        
+        <!-- Penagihan -->
+        <a href="<?= base_url('admin/penagihan') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'penagihan') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-file-invoice-dollar mr-3"></i>
+            Penagihan
+        </a>
+        
+        <!-- Monitoring Sistem -->
+        <a href="<?= base_url('admin/monitoring_sistem') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'monitoring_sistem') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-desktop mr-3"></i>
+            Monitoring Sistem
+        </a>
+        
+        <!-- Data Operasional -->
+        <a href="<?= base_url('admin/data_operasional') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'data_operasional') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-database mr-3"></i>
+            Data Operasional
+        </a>
+        
+        <!-- Data Master -->
+        <a href="<?= base_url('admin/data_master') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'data_master') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-folder mr-3"></i>
+            Data Master
+        </a>
+        
+        <!-- Notifikasi -->
+        <a href="<?= base_url('admin/notifikasi') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'notifikasi') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-bell mr-3"></i>
+            Notifikasi
+        </a>
+        
+        <!-- Backup & Restore -->
+        <a href="<?= base_url('admin/backup_restore') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'backup_restore') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-cloud-upload-alt mr-3"></i>
+            Backup & Restore
+        </a>
+        
+        <!-- Helpdesk -->
+        <a href="<?= base_url('admin/helpdesk') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'helpdesk') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-headset mr-3"></i>
+            Helpdesk
+        </a>
+        
+        <!-- Profil -->
+        <a href="<?= base_url('admin/profil') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'profil') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-user-circle mr-3"></i>
+            Profil
+        </a>
+        
+        <!-- Logout -->
+        <a href="<?= base_url('auth/logout') ?>" 
+           class="gradient-red flex items-center px-4 py-3 rounded-xl text-white font-medium hover:opacity-90 transition-opacity mt-4">
+            <i class="fas fa-sign-out-alt mr-3"></i>
+            Logout
+        </a>
+    </nav>
+</aside>
+
+<!-- JavaScript untuk Toggle Sidebar - LETAKKAN SEBELUM PENUTUP </body> -->
+<script>
+// Pastikan script ini berjalan setelah DOM ready
+(function() {
+    'use strict';
+    
+    function initSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        if (!sidebar || !mobileMenuBtn || !closeSidebarBtn || !overlay) {
+            console.error('Sidebar elements not found');
+            return;
+        }
+        
+        console.log('Sidebar script loaded successfully');
+        
+        // Fungsi untuk membuka sidebar
+        function openSidebar(e) {
+            if (e) e.preventDefault();
+            console.log('Opening sidebar...');
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Fungsi untuk menutup sidebar
+        function closeSidebar(e) {
+            if (e) e.preventDefault();
+            console.log('Closing sidebar...');
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('lg:translate-x-0');
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            
+            // Untuk mobile, tambahkan class khusus
+            if (window.innerWidth < 1024) {
+                const mainContent = document.querySelector('main');
+                if (mainContent) {
+                    mainContent.classList.remove('lg:ml-64');
+                }
+            }
+        }
+        
+        // Event listeners
+        mobileMenuBtn.addEventListener('click', openSidebar);
+        closeSidebarBtn.addEventListener('click', closeSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        
+        // Auto close sidebar saat link diklik (mobile)
+        const sidebarLinks = sidebar.querySelectorAll('a');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth < 1024) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        // Close sidebar on window resize to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+    
+    // Jalankan saat DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSidebar);
+    } else {
+        initSidebar();
+    }
+})();
+</script>
