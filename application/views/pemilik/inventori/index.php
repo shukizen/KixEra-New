@@ -14,7 +14,7 @@
         <!-- Sidebar (gunakan sidebar yang sudah ada) -->
         
         <!-- Main Content -->
-        <main class="flex-1 lg:ml-64">
+        <main class="flex-1 ml-64">
             <!-- Header -->
             <header class="bg-white border-b border-gray-100 shadow-sm px-6 py-4">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -52,7 +52,7 @@
                     <!-- Top Penggunaan Item -->
                     <div class="bg-white rounded-2xl shadow-lg p-8">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4">Top Penggunaan Item</h2>
-                        <div class="h-64">
+                        <div class="h-64 relative">
                             <canvas id="usageChart"></canvas>
                         </div>
                     </div>
@@ -60,7 +60,7 @@
                     <!-- Inventory Per Kategori -->
                     <div class="bg-white rounded-2xl shadow-lg p-8">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4">Inventory Per Kategori</h2>
-                        <div class="h-64">
+                        <div class="h-64 relative">
                             <canvas id="categoryChart"></canvas>
                         </div>
                     </div>
@@ -68,7 +68,7 @@
                     <!-- Tren Jumlah Stok -->
                     <div class="bg-white rounded-2xl shadow-lg p-8">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4">Tren Jumlah Stok</h2>
-                        <div class="h-64">
+                        <div class="h-64 relative">
                             <canvas id="trendChart"></canvas>
                         </div>
                     </div>
@@ -252,6 +252,29 @@
     
     let usageChart, categoryChart, trendChart;
     
+    // Notification function
+    function showNotification(message, type = 'info') {
+        const existing = document.getElementById('temp-notification');
+        if (existing) {
+            existing.remove();
+        }
+        
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-500 text-white' :
+            type === 'error' ? 'bg-red-500 text-white' :
+            'bg-blue-500 text-white'
+        }`;
+        notification.textContent = message;
+        notification.id = 'temp-notification';
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+    
     // helper format rupiah
     function formatRupiah(value) {
         if (value === null || value === undefined || value === '') return '-';
@@ -417,7 +440,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: { legend: { display: true } },
                     scales: {
                         y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: '#e5e7eb' } },
@@ -464,7 +487,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 12 } }
                     }
@@ -535,7 +558,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: { legend: { position: 'bottom', labels: { font: { size: 10, weight: 'bold' }, padding: 10, boxWidth: 12 } } },
                     scales: {
                         y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: '#e5e7eb' } },
@@ -588,18 +611,18 @@
             dataType: 'json',
             success: function(response) {
                 if(response.success) {
-                    alert(response.message);
+                    showNotification(response.message, 'success');
                     closeModal();
                     // update table & charts without reload
                     loadInventory();
                     loadChartData();
                 } else {
-                    alert(response.message || 'Gagal menyimpan data');
+                    showNotification(response.message || 'Gagal menyimpan data', 'error');
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error:', error);
-                alert('Terjadi kesalahan: ' + (xhr.responseText || error));
+                showNotification('Terjadi kesalahan: ' + (xhr.responseText || error), 'error');
             }
         });
     });
@@ -661,12 +684,12 @@
                     $('#viewContent').html(html);
                     $('#viewModal').removeClass('hidden');
                 } else {
-                    alert('Data tidak ditemukan');
+                    showNotification('Data tidak ditemukan', 'error');
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error:', error);
-                alert('Terjadi kesalahan saat mengambil data');
+                showNotification('Terjadi kesalahan saat mengambil data', 'error');
             }
         });
     }
@@ -692,12 +715,12 @@
                     $('#keterangan').val(item.keterangan);
                     $('#itemModal').removeClass('hidden');
                 } else {
-                    alert('Data tidak ditemukan');
+                    showNotification('Data tidak ditemukan', 'error');
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error:', error);
-                alert('Terjadi kesalahan saat mengambil data');
+                showNotification('Terjadi kesalahan saat mengambil data', 'error');
             }
         });
     }
@@ -711,17 +734,17 @@
                 dataType: 'json',
                 success: function(response) {
                     if(response.success) {
-                        alert(response.message);
+                        showNotification(response.message, 'success');
                         // update charts & table
                         loadChartData();
                         loadInventory();
                     } else {
-                        alert(response.message);
+                        showNotification(response.message, 'error');
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
-                    alert('Terjadi kesalahan saat menghapus data');
+                    showNotification('Terjadi kesalahan saat menghapus data', 'error');
                 }
             });
         }
@@ -733,7 +756,8 @@
         loadChartData();
         loadInventory();
     });
-</script>
+
+    
 </script>
 </body>
 </html>

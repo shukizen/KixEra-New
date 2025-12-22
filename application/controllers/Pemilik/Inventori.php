@@ -7,33 +7,28 @@ class Inventori extends CI_Controller {
         parent::__construct();
         $this->load->model('Inventorimodel');
         $this->load->library('form_validation');
-        $this->load->library('auth_library');
-        $this->load->library('session');
         
-        // Require owner role
-        $this->auth_library->require_role('owner');
+        // Check if user is logged in
+        if (!$this->session->userdata('logged_in')) {
+            redirect('auth/login');
+        }
+        
+        // Cek apakah id_pemilik ada di session
+        if (!$this->session->userdata('id_pemilik')) {
+            show_error('ID Pemilik tidak ditemukan. Silakan login kembali.', 403);
+        }
     }
     
-    // Helper to get id_pemilik
+    // Fungsi helper untuk mendapatkan id_pemilik dari session
     private function get_id_pemilik() {
-        $id_pemilik = $this->session->userdata('id_pemilik');
-        if (empty($id_pemilik)) {
-            // Fallback for testing or if session structure is different
-             $user_id = $this->session->userdata('user_id');
-             if ($user_id) {
-                 $this->load->model('Owner_model');
-                 $owner = $this->Owner_model->getOwnerByUserId($user_id);
-                 if ($owner) return $owner->id_pemilik;
-             }
-        }
-        return $id_pemilik;
+        return $this->session->userdata('id_pemilik');
     }
-
+    
     // Main inventory page
     public function index() {
-        $id_pemilik = $this->get_id_pemilik();
         $search = $this->input->get('search');
         $category = $this->input->get('category');
+        $id_pemilik = $this->get_id_pemilik();
         
         $data['inventory_items'] = $this->Inventorimodel->get_all_inventory($search, $category, $id_pemilik);
         $data['stats'] = $this->Inventorimodel->get_inventory_stats($id_pemilik);
@@ -48,9 +43,9 @@ class Inventori extends CI_Controller {
     
     // Get inventory data as JSON (for AJAX)
     public function get_inventory() {
-        $id_pemilik = $this->get_id_pemilik();
         $search = $this->input->post('search');
         $category = $this->input->post('category');
+        $id_pemilik = $this->get_id_pemilik();
         
         $items = $this->Inventorimodel->get_all_inventory($search, $category, $id_pemilik);
         
@@ -80,7 +75,6 @@ class Inventori extends CI_Controller {
     
     // Add new inventory item
     public function add() {
-        $id_pemilik = $this->get_id_pemilik();
         $this->form_validation->set_rules('nama_item', 'Nama Item', 'required|trim');
         $this->form_validation->set_rules('jenis_item', 'Jenis Item', 'required');
         $this->form_validation->set_rules('satuan', 'Satuan', 'required');
@@ -95,17 +89,20 @@ class Inventori extends CI_Controller {
             return;
         }
         
+        $id_pemilik = $this->get_id_pemilik();
         $nama_item = $this->input->post('nama_item');
         $id_cabang = $this->input->post('id_cabang');
-
-        // Verify branch ownership
-        $valid_branches = array_column($this->Inventorimodel->get_all_branches($id_pemilik), 'id_cabang');
-        if (!in_array($id_cabang, $valid_branches)) {
-             echo json_encode(['success' => false, 'message' => 'Cabang tidak valid']);
-             return;
+        
+        // Validasi apakah cabang milik pemilik yang login
+        if (!$this->Inventorimodel->validate_branch_owner($id_cabang, $id_pemilik)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Cabang tidak valid atau bukan milik Anda'
+            ]);
+            return;
         }
         
-        // Check if item already exists
+        // Check if item already exists untuk pemilik ini
         if ($this->Inventorimodel->item_exists($nama_item, null, $id_pemilik)) {
             echo json_encode([
                 'success' => false,
@@ -140,14 +137,6 @@ class Inventori extends CI_Controller {
     
     // Update inventory item
     public function update($id) {
-        $id_pemilik = $this->get_id_pemilik();
-        
-        // Ownership Verify
-        if (!$this->Inventorimodel->verify_ownership($id, $id_pemilik)) {
-             echo json_encode(['success' => false, 'message' => 'Akses ditolak']);
-             return;
-        }
-
         $this->form_validation->set_rules('nama_item', 'Nama Item', 'required|trim');
         $this->form_validation->set_rules('jenis_item', 'Jenis Item', 'required');
         $this->form_validation->set_rules('satuan', 'Satuan', 'required');
@@ -162,14 +151,27 @@ class Inventori extends CI_Controller {
             return;
         }
         
+        $id_pemilik = $this->get_id_pemilik();
         $nama_item = $this->input->post('nama_item');
         $id_cabang = $this->input->post('id_cabang');
-
-        // Verify branch ownership
-        $valid_branches = array_column($this->Inventorimodel->get_all_branches($id_pemilik), 'id_cabang');
-        if (!in_array($id_cabang, $valid_branches)) {
-             echo json_encode(['success' => false, 'message' => 'Cabang tidak valid']);
-             return;
+        
+        // Validasi apakah item milik pemilik yang login
+        $existing_item = $this->Inventorimodel->get_inventory_by_id($id, $id_pemilik);
+        if (!$existing_item) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Item tidak ditemukan atau Anda tidak memiliki akses'
+            ]);
+            return;
+        }
+        
+        // Validasi apakah cabang milik pemilik yang login
+        if (!$this->Inventorimodel->validate_branch_owner($id_cabang, $id_pemilik)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Cabang tidak valid atau bukan milik Anda'
+            ]);
+            return;
         }
         
         // Check if item name exists (excluding current item)
@@ -208,12 +210,17 @@ class Inventori extends CI_Controller {
     // Delete inventory item
     public function delete($id) {
         $id_pemilik = $this->get_id_pemilik();
-        // Ownership Verify
-        if (!$this->Inventorimodel->verify_ownership($id, $id_pemilik)) {
-             echo json_encode(['success' => false, 'message' => 'Akses ditolak']);
-             return;
+        
+        // Validasi apakah item milik pemilik yang login
+        $existing_item = $this->Inventorimodel->get_inventory_by_id($id, $id_pemilik);
+        if (!$existing_item) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Item tidak ditemukan atau Anda tidak memiliki akses'
+            ]);
+            return;
         }
-
+        
         if ($this->Inventorimodel->delete_inventory($id)) {
             echo json_encode([
                 'success' => true,
@@ -230,6 +237,7 @@ class Inventori extends CI_Controller {
     // Get chart data
     public function get_chart_data() {
         $id_pemilik = $this->get_id_pemilik();
+        
         // Top items by stock
         $top_items = $this->Inventorimodel->get_top_items_by_stock(5, $id_pemilik);
         
@@ -252,16 +260,19 @@ class Inventori extends CI_Controller {
     // Update stock (for restocking)
     public function update_stock() {
         $id = $this->input->post('id_inventori');
-        $id_pemilik = $this->get_id_pemilik();
-
-        // Ownership Verify
-        if (!$this->Inventorimodel->verify_ownership($id, $id_pemilik)) {
-             echo json_encode(['success' => false, 'message' => 'Akses ditolak']);
-             return;
-        }
-
         $quantity = $this->input->post('quantity');
         $type = $this->input->post('type'); // 'add' or 'subtract'
+        $id_pemilik = $this->get_id_pemilik();
+        
+        // Validasi apakah item milik pemilik yang login
+        $existing_item = $this->Inventorimodel->get_inventory_by_id($id, $id_pemilik);
+        if (!$existing_item) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Item tidak ditemukan atau Anda tidak memiliki akses'
+            ]);
+            return;
+        }
         
         if ($this->Inventorimodel->update_stock($id, $quantity, $type)) {
             echo json_encode([

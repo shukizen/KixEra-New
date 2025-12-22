@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Inventorimodel extends CI_Model {
+class Inventori_model extends CI_Model {
     
     private $table = 'inventori';
     
@@ -16,7 +16,6 @@ class Inventorimodel extends CI_Model {
         $this->db->from('inventori');
         $this->db->join('cabang', 'cabang.id_cabang = inventori.id_cabang', 'left');
         
-        // Filter berdasarkan id_pemilik
         if ($id_pemilik) {
             $this->db->where('cabang.id_pemilik', $id_pemilik);
         }
@@ -225,5 +224,78 @@ class Inventorimodel extends CI_Model {
         $this->db->group_by('inventori.jenis_item');
         $query = $this->db->get();
         return $query->result();
+    }
+    
+    // Get barang yang paling sering digunakan minggu ini
+    // Berdasarkan persentase penggunaan stok (stok tersedia vs stok minimal)
+    public function get_most_used_items($id_pemilik, $limit = 5)
+    {
+        // Hitung item dengan stok paling mendekati minimal (indikasi sering dipakai)
+        $this->db->select('inventori.id_inventori,
+                           inventori.nama_item, 
+                           inventori.jenis_item,
+                           inventori.stok_tersedia,
+                           inventori.stok_minimal,
+                           CASE 
+                               WHEN inventori.stok_minimal > 0 AND inventori.stok_tersedia < inventori.stok_minimal
+                               THEN ROUND(((inventori.stok_minimal - inventori.stok_tersedia) / inventori.stok_minimal) * 100)
+                               ELSE 0 
+                           END as usage_score');
+        $this->db->from('inventori');
+        $this->db->join('cabang', 'cabang.id_cabang = inventori.id_cabang', 'left');
+        $this->db->where('cabang.id_pemilik', $id_pemilik);
+        $this->db->where('inventori.stok_tersedia >=', 0); // Termasuk yang habis untuk analisa
+        $this->db->where('inventori.stok_minimal >', 0); // Pastikan ada stok minimal
+        $this->db->order_by('usage_score', 'DESC'); // Yang paling tinggi usage_score = paling sering dipakai
+        $this->db->limit($limit);
+        
+        $query = $this->db->get();
+        $result = $query->result();
+        
+        // Format hasil untuk chart
+        foreach ($result as $item) {
+            // Gunakan usage_score yang sudah dihitung dalam persen
+            $item->total_used = max(5, (int)$item->usage_score); // Minimal 5 untuk visibility di chart
+        }
+        
+        // Jika tidak ada data yang memenuhi kriteria atau semua usage_score 0
+        $hasValidData = false;
+        foreach ($result as $item) {
+            if ($item->total_used > 5) {
+                $hasValidData = true;
+                break;
+            }
+        }
+        
+        if (empty($result) || !$hasValidData) {
+            // Fallback: ambil 5 item dengan stok terkecil (mendekati habis)
+            $this->db->select('inventori.id_inventori,
+                               inventori.nama_item, 
+                               inventori.jenis_item,
+                               inventori.stok_tersedia,
+                               inventori.stok_minimal,
+                               20 as total_used'); // Default value 20% untuk visibility
+            $this->db->from('inventori');
+            $this->db->join('cabang', 'cabang.id_cabang = inventori.id_cabang', 'left');
+            $this->db->where('cabang.id_pemilik', $id_pemilik);
+            $this->db->where('inventori.stok_tersedia >=', 0);
+            $this->db->order_by('inventori.stok_tersedia', 'ASC'); // Stok terkecil dulu
+            $this->db->limit($limit);
+            
+            $query = $this->db->get();
+            $result = $query->result();
+            
+            // Hitung ulang usage based on stok saja
+            foreach ($result as $item) {
+                if ($item->stok_minimal > 0) {
+                    $percentage = ($item->stok_tersedia / $item->stok_minimal) * 100;
+                    $item->total_used = max(10, round(100 - $percentage));
+                } else {
+                    $item->total_used = 20; // Default
+                }
+            }
+        }
+        
+        return $result;
     }
 }

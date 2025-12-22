@@ -158,11 +158,6 @@ class User_model extends CI_Model {
      * @param array $data Data registrasi
      * @return array Result dengan success status dan message
      */
-    /**
-     * Registrasi user baru (Owner)
-     * @param array $data Data registrasi
-     * @return array Result dengan success status dan message
-     */
     public function register_owner($data)
     {
         // Simpan status db_debug dan nonaktifkan untuk mencegah error HTML
@@ -225,7 +220,7 @@ class User_model extends CI_Model {
             $cabang_data = [
                 'id_pemilik' => $id_pemilik,
                 'nama_cabang' => 'Cabang Utama',
-                'alamat' => '',
+                'alamat_cabang' => '',
                 'no_telp' => '',
                 'status' => 'aktif',
                 'created_at' => date('Y-m-d H:i:s')
@@ -307,13 +302,15 @@ class User_model extends CI_Model {
         $this->db->where('id_user', $id_user);
         $this->db->where('deleted_at IS NULL');
         $query = $this->db->get('users');
-        
-        if ($query->num_rows() == 1) {
-            $user = $query->row_array();
-            return $this->get_user_details($user);
-        }
-        
-        return false;
+        return $query->row_array();
+    }
+
+    /**
+     * Dapatkan user berdasarkan ID (alias untuk konsistensi)
+     */
+    public function getUserById($id_user)
+    {
+        return $this->get_user_by_id($id_user);
     }
 
     /**
@@ -410,6 +407,14 @@ class User_model extends CI_Model {
     }
 
     /**
+     * Alias untuk check_username_exists
+     */
+    public function checkUsername($username, $exclude_id_user = null)
+    {
+        return $this->check_username_exists($username, $exclude_id_user);
+    }
+
+    /**
      * Cek apakah email sudah ada
      */
     public function check_email_exists($email, $exclude_id = null)
@@ -422,6 +427,37 @@ class User_model extends CI_Model {
         }
         
         return $this->db->count_all_results('pemilik') > 0;
+    }
+
+    /**
+     * Insert user baru
+     */
+    public function insertUser($data)
+    {
+        // Hash password jika belum di-hash
+        if (isset($data['password']) && strlen($data['password']) < 60) {
+            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
+        
+        $data['created_at'] = date('Y-m-d H:i:s');
+        
+        return $this->db->insert('users', $data);
+    }
+
+    /**
+     * Update user
+     */
+    public function updateUser($id_user, $data)
+    {
+        // Hash password jika ada dan belum di-hash
+        if (isset($data['password']) && strlen($data['password']) < 60) {
+            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
+        
+        $data['updated_at'] = date('Y-m-d H:i:s');
+        
+        $this->db->where('id_user', $id_user);
+        return $this->db->update('users', $data);
     }
 
     /**
@@ -553,349 +589,4 @@ class User_model extends CI_Model {
         $query = $this->db->get();
         return $query->result_array();
     }
-
-    public function getUserById($id_user)
-    {
-        $this->db->where('id_user', $id_user);
-        $this->db->where('deleted_at IS NULL');
-        $query = $this->db->get('users');
-        
-        if ($query->num_rows() == 1) {
-            $user = $query->row_array();
-            return $this->get_user_details($user);
-        }
-        
-        return false;
-    }
-
-    // ========================================
-    // GOOGLE OAUTH METHODS
-    // ========================================
-    
-    /**
-     * Dapatkan user berdasarkan Google ID
-     * @param string $google_id Google ID
-     * @return array|false User data jika ditemukan
-     */
-    public function get_user_by_google_id($google_id)
-    {
-        $this->db->where('google_id', $google_id);
-        $this->db->where('deleted_at IS NULL');
-        $query = $this->db->get('users');
-        
-        if ($query->num_rows() == 1) {
-            return $this->get_user_details($query->row_array());
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Buat user baru dari data Google OAuth
-     * @param array $google_data Data dari Google
-     * @return array|false Result dengan user data atau false jika gagal
-     */
-    public function create_user_from_google($google_data)
-    {
-        // Simpan status db_debug dan nonaktifkan
-        $db_debug = $this->db->db_debug;
-        $this->db->db_debug = FALSE;
-        
-        $this->db->trans_start();
-        
-        try {
-            // 1. Generate username dari email Google
-            $email_parts = explode('@', $google_data['email']);
-            $base_username = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $email_parts[0]));
-            $username = $this->generate_unique_username($base_username);
-            
-            // 2. Insert ke tabel users
-            $user_data = [
-                'username' => $username,
-                'password' => null, // NULL untuk OAuth users
-                'role' => 'owner', // Default role owner
-                'status' => 'aktif',
-                'google_id' => $google_data['google_id'],
-                'google_email' => $google_data['email'],
-                'google_avatar' => $google_data['picture'] ?? null,
-                'oauth_provider' => 'google',
-                'created_at' => date('Y-m-d H:i:s')
-            ];
-            
-            if (!$this->db->insert('users', $user_data)) {
-                $error = $this->db->error();
-                throw new Exception('Gagal membuat user: ' . $error['message']);
-            }
-            
-            $id_user = $this->db->insert_id();
-            
-            // 3. Insert ke tabel pemilik (untuk role owner)
-            $nama = $google_data['name'] ?? $google_data['given_name'] ?? 'User';
-            
-            $pemilik_data = [
-                'id_user' => $id_user,
-                'nama' => $nama,
-                'email' => $google_data['email'],
-                'foto_profil' => $google_data['picture'] ?? null,
-                'nama_usaha' => $nama . "'s Business",
-                'status_langganan' => 'trial',
-                'id_paket' => null,
-                'created_at' => date('Y-m-d H:i:s')
-            ];
-            
-            if (!$this->db->insert('pemilik', $pemilik_data)) {
-                $error = $this->db->error();
-                throw new Exception('Gagal membuat pemilik: ' . $error['message']);
-            }
-            
-            $id_pemilik = $this->db->insert_id();
-            
-            // 4. Buat cabang default
-            $cabang_data = [
-                'id_pemilik' => $id_pemilik,
-                'nama_cabang' => 'Cabang Utama',
-                'alamat' => '',
-                'no_telp' => '',
-                'status' => 'aktif',
-                'created_at' => date('Y-m-d H:i:s')
-            ];
-            
-            if (!$this->db->insert('cabang', $cabang_data)) {
-                $error = $this->db->error();
-                throw new Exception('Gagal membuat cabang: ' . $error['message']);
-            }
-            
-            // Commit transaksi
-            $this->db->trans_complete();
-            
-            if ($this->db->trans_status() === FALSE) {
-                throw new Exception('Transaksi database gagal');
-            }
-            
-            // Restore db_debug
-            $this->db->db_debug = $db_debug;
-            
-            // Dapatkan detail user lengkap
-            return $this->get_user_by_id($id_user);
-            
-        } catch (Exception $e) {
-            $this->db->trans_rollback();
-            $this->db->db_debug = $db_debug;
-            
-            log_message('error', 'Create Google user error: ' . $e->getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * Update informasi Google untuk user existing
-     * @param int $id_user ID user
-     * @param array $google_data Data dari Google
-     * @return bool True jika berhasil
-     */
-    public function update_google_info($id_user, $google_data)
-    {
-        $data = [
-            'google_id' => $google_data['google_id'],
-            'google_email' => $google_data['email'],
-            'google_avatar' => $google_data['picture'] ?? null,
-            'oauth_provider' => 'google',
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
-        
-        $this->db->where('id_user', $id_user);
-        return $this->db->update('users', $data);
-    }
-    
-    /**
-     * Link akun Google ke akun existing
-     * Untuk user yang sudah punya akun dan ingin link dengan Google
-     * @param int $id_user ID user yang sedang login
-     * @param array $google_data Data dari Google
-     * @return array Result dengan status dan message
-     */
-    public function link_google_account($id_user, $google_data)
-    {
-        // Cek apakah Google ID sudah digunakan user lain
-        $this->db->where('google_id', $google_data['google_id']);
-        $this->db->where('id_user !=', $id_user);
-        $this->db->where('deleted_at IS NULL');
-        
-        if ($this->db->count_all_results('users') > 0) {
-            return [
-                'success' => false,
-                'message' => 'Akun Google ini sudah terhubung dengan akun lain'
-            ];
-        }
-        
-        // Update Google info
-        if ($this->update_google_info($id_user, $google_data)) {
-            return [
-                'success' => true,
-                'message' => 'Akun Google berhasil dihubungkan'
-            ];
-        }
-        
-        return [
-            'success' => false,
-            'message' => 'Gagal menghubungkan akun Google'
-        ];
-    }
-    
-    // ========================================
-    // PASSWORD RESET METHODS
-    // ========================================
-    
-    /**
-     * Create reset token for forgot password
-     * @param string $email Email user
-     * @return array|false Token data atau false jika gagal
-     */
-    public function create_reset_token($email)
-    {
-        // Find user by email (check all role tables)
-        $user = null;
-        
-        // Check admin table
-        $this->db->select('u.id_user, u.username, u.role, a.email, a.nama');
-        $this->db->from('users u');
-        $this->db->join('admin a', 'u.id_user = a.id_user');
-        $this->db->where('a.email', $email);
-        $this->db->where('u.deleted_at IS NULL');
-        $query = $this->db->get();
-        
-        if ($query->num_rows() > 0) {
-            $user = $query->row_array();
-        }
-        
-        // Check pemilik table
-        if (!$user) {
-            $this->db->select('u.id_user, u.username, u.role, p.email, p.nama');
-            $this->db->from('users u');
-            $this->db->join('pemilik p', 'u.id_user = p.id_user');
-            $this->db->where('p.email', $email);
-            $this->db->where('u.deleted_at IS NULL');
-            $query = $this->db->get();
-            
-            if ($query->num_rows() > 0) {
-                $user = $query->row_array();
-            }
-        }
-        
-        // Check karyawan table
-        if (!$user) {
-            $this->db->select('u.id_user, u.username, u.role, k.email, k.nama');
-            $this->db->from('users u');
-            $this->db->join('karyawan k', 'u.id_user = k.id_user');
-            $this->db->where('k.email', $email);
-            $this->db->where('u.deleted_at IS NULL');
-            $query = $this->db->get();
-            
-            if ($query->num_rows() > 0) {
-                $user = $query->row_array();
-            }
-        }
-        
-        if (!$user) {
-            return false;
-        }
-        
-        // Generate secure random token
-        $token = bin2hex(random_bytes(32)); // 64 character hex string
-        
-        // Set expiry (1 hour from now)
-        $expires_at = date('Y-m-d H:i:s', strtotime('+1 hour'));
-        
-        // Save token to database
-        $data = [
-            'id_user' => $user['id_user'],
-            'token' => $token,
-            'email' => $email,
-            'expires_at' => $expires_at,
-            'created_at' => date('Y-m-d H:i:s')
-        ];
-        
-        if ($this->db->insert('password_reset_tokens', $data)) {
-            return [
-                'token' => $token,
-                'email' => $email,
-                'username' => $user['username'],
-                'nama' => $user['nama'],
-                'expires_at' => $expires_at
-            ];
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Validate reset token
-     * @param string $token Reset token
-     * @return array|false User data jika valid, false jika tidak
-     */
-    public function validate_reset_token($token)
-    {
-        $this->db->select('prt.*, u.username, u.role');
-        $this->db->from('password_reset_tokens prt');
-        $this->db->join('users u', 'prt.id_user = u.id_user');
-        $this->db->where('prt.token', $token);
-        $this->db->where('prt.is_used', 0);
-        $this->db->where('prt.expires_at >', date('Y-m-d H:i:s'));
-        $query = $this->db->get();
-        
-        if ($query->num_rows() == 1) {
-            return $query->row_array();
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Reset password using token
-     * @param string $token Reset token
-     * @param string $new_password New password (plain text, will be hashed)
-     * @return bool True jika berhasil
-     */
-    public function reset_password_with_token($token, $new_password)
-    {
-        // Validate token first
-        $token_data = $this->validate_reset_token($token);
-        
-        if (!$token_data) {
-            return false;
-        }
-        
-        $this->db->trans_start();
-        
-        // Update user password
-        $this->db->where('id_user', $token_data['id_user']);
-        $this->db->update('users', [
-            'password' => password_hash($new_password, PASSWORD_DEFAULT),
-            'updated_at' => date('Y-m-d H:i:s')
-        ]);
-        
-        // Mark token as used
-        $this->db->where('token', $token);
-        $this->db->update('password_reset_tokens', [
-            'is_used' => 1,
-            'used_at' => date('Y-m-d H:i:s')
-        ]);
-        
-        $this->db->trans_complete();
-        
-        return $this->db->trans_status();
-    }
-    
-    /**
-     * Cleanup expired tokens (call via cron or periodically)
-     */
-    public function cleanup_expired_tokens()
-    {
-        // Delete tokens older than 24 hours
-        $this->db->where('created_at <', date('Y-m-d H:i:s', strtotime('-24 hours')));
-        $this->db->delete('password_reset_tokens');
-        
-        return $this->db->affected_rows();
-    }
-
 }
