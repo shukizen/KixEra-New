@@ -60,4 +60,20 @@ class Cabang_model extends CI_Model {
         $query = $this->db->get();
         return $query->result_array();
     }
+
+    /**
+     * Get all cabang by owner (untuk filter pesanan)
+     */
+    public function getAllCabangByOwner($id_pemilik)
+    {
+        $this->db->select('*');
+        $this->db->from('cabang');
+        $this->db->where('id_pemilik', $id_pemilik);
+        $this->db->where('status', 'aktif');
+        $this->db->where('deleted_at IS NULL');
+        $this->db->order_by('nama_cabang', 'ASC');
+        
+        $query = $this->db->get();
+        return $query->result();
+    }
 }

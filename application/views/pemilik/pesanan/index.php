@@ -8,7 +8,7 @@
     <div class="flex min-h-screen">
         <!-- Sidebar -->
         <!-- Main Content -->
-        <main class="flex-1 lg:ml-64">
+        <main class="flex-1 ml-64">
             <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-6 py-6">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -31,10 +31,21 @@
 
                         <select id="statusFilter"
                             class="px-4 py-2 border border-gray-300 rounded-xl text-black focus:outline-none focus:border-emerald-500">
-                            <option value="">All Status</option>
+                            <option value="">Semua Status</option>
                             <?php foreach ($status_list as $value => $label): ?>
                                 <option value="<?= $value ?>"><?= $label ?></option>
                             <?php endforeach; ?>
+                        </select>
+
+                        <!-- Cabang Filter -->
+                        <select id="cabangFilter"
+                            class="px-4 py-2 border border-gray-300 rounded-xl text-black focus:outline-none focus:border-emerald-500">
+                            <option value="">Semua Cabang</option>
+                            <?php if (!empty($cabang_list)): ?>
+                                <?php foreach ($cabang_list as $c): ?>
+                                    <option value="<?= $c->id_cabang ?>"><?= htmlspecialchars($c->nama_cabang) ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
                     </div>
                 </div>
@@ -213,17 +224,17 @@
                         </div>
                     </div>
 
-                    <!-- Menunggu -->
+                    <!-- Diterima -->
                     <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Menunggu</p>
+                                <p class="text-sm font-medium text-gray-500">Diterima</p>
                                 <h3 id="stat-tunggu" class="text-3xl font-bold text-gray-800 mt-2"><?php
                                                                                                     $waiting = 0;
                                                                                                     if (!empty($pesanan)) {
                                                                                                         foreach ($pesanan as $p) {
                                                                                                             $s = strtolower($p->status_pesanan ?? '');
-                                                                                                            if ($s === 'menunggu') $waiting++;
+                                                                                                            if ($s === 'diterima') $waiting++;
                                                                                                         }
                                                                                                     }
                                                                                                     echo $waiting;
@@ -282,7 +293,7 @@
                                 <tbody>
                                     <?php if (!empty($pesanan)) : ?>
                                         <?php foreach ($pesanan as $p) : ?>
-                                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                            <tr class="border-b border-gray-100 hover:bg-gray-50" data-status="<?= strtolower($p->status_pesanan ?? '') ?>" data-cabang="<?= $p->id_cabang ?? '' ?>">
                                                 <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nomor_pesanan ?? '-'); ?></td>
                                                 <td class="text-center py-4 px-2"><?php echo date('d/m/Y', strtotime($p->tgl_masuk)); ?></td>
                                                 <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_pelanggan ?? '-'); ?></td>
@@ -586,11 +597,11 @@
                 const tglMasuk = p.tgl_masuk ? p.tgl_masuk.split(' ')[0] : '';
 
                 if (tglMasuk === todayDate) today++;
-                if (status === 'selesai' || status === 'diambil') {
+                if (status === 'selesai' || status === 'siap_diambil' || status === 'sudah_diambil') {
                     selesai++;
-                } else if (status === 'diterima' || status === 'dalam_proses') {
+                } else if (status === 'dalam_proses') {
                     proses++;
-                } else if (status === 'menunggu') {
+                } else if (status === 'diterima') {
                     tunggu++;
                 } else if (status === 'dibatalkan') {
                     batal++;
@@ -940,6 +951,86 @@
             });
         })();
 
+
+
+        // ============ SEARCH & FILTER TABLE ============
+        (function() {
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const cabangFilter = document.getElementById('cabangFilter');
+            const tableBody = document.querySelector('table tbody');
+            const rows = tableBody ? tableBody.querySelectorAll('tr[data-status]') : [];
+
+            // Update statistics based on visible rows
+            function updateStats() {
+                let today = 0, selesai = 0, proses = 0, tunggu = 0, batal = 0;
+                const todayDate = new Date().toISOString().split('T')[0];
+
+                rows.forEach(row => {
+                    if (row.style.display === 'none') return; // Skip hidden rows
+                    
+                    const status = row.dataset.status || '';
+                    const tglMasukCell = row.querySelector('td:nth-child(2)');
+                    
+                    // Parse date from table (format: dd/mm/yyyy)
+                    if (tglMasukCell) {
+                        const parts = tglMasukCell.textContent.trim().split('/');
+                        if (parts.length === 3) {
+                            const rowDate = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+                            if (rowDate === todayDate) today++;
+                        }
+                    }
+
+                    if (status === 'selesai' || status === 'siap_diambil' || status === 'sudah_diambil') {
+                        selesai++;
+                    } else if (status === 'dalam_proses') {
+                        proses++;
+                    } else if (status === 'diterima') {
+                        tunggu++;
+                    } else if (status === 'dibatalkan') {
+                        batal++;
+                    }
+                });
+
+                // Update stat elements
+                const statToday = document.getElementById('stat-today');
+                const statSelesai = document.getElementById('stat-selesai');
+                const statProses = document.getElementById('stat-proses');
+                const statTunggu = document.getElementById('stat-tunggu');
+                const statBatal = document.getElementById('stat-batal');
+
+                if (statToday) statToday.textContent = today;
+                if (statSelesai) statSelesai.textContent = selesai;
+                if (statProses) statProses.textContent = proses;
+                if (statTunggu) statTunggu.textContent = tunggu;
+                if (statBatal) statBatal.textContent = batal;
+            }
+
+            function filterTable() {
+                const searchTerm = (searchInput?.value || '').toLowerCase();
+                const statusValue = statusFilter?.value || '';
+                const cabangValue = cabangFilter?.value || '';
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const rowStatus = row.dataset.status || '';
+                    const rowCabang = row.dataset.cabang || '';
+
+                    const matchSearch = !searchTerm || text.includes(searchTerm);
+                    const matchStatus = !statusValue || rowStatus === statusValue;
+                    const matchCabang = !cabangValue || rowCabang === cabangValue;
+
+                    row.style.display = (matchSearch && matchStatus && matchCabang) ? '' : 'none';
+                });
+
+                // Update stats after filtering
+                updateStats();
+            }
+
+            if (searchInput) searchInput.addEventListener('input', filterTable);
+            if (statusFilter) statusFilter.addEventListener('change', filterTable);
+            if (cabangFilter) cabangFilter.addEventListener('change', filterTable);
+        })();
 
         function showNotification(message, type = 'info') {
             const existing = document.getElementById('temp-notification');

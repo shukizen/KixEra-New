@@ -91,6 +91,19 @@ class Pelanggan_model extends CI_Model {
             ->row();
     }
 
+    // Get all pelanggan for a specific cabang (untuk karyawan)
+    public function getAllPelangganForCabang($id_cabang)
+    {
+        $this->db->select('pelanggan.*');
+        $this->db->from('pelanggan');
+        $this->db->join('pesanan', 'pesanan.id_pelanggan = pelanggan.id_pelanggan');
+        $this->db->where('pesanan.id_cabang', $id_cabang);
+        $this->db->where('pelanggan.deleted_at IS NULL');
+        $this->db->group_by('pelanggan.id_pelanggan'); // Distinct customers
+        $this->db->order_by('pelanggan.nama', 'ASC');
+        return $this->db->get()->result();
+    }
+
     // GRAFIK 1: Distribusi Pelanggan Per Cabang
     public function grafikCabang($id_pemilik = null)
     {

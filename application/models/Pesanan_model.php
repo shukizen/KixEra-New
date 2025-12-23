@@ -128,6 +128,7 @@ class Pesanan_model extends CI_Model
     {
         $this->db->select('
             v.*, 
+            p.nomor_pesanan,
             p.created_at,
             p.updated_at
         ');
@@ -194,6 +195,92 @@ class Pesanan_model extends CI_Model
         $row = $this->db->get('pesanan')->row();
         return $row ? $row->status_pesanan : null;
     }
+
+    // Get all pesanan by cabang (untuk karyawan)
+    public function getAllPesananByCabang($id_cabang)
+    {
+        $this->db->select('
+            pesanan.*,
+            pelanggan.nama AS nama_pelanggan,
+            pelanggan.no_telp,
+            layanan.nama_layanan,
+            layanan.harga AS harga_layanan,
+            karyawan.nama AS nama_karyawan,
+            cabang.nama_cabang
+        ');
+        $this->db->from($this->table);
+        $this->db->join('pelanggan', 'pelanggan.id_pelanggan = pesanan.id_pelanggan', 'left');
+        $this->db->join('layanan', 'layanan.id_layanan = pesanan.id_layanan', 'left');
+        $this->db->join('karyawan', 'karyawan.id_karyawan = pesanan.id_karyawan', 'left');
+        $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang', 'left');
+
+        $this->db->where('pesanan.id_cabang', $id_cabang);
+        $this->db->where('pesanan.deleted_at IS NULL');
+        $this->db->order_by('pesanan.created_at', 'DESC');
+
+        return $this->db->get()->result();
+    }
+
+    // Insert pesanan baru
+    public function insertPesanan($data)
+    {
+        $data['created_at'] = date('Y-m-d H:i:s');
+        if (empty($data['nomor_pesanan'])) {
+            $data['nomor_pesanan'] = $this->generateNomorPesanan();
+        }
+        $this->db->insert($this->table, $data);
+        return $this->db->insert_id();
+    }
+
+    // Generate nomor pesanan unik
+    public function generateNomorPesanan()
+    {
+        $prefix = 'PES-' . date('Ymd') . '-';
+        
+        $this->db->select('nomor_pesanan');
+        $this->db->from($this->table);
+        $this->db->like('nomor_pesanan', $prefix, 'after');
+        $this->db->order_by('nomor_pesanan', 'DESC');
+        $this->db->limit(1);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $last = $query->row()->nomor_pesanan;
+            $last_number = (int) substr($last, -3);
+            $new_number = $last_number + 1;
+        } else {
+            $new_number = 1;
+        }
+
+        return $prefix . str_pad($new_number, 3, '0', STR_PAD_LEFT);
+    }
+
+    // Insert detail pesanan
+    public function insertDetailPesanan($data)
+    {
+        $data['created_at'] = date('Y-m-d H:i:s');
+        $this->db->insert('detail_pesanan', $data);
+        return $this->db->insert_id();
+    }
+
+    // Get detail pesanan by id_pesanan
+    public function getDetailPesananByPesananId($id_pesanan)
+    {
+        $this->db->select('detail_pesanan.*, layanan.nama_layanan');
+        $this->db->from('detail_pesanan');
+        $this->db->join('layanan', 'layanan.id_layanan = detail_pesanan.id_layanan', 'left');
+        $this->db->where('detail_pesanan.id_pesanan', $id_pesanan);
+        $this->db->where('detail_pesanan.deleted_at IS NULL');
+        return $this->db->get()->result();
+    }
+
+    // Update detail pesanan
+    public function updateDetailPesanan($id_detail, $data)
+    {
+        $this->db->where('id_detail', $id_detail);
+        return $this->db->update('detail_pesanan', $data);
+    }
+
     // =============================================
     // DASHBOARD STATISTICS
     // =============================================
