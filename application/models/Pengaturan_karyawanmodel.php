@@ -148,4 +148,56 @@ class Pengaturan_karyawanmodel extends CI_Model {
         $this->db->where('id_karyawan', $id_karyawan);
         return $this->db->update('karyawan', $data);
     }
+    
+    /**
+     * Update pengaturan notifikasi
+     */
+    public function update_notification_settings($id_karyawan, $data)
+    {
+        $update_data = [];
+        
+        // Field notifikasi yang boleh diupdate
+        $notification_fields = ['notif_pesanan', 'notif_stok', 'notif_shift'];
+        
+        foreach ($notification_fields as $field) {
+            if (isset($data[$field])) {
+                $update_data[$field] = $data[$field];
+            }
+        }
+        
+        if (empty($update_data)) {
+            return false;
+        }
+        
+        $update_data['updated_at'] = date('Y-m-d H:i:s');
+        
+        $this->db->where('id_karyawan', $id_karyawan);
+        return $this->db->update('karyawan', $update_data);
+    }
+    
+    /**
+     * Update preferensi sistem (bahasa dan mata uang)
+     */
+    public function update_system_preferences($id_karyawan, $data)
+    {
+        $update_data = [];
+        
+        // Field preferensi yang boleh diupdate
+        $preference_fields = ['bahasa', 'mata_uang'];
+        
+        foreach ($preference_fields as $field) {
+            if (isset($data[$field])) {
+                $update_data[$field] = $data[$field];
+            }
+        }
+        
+        if (empty($update_data)) {
+            return false;
+        }
+        
+        $update_data['updated_at'] = date('Y-m-d H:i:s');
+        
+        $this->db->where('id_karyawan', $id_karyawan);
+        return $this->db->update('karyawan', $update_data);
+    }
 }

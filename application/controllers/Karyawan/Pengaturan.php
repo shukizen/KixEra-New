@@ -60,7 +60,7 @@ class Pengaturan extends CI_Controller {
         }
         
         // Cek apakah email sudah digunakan oleh karyawan lain
-        if ($this->Karyawan_model->check_email_exists($email, $id_karyawan)) {
+        if ($this->Pengaturan_karyawanmodel->check_email_exists($email, $id_karyawan)) {
             echo json_encode(['success' => false, 'message' => 'Email sudah digunakan']);
             return;
         }
@@ -73,7 +73,7 @@ class Pengaturan extends CI_Controller {
         ];
         
         // Update data
-        $result = $this->Karyawan_model->update_karyawan($id_karyawan, $update_data);
+        $result = $this->Pengaturan_karyawanmodel->update_karyawan($id_karyawan, $update_data);
         
         if ($result) {
             // Update session data
@@ -120,13 +120,13 @@ class Pengaturan extends CI_Controller {
         $foto_path = 'uploads/profile/karyawan/' . $upload_data['file_name'];
         
         // Hapus foto lama jika ada
-        $karyawan = $this->Karyawan_model->get_karyawan_by_id($id_karyawan);
+        $karyawan = $this->Pengaturan_karyawanmodel->get_karyawan_by_id($id_karyawan);
         if ($karyawan && !empty($karyawan->foto_profil) && file_exists('./' . $karyawan->foto_profil)) {
             unlink('./' . $karyawan->foto_profil);
         }
         
         // Update foto di database
-        $result = $this->Karyawan_model->update_karyawan($id_karyawan, ['foto_profil' => $foto_path]);
+        $result = $this->Pengaturan_karyawanmodel->update_karyawan($id_karyawan, ['foto_profil' => $foto_path]);
         
         if ($result) {
             echo json_encode([
@@ -140,52 +140,78 @@ class Pengaturan extends CI_Controller {
     }
     
     /**
-     * Ubah password
+     * Simpan pengaturan notifikasi
      */
-    public function change_password()
+    public function save_notification_settings()
     {
         if ($this->input->method() !== 'post') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
         }
         
-        $id_user = $this->session->userdata('id_user');
-        $password_lama = $this->input->post('password_lama');
-        $password_baru = $this->input->post('password_baru');
+        $id_karyawan = $this->session->userdata('id_karyawan');
         
-        // Validasi input
-        if (empty($password_lama) || empty($password_baru)) {
-            echo json_encode(['success' => false, 'message' => 'Password lama dan baru harus diisi']);
-            return;
-        }
+        $notif_pesanan = $this->input->post('notif_pesanan') ? 1 : 0;
+        $notif_stok = $this->input->post('notif_stok') ? 1 : 0;
+        $notif_shift = $this->input->post('notif_shift') ? 1 : 0;
         
-        // Validasi panjang password baru
-        if (strlen($password_baru) < 6) {
-            echo json_encode(['success' => false, 'message' => 'Password baru minimal 6 karakter']);
-            return;
-        }
+        $update_data = [
+            'notif_pesanan' => $notif_pesanan,
+            'notif_stok' => $notif_stok,
+            'notif_shift' => $notif_shift
+        ];
         
-        // Ambil data user
-        $user = $this->User_model->get_user_by_id($id_user);
-        
-        if (!$user) {
-            echo json_encode(['success' => false, 'message' => 'User tidak ditemukan']);
-            return;
-        }
-        
-        // Verifikasi password lama
-        if (!password_verify($password_lama, $user['password']) && md5($password_lama) !== $user['password']) {
-            echo json_encode(['success' => false, 'message' => 'Password lama tidak sesuai']);
-            return;
-        }
-        
-        // Update password
-        $result = $this->User_model->change_password($id_user, $password_baru);
+        $result = $this->Pengaturan_karyawanmodel->update_notification_settings($id_karyawan, $update_data);
         
         if ($result) {
-            echo json_encode(['success' => true, 'message' => 'Password berhasil diubah']);
+            echo json_encode(['success' => true, 'message' => 'Pengaturan notifikasi berhasil disimpan']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Gagal mengubah password']);
+            echo json_encode(['success' => false, 'message' => 'Gagal menyimpan pengaturan']);
+        }
+    }
+    
+    /**
+     * Simpan preferensi sistem (bahasa dan mata uang)
+     */
+    public function save_system_preferences()
+    {
+        if ($this->input->method() !== 'post') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+        
+        $id_karyawan = $this->session->userdata('id_karyawan');
+        
+        $bahasa = $this->input->post('bahasa');
+        $mata_uang = $this->input->post('mata_uang');
+        
+        // Validate inputs
+        $valid_languages = ['id', 'en'];
+        $valid_currencies = ['IDR', 'USD'];
+        
+        if (!in_array($bahasa, $valid_languages)) {
+            $bahasa = 'id'; // default
+        }
+        
+        if (!in_array($mata_uang, $valid_currencies)) {
+            $mata_uang = 'IDR'; // default
+        }
+        
+        $update_data = [
+            'bahasa' => $bahasa,
+            'mata_uang' => $mata_uang
+        ];
+        
+        $result = $this->Pengaturan_karyawanmodel->update_system_preferences($id_karyawan, $update_data);
+        
+        if ($result) {
+            // Update session for immediate effect
+            $this->session->set_userdata('bahasa', $bahasa);
+            $this->session->set_userdata('mata_uang', $mata_uang);
+            
+            echo json_encode(['success' => true, 'message' => 'Preferensi sistem berhasil disimpan']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Gagal menyimpan preferensi']);
         }
     }
 }

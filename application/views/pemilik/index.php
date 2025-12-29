@@ -10,12 +10,12 @@
             <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+                    <h1 class="text-2xl font-bold text-gray-800"><?= lang_text('dashboard') ?></h1>
                     
                     <div class="flex items-center gap-4">
                         <!-- Search -->
                         <div class="relative">
-                            <input type="text" placeholder="Search..." class="w-80 px-4 py-2 pr-10 border border-gray-300 rounded-xl text-gray-600 focus:outline-none focus:border-emerald-500">
+                            <input type="text" placeholder="<?= lang_text('search') ?>..." class="w-80 px-4 py-2 pr-10 border border-gray-300 rounded-xl text-gray-600 focus:outline-none focus:border-emerald-500">
                             <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
                         </div>
                         
@@ -68,7 +68,7 @@
                     <div class="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Total Pesanan Hari ini</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('total_orders_today') ?></p>
                                 <h3 class="text-3xl font-bold text-gray-800 mt-2"><?php echo number_format($total_orders_today); ?></h3>
                             </div>
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -81,10 +81,10 @@
                     <div class="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Pendapatan Bulanan</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('monthly_revenue') ?></p>
                                 <h3 class="text-3xl font-bold text-gray-800 mt-2">Rp <?php echo number_format($monthly_revenue, 0, ',', '.'); ?></h3>
                                 <p class="text-sm text-emerald-500 mt-2">
-                                    <?php echo ($revenue_growth >= 0 ? '+' : '') . number_format($revenue_growth, 1); ?>% from last month
+                                    <?php echo ($revenue_growth >= 0 ? '+' : '') . number_format($revenue_growth, 1); ?>% <?= lang_text('from_last_month') ?>
                                 </p>
                             </div>
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -97,7 +97,7 @@
                     <div class="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Pelanggan Aktif</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('active_customers') ?></p>
                                 <h3 class="text-3xl font-bold text-gray-800 mt-2"><?php echo number_format($active_customers); ?></h3>
                             </div>
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -110,10 +110,10 @@
                     <div class="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Pending Pickups</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('pending_pickups') ?></p>
                                 <h3 class="text-3xl font-bold text-gray-800 mt-2"><?php echo number_format($pending_pickups); ?></h3>
                                 <?php if($pending_pickups > 0): ?>
-                                    <p class="text-sm text-yellow-600 mt-2">Requires attention</p>
+                                    <p class="text-sm text-yellow-600 mt-2"><?= lang_text('requires_attention') ?></p>
                                 <?php endif; ?>
                             </div>
                             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -127,7 +127,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     <!-- Performa Cabang -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Performa Cabang</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('branch_performance') ?></h2>
                         <div class="h-64 flex items-center justify-center">
                             <canvas id="branchChart"></canvas>
                         </div>
@@ -135,7 +135,7 @@
                     
                     <!-- Volume Pelanggan Per Service -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Volume Pelanggan Per Service</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('customer_volume_service') ?></h2>
                         <div class="h-64">
                             <canvas id="serviceChart"></canvas>
                         </div>
@@ -150,7 +150,7 @@
                             <h2 class="text-lg font-semibold text-gray-800">KixEra AI Insight</h2>
                         </div>
                         <div class="bg-emerald-100 rounded-xl p-4">
-                            <p class="text-sm font-bold text-gray-700 mb-2">Recommendation:</p>
+                            <p class="text-sm font-bold text-gray-700 mb-2"><?= lang_text('recommendation') ?>:</p>
                             <p class="text-sm text-gray-700 mb-4">
                                 <?php if($pending_pickups > 5): ?>
                                     High number of pending pickups. Consider sending reminder SMS to customers to free up space.
@@ -161,7 +161,7 @@
                             </p>
                             <button onclick="window.location='<?= base_url('pemilik/rekomendasi') ?>'" 
                                     class="w-full bg-emerald-500 text-white py-2 rounded-lg hover:bg-emerald-600 transition">
-                                View Details
+                                <?= lang_text('view_details') ?>
                             </button>
 
                         </div>
@@ -171,7 +171,7 @@
                 <!-- Monthly Revenue Trend -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Monthly Revenue Trend (<?php echo date('Y'); ?>)</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('monthly_revenue_trend') ?> (<?php echo date('Y'); ?>)</h2>
                         <div class="h-80">
                             <canvas id="revenueChart"></canvas>
                         </div>
@@ -179,7 +179,7 @@
                     
                     <!-- Distribusi Servis -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Distribusi Servis</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('service_distribution') ?></h2>
                         <div class="h-64 flex items-center justify-center">
                             <canvas id="distributionChart"></canvas>
                         </div>
@@ -190,16 +190,16 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Recent Orders -->
                     <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Recent Orders</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('recent_orders') ?></h2>
                         <div class="overflow-x-auto">
                             <table class="w-full">
                                 <thead class="border-b border-gray-200">
                                     <tr>
-                                        <th class="text-center py-3 text-gray-500 font-medium">Customer</th>
-                                        <th class="text-center py-3 text-gray-500 font-medium">Service</th>
-                                        <th class="text-center py-3 text-gray-500 font-medium">Status</th>
-                                        <th class="text-center py-3 text-gray-500 font-medium">Total</th>
-                                        <th class="text-center py-3 text-gray-500 font-medium">Date</th>
+                                        <th class="text-center py-3 text-gray-500 font-medium"><?= lang_text('customer') ?></th>
+                                        <th class="text-center py-3 text-gray-500 font-medium"><?= lang_text('service') ?></th>
+                                        <th class="text-center py-3 text-gray-500 font-medium"><?= lang_text('status') ?></th>
+                                        <th class="text-center py-3 text-gray-500 font-medium"><?= lang_text('total') ?></th>
+                                        <th class="text-center py-3 text-gray-500 font-medium"><?= lang_text('date') ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -227,7 +227,7 @@
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <tr>
-                                            <td colspan="5" class="text-center py-4 text-gray-500">Belum ada pesanan terbaru.</td>
+                                            <td colspan="5" class="text-center py-4 text-gray-500"><?= lang_text('no_recent_orders') ?></td>
                                         </tr>
                                     <?php endif; ?>
                                 </tbody>
@@ -239,7 +239,7 @@
                     <div class="space-y-6">
                         <!-- Notifications & Alerts -->
                          <div class="bg-white rounded-2xl shadow-lg p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Notifications & Alerts</h2>
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('notifications_alerts') ?></h2>
                             <div class="space-y-4">
                                 <!-- Alert 1 -->
                                 <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
@@ -254,15 +254,15 @@
                         
                         <!-- Quick Actions -->
                         <div class="bg-white rounded-2xl shadow-lg p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('quick_actions') ?></h2>
                             <div class="space-y-3">
                                 <button onclick="window.location='<?= base_url('pemilik/pesanan/add') ?>'" class="w-full bg-emerald-500 text-white py-3 rounded-xl hover:bg-emerald-600 transition flex items-center justify-center gap-2">
                                     <i class="fas fa-plus"></i>
-                                    Tambah Pesanan
+                                    <?= lang_text('add_order') ?>
                                 </button>
                                 <button onclick="window.location='<?= base_url('pemilik/pelanggan/add') ?>'" class="w-full border border-emerald-500 text-emerald-500 py-3 rounded-xl hover:bg-emerald-50 transition flex items-center justify-center gap-2">
                                     <i class="fas fa-user-plus"></i>
-                                    Tambah Pelanggan
+                                    <?= lang_text('add_customer') ?>
                                 </button>
                             </div>
                         </div>

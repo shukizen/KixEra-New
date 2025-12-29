@@ -113,8 +113,10 @@
                                 <p class="text-sm text-gray-600">Dapatkan pemberitahuan saat ada pesanan baru atau update</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked class="sr-only peer">
-                                <div class="w-11 h-6 bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                <input type="checkbox" id="notif_pesanan" 
+                                       <?= isset($karyawan->notif_pesanan) && $karyawan->notif_pesanan ? 'checked' : '' ?> 
+                                       class="sr-only peer notification-toggle">
+                                <div class="w-11 h-6 bg-gray-300 peer-checked:bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                             </label>
                         </div>
                         
@@ -125,8 +127,10 @@
                                 <p class="text-sm text-gray-600">Dapatkan alert saat stok barang menipis</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked class="sr-only peer">
-                                <div class="w-11 h-6 bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                <input type="checkbox" id="notif_stok" 
+                                       <?= isset($karyawan->notif_stok) && $karyawan->notif_stok ? 'checked' : '' ?> 
+                                       class="sr-only peer notification-toggle">
+                                <div class="w-11 h-6 bg-gray-300 peer-checked:bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                             </label>
                         </div>
 
@@ -137,8 +141,10 @@
                                 <p class="text-sm text-gray-600">Dapatkan pengingat jadwal shift Anda</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked class="sr-only peer">
-                                <div class="w-11 h-6 bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                <input type="checkbox" id="notif_shift" 
+                                       <?= isset($karyawan->notif_shift) && $karyawan->notif_shift ? 'checked' : '' ?> 
+                                       class="sr-only peer notification-toggle">
+                                <div class="w-11 h-6 bg-gray-300 peer-checked:bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                             </label>
                         </div>
                     </div>
@@ -148,66 +154,37 @@
                 <div class="bg-white rounded-2xl shadow-lg p-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-6">Preferensi Sistem</h2>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <!-- Bahasa -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Bahasa</label>
-                            <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
-                                <option selected>Indonesia</option>
-                                <option>English</option>
+                            <select id="bahasa" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 preference-select">
+                                <option value="id" <?= (isset($karyawan->bahasa) && $karyawan->bahasa == 'id') || !isset($karyawan->bahasa) ? 'selected' : '' ?>>Indonesia</option>
+                                <option value="en" <?= isset($karyawan->bahasa) && $karyawan->bahasa == 'en' ? 'selected' : '' ?>>English</option>
                             </select>
                         </div>
                         
                         <!-- Mata Uang -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Mata Uang</label>
-                            <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
-                                <option selected>Rupiah (Rp)</option>
-                                <option>Dollar ($)</option>
+                            <select id="mata_uang" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 preference-select">
+                                <option value="IDR" <?= (isset($karyawan->mata_uang) && $karyawan->mata_uang == 'IDR') || !isset($karyawan->mata_uang) ? 'selected' : '' ?>>Rupiah (Rp)</option>
+                                <option value="USD" <?= isset($karyawan->mata_uang) && $karyawan->mata_uang == 'USD' ? 'selected' : '' ?>>Dollar ($)</option>
                             </select>
                         </div>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button onclick="saveSystemPreferences()" 
+                                class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition font-medium">
+                            <i class="fas fa-save mr-2"></i>Simpan Preferensi
+                        </button>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal Change Password -->
-    <div id="changePasswordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-2xl font-semibold text-gray-800">Ubah Password</h2>
-            </div>
-            <form id="changePasswordForm" class="p-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Password Lama</label>
-                        <input type="password" id="password_lama" name="password_lama" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
-                        <input type="password" id="password_baru" name="password_baru" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password</label>
-                        <input type="password" id="password_konfirmasi" name="password_konfirmasi" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
-                    </div>
-                </div>
-                <div class="flex gap-3 mt-6">
-                    <button type="button" onclick="closeChangePasswordModal()" 
-                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-                        Batal
-                    </button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
-                        Ubah Password
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 
 <script>
     const BASE_URL = '<?= base_url() ?>';
@@ -332,7 +309,70 @@
             }
         });
     }
-
+    
+  
+    // ============ NOTIFICATION SETTINGS FUNCTIONS ============
+    function saveNotificationSettings() {
+        const notifPesanan = document.getElementById('notif_pesanan').checked ? 1 : 0;
+        const notifStok = document.getElementById('notif_stok').checked ? 1 : 0;
+        const notifShift = document.getElementById('notif_shift').checked ? 1 : 0;
+        
+        $.ajax({
+            url: BASE_URL + 'karyawan/pengaturan/save_notification_settings',
+            type: 'POST',
+            data: {
+                notif_pesanan: notifPesanan,
+                notif_stok: notifStok,
+                notif_shift: notifShift
+            },
+            dataType: 'json',
+            success: function(response) {
+                showNotification(response.message, response.success ? 'success' : 'error');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                showNotification('Terjadi kesalahan: ' + error, 'error');
+            }
+        });
+    }
+    
+    // Auto-save notification settings on toggle change
+    document.addEventListener('DOMContentLoaded', function() {
+        const notifToggles = document.querySelectorAll('.notification-toggle');
+        notifToggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                saveNotificationSettings();
+            });
+        });
+    });
+    
+    // ============ SYSTEM PREFERENCES FUNCTIONS ============
+    function saveSystemPreferences() {
+        const bahasa = document.getElementById('bahasa').value;
+        const mataUang = document.getElementById('mata_uang').value;
+        
+        $.ajax({
+            url: BASE_URL + 'karyawan/pengaturan/save_system_preferences',
+            type: 'POST',
+            data: {
+                bahasa: bahasa,
+                mata_uang: mataUang
+            },
+            dataType: 'json',
+            success: function(response) {
+                showNotification(response.message, response.success ? 'success' : 'error');
+                if(response.success) {
+                    // Store in session/local storage for immediate UI updates if needed
+                    localStorage.setItem('user_language', bahasa);
+                    localStorage.setItem('user_currency', mataUang);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                showNotification('Terjadi kesalahan: ' + error, 'error');
+            }
+        });
+    }
 
 </script>
 </body>

@@ -13,69 +13,52 @@
 <main class="flex-1 ml-64">
 
     <!-- Topbar -->
-    <div class="bg-white shadow-sm px-6 py-4 sticky top-0 z-10">
+    <div class="bg-white shadow-lg px-6 py-4 sticky top-0 z-10">
         <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800">Input Data Inventory</h1>
                 <p class="text-sm text-gray-500 mt-1">Tambah dan kelola stok barang inventory</p>
             </div>
             <div class="flex flex-wrap gap-3">
-                <input type="text" id="searchInput" placeholder="Cari barang..." 
-                    class="border border-gray-300 px-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                <select class="border border-gray-300 px-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                    <option>Semua Cabang</option>
-                    <option>Cabang A</option>
-                    <option>Cabang B</option>
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Cari barang..." 
+                        class="w-64 pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <select id="branchFilter" class="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                    <option value="">Semua Cabang</option>
+                    <?php if(isset($branches) && !empty($branches)): ?>
+                        <?php foreach($branches as $branch): ?>
+                        <option value="<?= $branch->id_cabang ?>"><?= $branch->nama_cabang ?></option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </select>
             </div>
         </div>
     </div>
 
-    <div class="p-6">
-
-        <!-- Flash Messages -->
-        <?php if($this->session->flashdata('success')): ?>
-        <div class="bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded-lg mb-6 flex items-center shadow-sm animate-fade-in">
-            <i class="fas fa-check-circle mr-3 text-xl"></i>
-            <div>
-                <p class="font-semibold">Berhasil!</p>
-                <p class="text-sm"><?= $this->session->flashdata('success') ?></p>
-            </div>
+    <!-- Form Input -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-plus-circle text-emerald-600"></i>
+                </div>
+                Form Input Inventory
+            </h2>
         </div>
-        <?php endif; ?>
 
-        <?php if($this->session->flashdata('error')): ?>
-        <div class="bg-red-50 border-l-4 border-red-500 text-red-800 px-4 py-3 rounded-lg mb-6 flex items-center shadow-sm animate-fade-in">
-            <i class="fas fa-exclamation-circle mr-3 text-xl"></i>
-            <div>
-                <p class="font-semibold">Error!</p>
-                <p class="text-sm"><?= $this->session->flashdata('error') ?></p>
-            </div>
-        </div>
-        <?php endif; ?>
-
-        <!-- Form Input -->
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-plus-circle text-emerald-600"></i>
-                    </div>
-                    Form Input Inventory
-                </h2>
-            </div>
-
-            <form method="POST" action="<?= base_url('karyawan/inventori/save') ?>" id="formInventory">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Nama Barang -->
-                    <div>
+        <form method="POST" action="<?= base_url('karyawan/inventori/save') ?>" id="formInventory">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Nama Barang -->
+                <div>
                         <label class="text-sm font-semibold text-gray-700 block mb-2">
                             Nama Barang <span class="text-red-500">*</span>
                         </label>
                         <input 
                             type="text"
                             name="nama_item" 
-                            class="input" 
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
                             placeholder="Contoh: Sabun Cair Premium" 
                             required
                             autocomplete="off">
@@ -89,7 +72,7 @@
                         <input 
                             type="number" 
                             name="stok_masuk" 
-                            class="input" 
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
                             min="1" 
                             placeholder="0" 
                             required>
@@ -100,7 +83,7 @@
                         <label class="text-sm font-semibold text-gray-700 block mb-2">
                             Kategori <span class="text-red-500">*</span>
                         </label>
-                        <select name="jenis_item" class="input" required>
+                        <select name="jenis_item" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" required>
                             <option value="">-- Pilih Kategori --</option>
                             <?php if(isset($categories) && is_array($categories)): ?>
                                 <?php foreach($categories as $cat): ?>
@@ -115,7 +98,7 @@
                         <label class="text-sm font-semibold text-gray-700 block mb-2">
                             Satuan <span class="text-red-500">*</span>
                         </label>
-                        <select name="satuan" class="input" required>
+                        <select name="satuan" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" required>
                             <option value="">-- Pilih Satuan --</option>
                             <?php if(isset($units) && is_array($units)): ?>
                                 <?php foreach($units as $unit): ?>
@@ -130,7 +113,7 @@
                         <label class="text-sm font-semibold text-gray-700 block mb-2">
                             Cabang <span class="text-red-500">*</span>
                         </label>
-                        <select name="id_cabang" class="input" required>
+                        <select name="id_cabang" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" required>
                             <option value="">-- Pilih Cabang --</option>
                             <?php if(isset($branches) && !empty($branches)): ?>
                                 <?php foreach($branches as $branch): ?>
@@ -148,28 +131,40 @@
                         <input 
                             type="date" 
                             name="tanggal_masuk" 
-                            class="input" 
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
                             value="<?= date('Y-m-d') ?>" 
                             max="<?= date('Y-m-d') ?>"
                             required>
                     </div>
                     
                     <!-- Harga Satuan -->
-                    <div class="md:col-span-2">
+                    <div class="lg:col-span-3">
                         <label class="text-sm font-semibold text-gray-700 block mb-2">
                             Harga Satuan (Opsional)
                         </label>
                         <input 
                             type="number" 
                             name="harga_satuan" 
-                            class="input" 
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
                             min="0" 
                             placeholder="Masukkan harga satuan (Rp)">
+                    </div>
+                    
+                    <!-- Keterangan -->
+                    <div class="lg:col-span-3">
+                        <label class="text-sm font-semibold text-gray-700 block mb-2">
+                            Keterangan (Opsional)
+                        </label>
+                        <textarea 
+                            name="keterangan" 
+                            rows="2"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
+                            placeholder="Masukkan keterangan atau catatan"></textarea>
                     </div>
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="mt-8 flex flex-wrap gap-3 pt-6 border-t border-gray-100">
+                <div class="mt-6 flex flex-wrap gap-3 pt-5 border-t border-gray-100">
                     <button 
                         type="submit" 
                         class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg transition flex items-center gap-2 shadow-sm font-medium">
@@ -193,78 +188,44 @@
             </form>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1 font-medium">Total Item</p>
-                        <p class="text-3xl font-bold text-gray-800"><?= isset($stats['total']) ? $stats['total'] : 0 ?></p>
-                    </div>
-                    <div class="bg-blue-50 p-4 rounded-xl">
-                        <i class="fas fa-box text-blue-600 text-2xl"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1 font-medium">Tersedia</p>
-                        <p class="text-3xl font-bold text-green-600"><?= isset($stats['available']) ? $stats['available'] : 0 ?></p>
-                    </div>
-                    <div class="bg-green-50 p-4 rounded-xl">
-                        <i class="fas fa-check-circle text-green-600 text-2xl"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1 font-medium">Stok Rendah</p>
-                        <p class="text-3xl font-bold text-yellow-600"><?= isset($stats['low_stock']) ? $stats['low_stock'] : 0 ?></p>
-                    </div>
-                    <div class="bg-yellow-50 p-4 rounded-xl">
-                        <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1 font-medium">Habis</p>
-                        <p class="text-3xl font-bold text-red-600"><?= isset($stats['out_of_stock']) ? $stats['out_of_stock'] : 0 ?></p>
-                    </div>
-                    <div class="bg-red-50 p-4 rounded-xl">
-                        <i class="fas fa-times-circle text-red-600 text-2xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Grafik Kategori Barang Terbanyak -->
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
-            <div class="mb-6">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-chart-bar text-emerald-600"></i>
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Chart: Barang Paling Sering Digunakan (Bar Chart) -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div class="mb-4">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-bar text-emerald-600"></i>
+                        </div>
+                        <h2 class="text-lg font-semibold text-gray-800">Barang Paling Sering Digunakan</h2>
                     </div>
-                    <h2 class="text-lg font-semibold text-gray-800">
-                        Barang Paling Sering Digunakan Minggu Ini
-                    </h2>
+                    <p class="text-sm text-gray-500 ml-10">Item inventory dengan penggunaan tertinggi</p>
                 </div>
-                <p class="text-sm text-gray-500 ml-10">Berdasarkan perbandingan stok tersedia dengan stok minimal</p>
+                <div class="relative h-72">
+                    <canvas id="itemUsageChart"></canvas>
+                </div>
             </div>
-            
-            <div style="position: relative; height: 400px;">
-                <canvas id="itemUsageChart"></canvas>
+
+            <!-- Chart: Distribusi Kategori (Doughnut Chart) -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div class="mb-4">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-pie text-teal-600"></i>
+                        </div>
+                        <h2 class="text-lg font-semibold text-gray-800">Distribusi Kategori</h2>
+                    </div>
+                    <p class="text-sm text-gray-500 ml-10">Persentase item berdasarkan kategori</p>
+                </div>
+                <div class="relative h-72">
+                    <canvas id="categoryChart"></canvas>
+                </div>
             </div>
         </div>
 
         <!-- Table Inventory Terbaru -->
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
             <div class="px-6 py-4 border-b border-gray-200 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
                 <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
                     <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -273,10 +234,7 @@
                     Inventory Terbaru
                 </h2>
                 <div class="flex flex-wrap gap-2">
-                    <button class="text-sm text-gray-600 hover:text-emerald-600 px-4 py-2 rounded-lg border border-gray-300 hover:border-emerald-600 transition font-medium">
-                        <i class="fas fa-filter mr-2"></i>Filter
-                    </button>
-                    <button class="text-sm text-gray-600 hover:text-emerald-600 px-4 py-2 rounded-lg border border-gray-300 hover:border-emerald-600 transition font-medium">
+                    <button onclick="exportData()" class="text-sm text-gray-600 hover:text-emerald-600 px-4 py-2 rounded-lg border border-gray-300 hover:border-emerald-600 transition font-medium">
                         <i class="fas fa-download mr-2"></i>Export
                     </button>
                 </div>
@@ -298,10 +256,10 @@
                     <tbody id="inventoryTableBody">
                     <?php if(isset($recent_inventory) && !empty($recent_inventory)): ?>
                         <?php foreach($recent_inventory as $item): ?>
-                        <tr class="border-t hover:bg-gray-50 transition">
-                            <td class="px-4 py-3 font-medium text-gray-800"><?= $item->nama_item ?></td>
+                        <tr class="border-t hover:bg-gray-50 transition" data-branch="<?= $item->id_cabang ?>" data-branch-name="<?= isset($item->nama_cabang) ? htmlspecialchars($item->nama_cabang) : '' ?>">
+                            <td class="px-4 py-3 font-medium text-gray-800"><?= htmlspecialchars($item->nama_item) ?></td>
                             <td class="px-4 py-3">
-                                <span class="badge"><?= $item->jenis_item ?></span>
+                                <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700"><?= htmlspecialchars($item->jenis_item) ?></span>
                             </td>
                             <td class="px-4 py-3 text-center font-semibold">
                                 <?php if($item->stok_tersedia <= 0): ?>
@@ -312,8 +270,8 @@
                                     <span class="text-green-600"><?= $item->stok_tersedia ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="px-4 py-3 text-gray-600"><?= $item->satuan ?></td>
-                            <td class="px-4 py-3 text-gray-600"><?= isset($item->nama_cabang) ? $item->nama_cabang : '-' ?></td>
+                            <td class="px-4 py-3 text-gray-600"><?= htmlspecialchars($item->satuan) ?></td>
+                            <td class="px-4 py-3 text-gray-600"><?= isset($item->nama_cabang) ? htmlspecialchars($item->nama_cabang) : '-' ?></td>
                             <td class="px-4 py-3 text-gray-600"><?= isset($item->updated_at) ? date('d/m/Y H:i', strtotime($item->updated_at)) : '-' ?></td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex justify-center gap-3">
@@ -324,8 +282,8 @@
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <a 
-                                        href="<?= base_url('inventori/delete/'.$item->id_inventori) ?>" 
-                                        onclick="return confirm('Yakin ingin menghapus <?= $item->nama_item ?>?')"
+                                        href="<?= base_url('karyawan/inventori/delete/'.$item->id_inventori) ?>" 
+                                        onclick="return confirm('Yakin ingin menghapus <?= htmlspecialchars($item->nama_item) ?>?')"
                                         class="text-red-600 hover:text-red-800 transition" 
                                         title="Hapus">
                                         <i class="fas fa-trash"></i>
@@ -354,9 +312,9 @@
 </main>
 
 <!-- Modal Edit -->
-<div id="editModal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <div class="modal-header">
+<div id="editModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
                     <i class="fas fa-edit text-emerald-600"></i>
@@ -368,22 +326,22 @@
             </button>
         </div>
         
-        <form method="POST" action="<?= base_url('karyawan/inventori/update') ?>" id="formEdit">
+        <form method="POST" action="<?= site_url('karyawan/inventori/update') ?>" id="formEdit">
             <input type="hidden" name="id_inventori" id="edit_id">
             
-            <div class="modal-body">
+            <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-sm font-semibold text-gray-700 block mb-2">Nama Barang *</label>
-                        <input type="text" name="nama_item" id="edit_nama" class="input" required>
+                        <input type="text" name="nama_item" id="edit_nama" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required>
                     </div>
                     <div>
                         <label class="text-sm font-semibold text-gray-700 block mb-2">Stok Tersedia *</label>
-                        <input type="number" name="stok_tersedia" id="edit_stok" class="input" min="0" required>
+                        <input type="number" name="stok_tersedia" id="edit_stok" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" min="0" required>
                     </div>
                     <div>
                         <label class="text-sm font-semibold text-gray-700 block mb-2">Kategori *</label>
-                        <select name="jenis_item" id="edit_kategori" class="input" required>
+                        <select name="jenis_item" id="edit_kategori" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required>
                             <?php if(isset($categories)): foreach($categories as $cat): ?>
                             <option value="<?= $cat ?>"><?= $cat ?></option>
                             <?php endforeach; endif; ?>
@@ -391,7 +349,7 @@
                     </div>
                     <div>
                         <label class="text-sm font-semibold text-gray-700 block mb-2">Satuan *</label>
-                        <select name="satuan" id="edit_satuan" class="input" required>
+                        <select name="satuan" id="edit_satuan" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required>
                             <?php if(isset($units)): foreach($units as $unit): ?>
                             <option value="<?= $unit ?>"><?= $unit ?></option>
                             <?php endforeach; endif; ?>
@@ -399,7 +357,7 @@
                     </div>
                     <div>
                         <label class="text-sm font-semibold text-gray-700 block mb-2">Cabang *</label>
-                        <select name="id_cabang" id="edit_cabang" class="input" required>
+                        <select name="id_cabang" id="edit_cabang" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required>
                             <?php if(isset($branches)): foreach($branches as $branch): ?>
                             <option value="<?= $branch->id_cabang ?>"><?= $branch->nama_cabang ?></option>
                             <?php endforeach; endif; ?>
@@ -407,16 +365,16 @@
                     </div>
                     <div>
                         <label class="text-sm font-semibold text-gray-700 block mb-2">Stok Minimal *</label>
-                        <input type="number" name="stok_minimal" id="edit_minimal" class="input" min="0" required>
+                        <input type="number" name="stok_minimal" id="edit_minimal" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" min="0" required>
                     </div>
                     <div class="md:col-span-2">
                         <label class="text-sm font-semibold text-gray-700 block mb-2">Harga Satuan</label>
-                        <input type="number" name="harga_satuan" id="edit_harga" class="input" min="0">
+                        <input type="number" name="harga_satuan" id="edit_harga" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" min="0">
                     </div>
                 </div>
             </div>
             
-            <div class="modal-footer">
+            <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
                 <button type="button" onclick="closeEditModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2.5 rounded-lg transition font-medium">
                     Batal
                 </button>
@@ -427,15 +385,22 @@
         </form>
     </div>
 </div>
+
 <script>
 // Auto-hide flash messages after 5 seconds
 setTimeout(function() {
-    const alerts = document.querySelectorAll('.animate-fade-in');
-    alerts.forEach(alert => {
-        alert.style.opacity = '0';
-        alert.style.transition = 'opacity 0.5s';
-        setTimeout(() => alert.remove(), 500);
-    });
+    const flashSuccess = document.getElementById('flashSuccess');
+    const flashError = document.getElementById('flashError');
+    if (flashSuccess) {
+        flashSuccess.style.opacity = '0';
+        flashSuccess.style.transition = 'opacity 0.5s';
+        setTimeout(() => flashSuccess.remove(), 500);
+    }
+    if (flashError) {
+        flashError.style.opacity = '0';
+        flashError.style.transition = 'opacity 0.5s';
+        setTimeout(() => flashError.remove(), 500);
+    }
 }, 5000);
 
 // Form validation
@@ -459,11 +424,15 @@ function openEditModal(item) {
     document.getElementById('edit_minimal').value = item.stok_minimal;
     document.getElementById('edit_harga').value = item.harga_satuan || 0;
     
-    document.getElementById('editModal').classList.remove('hidden');
+    const modal = document.getElementById('editModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 }
 
 function closeEditModal() {
-    document.getElementById('editModal').classList.add('hidden');
+    const modal = document.getElementById('editModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
 }
 
 // Close modal when clicking outside
@@ -480,102 +449,108 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Search Function
-document.getElementById('searchInput').addEventListener('input', function(e) {
-    const searchText = e.target.value.toLowerCase();
+// Search and Filter Functions
+let currentSearch = '';
+let currentBranch = '';
+
+function applyFilters() {
     const rows = document.querySelectorAll('#inventoryTableBody tr');
     
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchText) ? '' : 'none';
+        const branchId = row.getAttribute('data-branch');
+        
+        const matchesSearch = currentSearch === '' || text.includes(currentSearch);
+        const matchesBranch = currentBranch === '' || branchId === currentBranch;
+        
+        row.style.display = (matchesSearch && matchesBranch) ? '' : 'none';
     });
+}
+
+// Search Function
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    currentSearch = e.target.value.toLowerCase();
+    applyFilters();
 });
 
-// Inisialisasi Chart
+// Branch Filter Function
+document.getElementById('branchFilter').addEventListener('change', function(e) {
+    currentBranch = e.target.value;
+    applyFilters();
+});
+
+// Export Function (placeholder)
+function exportData() {
+    alert('Fitur export akan segera tersedia!');
+}
+
+// Chart Colors
+const chartColors = ['#10b981', '#14b8a6', '#0d9488', '#0891b2', '#0284c7'];
+
+// Initialize Charts
 document.addEventListener('DOMContentLoaded', function() {
-    // Ambil data dari PHP
+    initUsageChart();
+    initCategoryChart();
+});
+
+// Chart 1: Item Usage (Bar Chart)
+function initUsageChart() {
     const chartData = <?= json_encode($items_by_category ?? []) ?>;
+    const canvas = document.getElementById('itemUsageChart');
     
-    console.log('=== DEBUG CHART DATA ===');
-    console.log('Raw Data:', chartData);
-    console.log('Data Length:', chartData ? chartData.length : 0);
-    console.log('========================');
+    console.log('Usage Chart Data:', chartData);
     
-    // Jika tidak ada data, tampilkan pesan
-    if (!chartData || chartData.length === 0) {
-        const canvas = document.getElementById('itemUsageChart');
-        const parent = canvas.parentElement;
-        parent.innerHTML = `
-            <div class="flex flex-col items-center justify-center h-full py-12">
-                <i class="fas fa-chart-bar text-gray-300 text-6xl mb-4"></i>
-                <p class="text-gray-500 font-semibold text-lg mb-2">Belum ada data untuk ditampilkan</p>
-                <p class="text-gray-400 text-sm">Tambahkan inventory dengan stok minimal terlebih dahulu</p>
-            </div>
-        `;
+    if (!canvas) {
+        console.error('Canvas element itemUsageChart not found');
         return;
     }
     
-    // Prepare data untuk Chart.js - Prioritas nama_item
-    const labels = chartData.map(item => {
-        return item.nama_item || item.jenis_item || 'Unknown';
-    });
+    if (!chartData || chartData.length === 0) {
+        showChartPlaceholder(canvas, 'Belum ada data untuk ditampilkan');
+        return;
+    }
+    
+    const labels = chartData.map(item => item.nama_item || item.jenis_item || 'Unknown');
     const dataValues = chartData.map(item => parseInt(item.total_used || item.total || 0));
     
-    console.log('Labels (Nama Barang):', labels);
-    console.log('Values (Tingkat Penggunaan):', dataValues);
-    
-    // Validasi data values
-    const hasValidData = dataValues.some(val => val > 0);
-    if (!hasValidData) {
-        const canvas = document.getElementById('itemUsageChart');
-        const parent = canvas.parentElement;
-        parent.innerHTML = `
-            <div class="flex flex-col items-center justify-center h-full py-12">
-                <i class="fas fa-info-circle text-blue-400 text-6xl mb-4"></i>
-                <p class="text-gray-500 font-semibold text-lg mb-2">Data inventory ditemukan, tapi belum ada yang memenuhi kriteria</p>
-                <p class="text-gray-400 text-sm">Pastikan item memiliki stok minimal yang terisi</p>
-            </div>
-        `;
+    if (!dataValues.some(val => val > 0)) {
+        showChartPlaceholder(canvas, 'Pastikan item memiliki stok minimal yang terisi');
         return;
     }
     
-    // Create gradient
-    const ctx = document.getElementById('itemUsageChart').getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 280);
     gradient.addColorStop(0, '#10b981');
     gradient.addColorStop(1, 'rgba(134, 239, 172, 0.6)');
     
-    // Create chart
-    const itemUsageChart = new Chart(ctx, {
+    new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Tingkat Penggunaan',
+                label: 'Tingkat Penggunaan (%)',
                 data: dataValues,
                 backgroundColor: gradient,
-                borderRadius: 8,
-                maxBarThickness: 80
+                borderRadius: 6,
+                maxBarThickness: 60
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: 'white',
                     titleColor: '#1f2937',
                     bodyColor: '#6b7280',
                     borderColor: '#e5e7eb',
                     borderWidth: 1,
-                    padding: 12,
+                    padding: 10,
                     displayColors: false,
                     callbacks: {
                         label: function(context) {
-                            return 'Tingkat Penggunaan: ' + context.parsed.y + '%';
+                            return 'Penggunaan: ' + context.parsed.y + '%';
                         }
                     }
                 }
@@ -583,49 +558,96 @@ document.addEventListener('DOMContentLoaded', function() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        stepSize: 10,
-                        color: '#6b7280',
-                        font: {
-                            size: 12
-                        },
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    },
-                    grid: {
-                        color: '#f3f4f6',
-                        drawBorder: false
-                    },
-                    title: {
-                        display: true,
-                        text: 'Tingkat Penggunaan (%)',
-                        color: '#6b7280',
-                        font: {
-                            size: 12,
-                            weight: 'normal'
-                        }
-                    }
+                    max: 100,
+                    ticks: { stepSize: 20, color: '#6b7280', font: { size: 11 } },
+                    grid: { color: '#f3f4f6', drawBorder: false }
                 },
                 x: {
-                    ticks: {
-                        color: '#6b7280',
-                        font: {
-                            size: 11
-                        },
-                        maxRotation: 45,
-                        minRotation: 45
-                    },
-                    grid: {
-                        display: false
+                    ticks: { color: '#6b7280', font: { size: 10 }, maxRotation: 45, minRotation: 45 },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+// Chart 2: Category Distribution (Doughnut Chart)
+function initCategoryChart() {
+    const categoryData = <?= json_encode($category_distribution ?? []) ?>;
+    
+    const canvas = document.getElementById('categoryChart');
+    
+    if (!categoryData || categoryData.length === 0) {
+        showChartPlaceholder(canvas, 'Belum ada data kategori');
+        return;
+    }
+    
+    const labels = categoryData.map(item => item.jenis_item || 'Lainnya');
+    const dataValues = categoryData.map(item => parseInt(item.total || 0));
+    
+    if (!dataValues.some(val => val > 0)) {
+        showChartPlaceholder(canvas, 'Belum ada data kategori');
+        return;
+    }
+    
+    const ctx = canvas.getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dataValues,
+                backgroundColor: chartColors.slice(0, labels.length),
+                borderWidth: 2,
+                borderColor: '#fff',
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'white',
+                    titleColor: '#1f2937',
+                    bodyColor: '#6b7280',
+                    borderColor: '#e5e7eb',
+                    borderWidth: 1,
+                    padding: 10,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((context.parsed / total) * 100);
+                            return context.label + ': ' + context.parsed + ' item (' + percentage + '%)';
+                        }
                     }
                 }
             }
         }
     });
-    
-    console.log('✅ Chart berhasil dibuat!');
-});
+}
+
+// Helper function to show placeholder when no data
+function showChartPlaceholder(canvas, message) {
+    const parent = canvas.parentElement;
+    parent.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full py-8">
+            <i class="fas fa-chart-bar text-gray-300 text-5xl mb-3"></i>
+            <p class="text-gray-500 font-medium text-sm">${message}</p>
+        </div>
+    `;
+}
 </script>
 </body>
 </html>

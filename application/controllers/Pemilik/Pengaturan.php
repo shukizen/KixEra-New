@@ -7,7 +7,7 @@ class Pengaturan extends CI_Controller {
         parent::__construct();
         $this->load->database();
         $this->load->model('User_model');
-        
+        $this->load->helper(['lang', 'currency']);
         // Pastikan user sudah login
         if (!$this->session->userdata('id_user')) {
             redirect('auth/login');
@@ -70,6 +70,14 @@ class Pengaturan extends CI_Controller {
             return;
         }
         
+        // Initialize session with user's preferences from database
+        if (isset($pemilik->bahasa)) {
+            $this->session->set_userdata('bahasa', $pemilik->bahasa);
+        }
+        if (isset($pemilik->mata_uang)) {
+            $this->session->set_userdata('mata_uang', $pemilik->mata_uang);
+        }
+        
         $pemilik->is_admin = false;
         $id_pemilik = $pemilik->id_pemilik;
 
@@ -104,6 +112,27 @@ class Pengaturan extends CI_Controller {
         $this->load->view('template/header');
         $this->load->view('template/sidebar');
         $this->load->view('pemilik/pengaturan/index', $data);
+        $this->load->view('template/footer');
+    }
+
+    // Halaman Langganan / Subscription
+    public function langganan() {
+        $id_user = $this->session->userdata('id_user');
+        
+        // Get pemilik data for current plan info
+        $pemilik = $this->db->where('id_user', $id_user)
+                           ->where('deleted_at IS NULL')
+                           ->get('pemilik')
+                           ->row();
+        
+        $data = [
+            'current_plan' => isset($pemilik->subscription_plan) ? $pemilik->subscription_plan : 'free',
+            'subscription_end' => isset($pemilik->subscription_end) ? $pemilik->subscription_end : null
+        ];
+
+        $this->load->view('template/header');
+        $this->load->view('template/sidebar');
+        $this->load->view('pemilik/pengaturan/langganan', $data);
         $this->load->view('template/footer');
     }
 
@@ -616,6 +645,111 @@ class Pengaturan extends CI_Controller {
             echo json_encode(['success' => true, 'message' => 'Cabang berhasil dihapus']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Gagal menghapus cabang']);
+        }
+    }
+
+    // Save preferences (bahasa & mata uang)
+    public function save_preferences() {
+        $id_pemilik = $this->input->post('id_pemilik');
+        $bahasa = $this->input->post('bahasa');
+        $mata_uang = $this->input->post('mata_uang');
+
+        log_message('debug', "save_preferences - id_pemilik: $id_pemilik, bahasa: $bahasa, mata_uang: $mata_uang");
+
+        if (empty($id_pemilik)) {
+            echo json_encode(['success' => false, 'message' => 'ID tidak ditemukan']);
+            return;
+        }
+
+        // Validasi nilai bahasa
+        $valid_bahasa = ['id', 'en'];
+        if (!in_array($bahasa, $valid_bahasa)) {
+            $bahasa = 'id'; // default
+        }
+
+        // Validasi nilai mata_uang
+        $valid_mata_uang = ['IDR', 'USD', 'EUR', 'SGD', 'MYR'];
+        if (!in_array($mata_uang, $valid_mata_uang)) {
+            $mata_uang = 'IDR'; // default
+        }
+
+        // Check if pemilik exists
+        $pemilik = $this->db->where('id_pemilik', $id_pemilik)
+                            ->where('deleted_at IS NULL')
+                            ->get('pemilik')
+                            ->row();
+        
+        if (!$pemilik) {
+            echo json_encode(['success' => false, 'message' => 'Data pemilik tidak ditemukan']);
+            return;
+        }
+
+        // Update preferences
+        $update_data = [
+            'bahasa' => $bahasa,
+            'mata_uang' => $mata_uang,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->where('id_pemilik', $id_pemilik);
+        $result = $this->db->update('pemilik', $update_data);
+
+        log_message('debug', "save_preferences - affected_rows: " . $this->db->affected_rows());
+        log_message('debug', "save_preferences - db_error: " . json_encode($this->db->error()));
+
+        if ($result) {
+            // Also save to session for immediate use
+            $this->session->set_userdata('bahasa', $bahasa);
+            $this->session->set_userdata('mata_uang', $mata_uang);
+
+            $bahasa_text = $bahasa == 'id' ? 'Indonesia' : 'English';
+            $mata_uang_text = [
+                'IDR' => 'Rupiah (Rp)',
+                'USD' => 'Dollar ($)',
+                'EUR' => 'Euro (€)',
+            ][$mata_uang] ?? $mata_uang;
+
+            echo json_encode([
+                'success' => true, 
+                'message' => "Preferensi berhasil disimpan! Bahasa: $bahasa_text, Mata Uang: $mata_uang_text"
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Gagal menyimpan preferensi']);
+        }
+    }
+
+    // Save notification settings
+    public function save_notification_settings() {
+        $id_pemilik = $this->input->post('id_pemilik');
+        $notif_pesanan = $this->input->post('notif_pesanan');
+        $notif_stok = $this->input->post('notif_stok');
+        $notif_laporan = $this->input->post('notif_laporan');
+
+        log_message('debug', "save_notification_settings - id_pemilik: $id_pemilik");
+
+        if (empty($id_pemilik)) {
+            echo json_encode(['success' => false, 'message' => 'ID tidak ditemukan']);
+            return;
+        }
+
+        // Update notification settings
+        $update_data = [
+            'notif_pesanan' => $notif_pesanan == '1' ? '1' : '0',
+            'notif_stok' => $notif_stok == '1' ? '1' : '0',
+            'notif_laporan' => $notif_laporan == '1' ? '1' : '0',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->where('id_pemilik', $id_pemilik);
+        $result = $this->db->update('pemilik', $update_data);
+
+        if ($result) {
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Pengaturan notifikasi berhasil disimpan!'
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Gagal menyimpan pengaturan notifikasi']);
         }
     }
 }

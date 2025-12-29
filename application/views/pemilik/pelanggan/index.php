@@ -3,11 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelola Pelanggan - KixEra</title>
+    <title><?= lang_text('manage_customers') ?> - KixEra</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Chart container styles for stable rendering */
+        .chart-container {
+            position: relative;
+            height: 256px;
+            width: 100%;
+        }
+        .chart-container canvas {
+            max-width: 100% !important;
+            max-height: 100% !important;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
@@ -19,16 +31,16 @@
             <header class="bg-white border-b border-gray-200 px-6 py-6">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <h1 class="text-2xl font-semibold text-gray-800">Kelola Pelanggan</h1>
+                        <h1 class="text-2xl font-semibold text-gray-800"><?= lang_text('manage_customers') ?></h1>
                         <div class="bg-emerald-100 px-4 py-1 rounded-full">
-                            <span class="text-emerald-700 text-sm font-medium" id="totalBadge">0 Total Pelanggan</span>
+                            <span class="text-emerald-700 text-sm font-medium" id="totalBadge">0 <?= lang_text('total_customers') ?></span>
                         </div>
                     </div>
 
                     <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
                         <!-- Search -->
                         <div class="relative flex-1 md:w-80">
-                            <input type="text" id="searchInput" placeholder="Cari pelanggan..."
+                            <input type="text" id="searchInput" placeholder="<?= lang_text('search_customer') ?>"
                                 class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-xl text-gray-600 focus:outline-none focus:border-emerald-500">
                             <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                         </div>
@@ -36,7 +48,7 @@
                         <!-- Branch Filter -->
                         <select id="branchFilter"
                             class="px-4 py-2 border border-gray-300 rounded-xl text-black focus:outline-none focus:border-emerald-500">
-                            <option value="">Semua Cabang</option>
+                            <option value=""><?= lang_text('all_branches') ?></option>
                             <option value="1">Kota Gede</option>
                             <option value="2">Seturan</option>
                             <option value="3">Condongcatur</option>
@@ -47,7 +59,7 @@
                         <!-- Add Customer Button -->
                         <button onclick="openAddModal()" class="bg-emerald-500 text-white px-6 py-2 rounded-xl hover:bg-emerald-600 transition flex items-center justify-center gap-2">
                             <i class="fas fa-user-plus"></i>
-                            <span>Tambah Pelanggan</span>
+                            <span><?= lang_text('add_customer') ?></span>
                         </button>
                     </div>
                 </div>
@@ -61,9 +73,9 @@
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Total Pelanggan</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('total_customers') ?></p>
                                 <h3 class="text-2xl font-bold text-emerald-500 mt-2" id="totalCustomers">0</h3>
-                                <p class="text-sm text-gray-500 mt-2">Semua cabang</p>
+                                <p class="text-sm text-gray-500 mt-2"><?= lang_text('all_branches') ?></p>
                             </div>
                             <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                                 <i class="fas fa-users text-emerald-500"></i>
@@ -75,9 +87,9 @@
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Pelanggan Aktif</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('active_customers') ?></p>
                                 <h3 class="text-2xl font-bold text-blue-500 mt-2" id="activeCustomers">0</h3>
-                                <p class="text-sm text-gray-500 mt-2">30 hari terakhir</p>
+                                <p class="text-sm text-gray-500 mt-2"><?= lang_text('last_30_days') ?></p>
                             </div>
                             <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                                 <i class="fas fa-user-check text-blue-500"></i>
@@ -89,7 +101,7 @@
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Baru Bulan Ini</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('new_this_month') ?></p>
                                 <h3 class="text-2xl font-bold text-purple-500 mt-2" id="newCustomers">0</h3>
                                 <p class="text-sm text-gray-500 mt-2" id="currentMonth">-</p>
                             </div>
@@ -103,9 +115,9 @@
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Total Transaksi</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('total_orders') ?></p>
                                 <h3 class="text-2xl font-bold text-orange-500 mt-2" id="totalTransactions">0</h3>
-                                <p class="text-sm text-gray-500 mt-2">Semua waktu</p>
+                                <p class="text-sm text-gray-500 mt-2"><?= lang_text('all_time') ?></p>
                             </div>
                             <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                                 <i class="fas fa-shopping-cart text-orange-500"></i>
@@ -117,58 +129,59 @@
                 <!-- Charts Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     <!-- Distribusi Pelanggan Per Cabang -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 overflow-hidden">
                         <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-lg font-semibold text-gray-800">Distribusi Per Cabang</h2>
+                            <h2 class="text-lg font-semibold text-gray-800"><?= lang_text('distribution_by_branch') ?></h2>
                             <button onclick="refreshCharts()" class="text-emerald-500 hover:text-emerald-600" title="Refresh">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
-                        <div class="h-64">
+                        <div class="chart-container">
                             <canvas id="distributionChart"></canvas>
                         </div>
                     </div>
 
                     <!-- Top Pelanggan Aktif -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Top 5 Pelanggan Aktif</h2>
-                        <div class="h-64">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 overflow-hidden">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('top_active_customers') ?></h2>
+                        <div class="chart-container">
                             <canvas id="topCustomersChart"></canvas>
                         </div>
                     </div>
 
                     <!-- Pertumbuhan Bulanan -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 overflow-hidden">
                         <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-lg font-semibold text-gray-800">Pertumbuhan Bulanan</h2>
+                            <h2 class="text-lg font-semibold text-gray-800"><?= lang_text('monthly_growth') ?></h2>
                             <select id="periodFilter" class="text-xs px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
-                                <option value="6">6 Bulan</option>
-                                <option value="3">3 Bulan</option>
-                                <option value="12">12 Bulan</option>
+                                <option value="6"><?= lang_text('months_6') ?></option>
+                                <option value="3"><?= lang_text('months_3') ?></option>
+                                <option value="12"><?= lang_text('months_12') ?></option>
                             </select>
                         </div>
-                        <div class="h-64">
+                        <div class="chart-container">
                             <canvas id="growthChart"></canvas>
                         </div>
                     </div>
                 </div>
 
+
                 <!-- Customer Table -->
                 <div class="bg-white rounded-2xl shadow-lg p-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Data Pelanggan</h2>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6"><?= lang_text('customer_data') ?></h2>
                     
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="border-b border-gray-200">
                                 <tr>
                                     <th class="text-center py-3 px-4 text-base font-medium text-gray-600">ID</th>
-                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Nama</th>
-                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Telepon</th>
-                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Email</th>
-                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Alamat</th>
-                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Total Pesanan</th>
-                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Status</th>
-                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Aksi</th>
+                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('name') ?></th>
+                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('phone') ?></th>
+                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('email') ?></th>
+                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('address') ?></th>
+                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('total_orders') ?></th>
+                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('status') ?></th>
+                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('action') ?></th>
                                 </tr>
                             </thead>
                             <tbody id="customerTableBody">
@@ -182,7 +195,7 @@
                                         <td class="py-4 px-4 text-center text-gray-700"><?= htmlspecialchars($p->alamat ?? '-') ?></td>
                                         <td class="py-4 px-4 text-center text-gray-700">-</td>
                                         <td class="py-4 px-4 text-center">
-                                            <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Aktif</span>
+                                            <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full"><?= lang_text('active') ?></span>
                                         </td>
                                         <td class="py-4 px-4">
                                             <div class="flex items-center justify-center gap-2">
@@ -201,7 +214,7 @@
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="8" class="text-center py-8 text-gray-500">Tidak ada data pelanggan</td>
+                                        <td colspan="8" class="text-center py-8 text-gray-500"><?= lang_text('no_customer_data') ?></td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -216,7 +229,7 @@
     <div id="customerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4">
             <div class="flex items-center justify-between p-6 border-b">
-                <h3 id="modalTitle" class="text-xl font-semibold text-gray-800">Tambah Pelanggan Baru</h3>
+                <h3 id="modalTitle" class="text-xl font-semibold text-gray-800"><?= lang_text('add_new_customer') ?></h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -253,10 +266,10 @@
                 </div>
                 <div class="flex gap-3 p-6 border-t">
                     <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-                        Batal
+                        <?= lang_text('cancel') ?>
                     </button>
                     <button type="submit" class="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">
-                        Simpan
+                        <?= lang_text('save') ?>
                     </button>
                 </div>
             </form>
@@ -267,7 +280,7 @@
     <div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
             <div class="flex items-center justify-between p-6 border-b">
-                <h3 class="text-xl font-semibold text-gray-800">Detail Pelanggan</h3>
+                <h3 class="text-xl font-semibold text-gray-800"><?= lang_text('customer_details') ?></h3>
                 <button onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -275,7 +288,7 @@
             <div id="viewContent" class="p-6"></div>
             <div class="flex justify-end p-6 border-t">
                 <button onclick="closeViewModal()" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
-                    Tutup
+                    <?= lang_text('close') ?>
                 </button>
             </div>
         </div>
@@ -455,7 +468,7 @@
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: { position: 'bottom' }
                         }
@@ -490,7 +503,7 @@
                     options: {
                         indexAxis: 'y',
                         responsive: true,
-                        maintainAspectRatio: true,
+                        maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
                             x: { beginAtZero: true }
@@ -529,7 +542,7 @@
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
+                        maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
                             y: { beginAtZero: true }

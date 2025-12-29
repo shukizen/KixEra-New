@@ -24,13 +24,27 @@ class Inventori extends CI_Controller {
 
     public function index()
     {
-        // Ambil id_pemilik dari session karyawan
+        // Ambil id_pemilik dan id_cabang dari session karyawan
         $id_pemilik = $this->session->userdata('id_pemilik');
+        $id_cabang = $this->session->userdata('id_cabang');
+        
+        // Fallback: jika id_pemilik belum ada di session, ambil dari database melalui cabang
+        if (empty($id_pemilik) && !empty($id_cabang)) {
+            $cabang = $this->db->select('id_pemilik')
+                               ->where('id_cabang', $id_cabang)
+                               ->get('cabang')
+                               ->row();
+            if ($cabang) {
+                $id_pemilik = $cabang->id_pemilik;
+                // Update session untuk request berikutnya
+                $this->session->set_userdata('id_pemilik', $id_pemilik);
+            }
+        }
         
         // Inisialisasi data
         $data = [];
         
-        // Ambil data untuk form
+        // Ambil data untuk form - hanya cabang milik pemilik yang sama
         $data['branches'] = $this->Inventori_model->get_all_branches($id_pemilik);
         $data['categories'] = $this->get_categories();
         $data['units'] = $this->get_units();
@@ -41,12 +55,15 @@ class Inventori extends CI_Controller {
         // Ambil statistik
         $data['stats'] = $this->Inventori_model->get_inventory_stats($id_pemilik);
         
-        // PENTING: Ambil data barang paling sering digunakan untuk grafik
-        // Ini yang akan menampilkan nama barang di grafik
+        // Data untuk Chart 1: Barang paling sering digunakan (Bar Chart)
         $data['items_by_category'] = $this->Inventori_model->get_most_used_items($id_pemilik, 5);
         
+        // Data untuk Chart 2: Distribusi Kategori (Doughnut Chart)
+        $data['category_distribution'] = $this->Inventori_model->get_items_by_category($id_pemilik);
+        
         // Debug - cek apakah data grafik ada
-        log_message('debug', 'Chart Data: ' . print_r($data['items_by_category'], true));
+        log_message('debug', 'Chart Data Usage: ' . print_r($data['items_by_category'], true));
+        log_message('debug', 'Chart Data Category: ' . print_r($data['category_distribution'], true));
         
         // Load views
         $this->load->view('template/header');
@@ -66,12 +83,10 @@ class Inventori extends CI_Controller {
         $this->form_validation->set_rules('satuan', 'Satuan', 'required');
         $this->form_validation->set_rules('id_cabang', 'Cabang', 'required|numeric');
         $this->form_validation->set_rules('stok_masuk', 'Jumlah Masuk', 'required|numeric|greater_than[0]');
-        $this->form_validation->set_rules('tanggal_masuk', 'Tanggal', 'required');
-        $this->form_validation->set_rules('harga_satuan', 'Harga Satuan', 'numeric');
         
         if ($this->form_validation->run() == FALSE) {
             $this->session->set_flashdata('error', validation_errors());
-            redirect('inventori');
+            redirect('karyawan/inventori');
             return;
         }
         
@@ -80,7 +95,7 @@ class Inventori extends CI_Controller {
         // Validasi cabang milik owner
         if (!$this->Inventori_model->validate_branch_owner($id_cabang, $id_pemilik)) {
             $this->session->set_flashdata('error', 'Cabang tidak valid atau bukan milik perusahaan Anda!');
-            redirect('inventori');
+            redirect('karyawan/inventori');
             return;
         }
         
@@ -113,7 +128,7 @@ class Inventori extends CI_Controller {
                 'stok_tersedia' => $this->input->post('stok_masuk'),
                 'stok_minimal' => 5, // Default
                 'harga_satuan' => (!empty($harga_satuan) && $harga_satuan > 0) ? $harga_satuan : 0,
-                'tanggal_masuk' => $this->input->post('tanggal_masuk'),
+                'keterangan' => $this->input->post('keterangan'),
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             ];
@@ -185,7 +200,7 @@ class Inventori extends CI_Controller {
         
         if ($this->form_validation->run() == FALSE) {
             $this->session->set_flashdata('error', validation_errors());
-            redirect('inventori');
+            redirect('karyawan/inventori/lihat_stok');
             return;
         }
         
@@ -194,7 +209,7 @@ class Inventori extends CI_Controller {
         
         if (!$item) {
             $this->session->set_flashdata('error', 'Data tidak ditemukan atau Anda tidak memiliki akses!');
-            redirect('inventori');
+            redirect('karyawan/inventori/lihat_stok');
             return;
         }
         
@@ -215,7 +230,7 @@ class Inventori extends CI_Controller {
             $this->session->set_flashdata('error', 'Gagal mengupdate data!');
         }
         
-        redirect('inventori');
+        redirect('karyawan/inventori/lihat_stok');
     }
     
     // Delete inventory item
@@ -223,7 +238,7 @@ class Inventori extends CI_Controller {
     {
         if (empty($id) || !is_numeric($id)) {
             $this->session->set_flashdata('error', 'ID tidak valid!');
-            redirect('inventori');
+            redirect('karyawan/inventori/lihat_stok');
             return;
         }
         
@@ -234,7 +249,7 @@ class Inventori extends CI_Controller {
         
         if (!$item) {
             $this->session->set_flashdata('error', 'Data tidak ditemukan atau Anda tidak memiliki akses!');
-            redirect('inventori');
+            redirect('karyawan/inventori/lihat_stok');
             return;
         }
         
@@ -246,7 +261,7 @@ class Inventori extends CI_Controller {
             $this->session->set_flashdata('error', 'Gagal menghapus data!');
         }
         
-        redirect('inventori');
+        redirect('karyawan/inventori/lihat_stok');
     }
     
     // AJAX: Get inventory data

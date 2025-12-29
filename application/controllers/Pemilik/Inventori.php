@@ -73,6 +73,17 @@ class Inventori extends CI_Controller {
         }
     }
     
+    // Detail page for inventory item
+    public function detail($id) {
+        $id_pemilik = $this->get_id_pemilik();
+        $data['item'] = $this->Inventorimodel->get_inventory_by_id($id, $id_pemilik);
+        
+        $this->load->view('template/header');
+        $this->load->view('template/sidebar');
+        $this->load->view('pemilik/inventori/detail', $data);
+        $this->load->view('template/footer');
+    }
+    
     // Add new inventory item
     public function add() {
         $this->form_validation->set_rules('nama_item', 'Nama Item', 'required|trim');

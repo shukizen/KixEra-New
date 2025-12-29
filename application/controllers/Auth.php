@@ -356,6 +356,7 @@ class Auth extends CI_Controller {
             $session_data['email'] = $user['email'];
             $session_data['id_cabang'] = $user['id_cabang'];
             $session_data['nama_cabang'] = $user['nama_cabang'];
+            $session_data['id_pemilik'] = $user['id_pemilik']; // ID pemilik dari cabang
         }
         
         $this->session->set_userdata($session_data);

@@ -2,12 +2,12 @@
     <!-- Header -->
     <header class="bg-white border-b border-gray-200 px-8 py-4">
         <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-gray-800">Keuangan</h1>
+            <h1 class="text-2xl font-bold text-gray-800"><?= lang_text('financial_report') ?></h1>
             
             <div class="flex items-center gap-4">
                 <!-- Search Bar -->
                 <div class="relative">
-                    <input type="text" id="searchInput" placeholder="Search..." class="w-80 px-4 py-2 pr-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" id="searchInput" placeholder="<?= lang_text('search') ?>..." class="w-80 px-4 py-2 pr-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
                 </div>
                 
@@ -21,15 +21,15 @@
                 <div class="relative">
                     <button onclick="toggleTransaksiDropdown()" class="px-6 py-2 bg-emerald-500 text-white rounded-lg font-medium flex items-center gap-2 hover:bg-emerald-600">
                         <i class="fas fa-plus"></i>
-                        Tambah Transaksi
+                        <?= lang_text('add_transaction') ?>
                         <i class="fas fa-chevron-down text-xs"></i>
                     </button>
                     <div id="transaksiDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10 border border-gray-200">
                         <a href="javascript:void(0)" onclick="openPemasukanModal()" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-t-lg">
-                            <i class="fas fa-arrow-up text-green-500 mr-2"></i> Pemasukan
+                            <i class="fas fa-arrow-up text-green-500 mr-2"></i> <?= lang_text('income') ?>
                         </a>
                         <a href="javascript:void(0)" onclick="openPengeluaranModal()" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-b-lg">
-                            <i class="fas fa-arrow-down text-red-500 mr-2"></i> Pengeluaran
+                            <i class="fas fa-arrow-down text-red-500 mr-2"></i> <?= lang_text('expense') ?>
                         </a>
                     </div>
                 </div>
@@ -45,7 +45,7 @@
             <div class="bg-white rounded-2xl shadow-lg p-6">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Total Pemasukan</p>
+                        <p class="text-sm font-medium text-gray-500"><?= lang_text('total_income') ?></p>
                         <h3 class="text-2xl font-bold text-emerald-500 mt-2">
                             Rp <?php echo number_format($total_pemasukan ?? 0, 0, ',', '.'); ?>
                         </h3>
@@ -61,7 +61,7 @@
             <div class="bg-white rounded-2xl shadow-lg p-6">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Total Pengeluaran</p>
+                        <p class="text-sm font-medium text-gray-500"><?= lang_text('total_expense') ?></p>
                         <h3 class="text-2xl font-bold text-red-500 mt-2">
                             Rp <?php echo number_format($total_pengeluaran ?? 0, 0, ',', '.'); ?>
                         </h3>
@@ -77,7 +77,7 @@
             <div class="bg-white rounded-2xl shadow-lg p-6">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Net Profit</p>
+                        <p class="text-sm font-medium text-gray-500"><?= lang_text('net_profit') ?></p>
                         <?php 
                         $net_profit = ($total_pemasukan ?? 0) - ($total_pengeluaran ?? 0);
                         $profit_class = $net_profit >= 0 ? 'text-emerald-500' : 'text-red-500';
@@ -85,7 +85,7 @@
                         <h3 class="text-2xl font-bold <?php echo $profit_class; ?> mt-2">
                             Rp <?php echo number_format($net_profit, 0, ',', '.'); ?>
                         </h3>
-                        <p class="text-sm text-gray-500 mt-2">Current period</p>
+                        <p class="text-sm text-gray-500 mt-2"><?= lang_text('current_period') ?></p>
                     </div>
                     <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                         <i class="fas fa-chart-line text-emerald-500"></i>
@@ -97,11 +97,11 @@
             <div class="bg-white rounded-2xl shadow-lg p-6">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Total Transaksi</p>
+                        <p class="text-sm font-medium text-gray-500"><?= lang_text('transactions') ?></p>
                         <h3 class="text-2xl font-bold text-blue-500 mt-2">
                             <?php echo count($transaksi ?? []); ?>
                         </h3>
-                        <p class="text-sm text-gray-500 mt-2">Transactions</p>
+                        <p class="text-sm text-gray-500 mt-2"><?= lang_text('transactions') ?></p>
                     </div>
                     <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                         <i class="fas fa-receipt text-blue-500"></i>
@@ -114,13 +114,13 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <!-- Cash Flow Trend -->
             <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Cash Flow Trend</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('cash_flow_trend') ?></h3>
                 <canvas id="cashFlowChart"></canvas>
             </div>
 
             <!-- Pengeluaran Breakdown -->
             <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Pengeluaran Breakdown</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('expense_breakdown') ?></h3>
                 <canvas id="pengeluaranChart"></canvas>
             </div>
         </div>
@@ -128,13 +128,13 @@
         <!-- Transaction Table -->
         <div class="bg-white rounded-2xl shadow-lg p-6">
     <div class="flex items-center justify-between mb-6">
-        <h3 class="text-xl font-semibold text-gray-800">Rincian Biaya</h3>
+        <h3 class="text-xl font-semibold text-gray-800"><?= lang_text('cost_details') ?></h3>
         
         <!-- Export Button dengan Dropdown -->
         <div class="relative">
             <button onclick="toggleExportDropdown()" class="px-6 py-2 bg-emerald-500 text-white rounded-lg font-medium flex items-center gap-2 hover:bg-emerald-600">
                 <i class="fas fa-file-export"></i>
-                Export Data
+                <?= lang_text('export_data') ?>
                 <i class="fas fa-chevron-down text-xs ml-2"></i>
             </button>
             
@@ -142,7 +142,7 @@
             <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-20 border border-gray-200">
                 <!-- Header Export Type -->
                 <div class="px-4 py-3 border-b border-gray-100">
-                    <p class="text-sm font-semibold text-gray-700">Tipe Laporan</p>
+                    <p class="text-sm font-semibold text-gray-700"><?= lang_text('report_type') ?></p>
                 </div>
                 
                 <!-- Export Options -->
@@ -151,8 +151,8 @@
                         <i class="fas fa-file-excel text-emerald-600 text-xs"></i>
                     </div>
                     <div>
-                        <p class="font-medium text-sm">Excel (Lengkap)</p>
-                        <p class="text-xs text-gray-500">Semua transaksi</p>
+                        <p class="font-medium text-sm">Excel (<?= lang_text('all_transactions') ?>)</p>
+                        <p class="text-xs text-gray-500"><?= lang_text('all_transactions') ?></p>
                     </div>
                 </a>
                 
@@ -161,8 +161,8 @@
                         <i class="fas fa-arrow-up text-green-600 text-xs"></i>
                     </div>
                     <div>
-                        <p class="font-medium text-sm">Excel (Pemasukan)</p>
-                        <p class="text-xs text-gray-500">Pemasukan saja</p>
+                        <p class="font-medium text-sm">Excel (<?= lang_text('income') ?>)</p>
+                        <p class="text-xs text-gray-500"><?= lang_text('income_only') ?></p>
                     </div>
                 </a>
                 
@@ -171,15 +171,15 @@
                         <i class="fas fa-arrow-down text-red-600 text-xs"></i>
                     </div>
                     <div>
-                        <p class="font-medium text-sm">Excel (Pengeluaran)</p>
-                        <p class="text-xs text-gray-500">Pengeluaran saja</p>
+                        <p class="font-medium text-sm">Excel (<?= lang_text('expense') ?>)</p>
+                        <p class="text-xs text-gray-500"><?= lang_text('expense_only') ?></p>
                     </div>
                 </a>
                 
                 <!-- Separator -->
                 <div class="border-t border-gray-100">
                     <div class="px-4 py-2">
-                        <p class="text-xs font-medium text-gray-500">Format Lainnya</p>
+                        <p class="text-xs font-medium text-gray-500"><?= lang_text('other_format') ?></p>
                     </div>
                 </div>
                 
@@ -201,7 +201,7 @@
                     </div>
                     <div>
                         <p class="font-medium text-sm">Download PDF</p>
-                        <p class="text-xs text-gray-500">Untuk cetak</p>
+                        <p class="text-xs text-gray-500"><?= lang_text('for_print') ?></p>
                     </div>
                 </a>
             </div>
@@ -211,13 +211,13 @@
                 <table class="w-full" id="transaksiTable">
                     <thead class="border-b border-gray-200">
                         <tr>
-                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Tanggal</th>
-                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Deskripsi</th>
-                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Cabang</th>
-                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Kategori</th>
-                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Tipe</th>
-                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Jumlah</th>
-                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Aksi</th>
+                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('date') ?></th>
+                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('description') ?></th>
+                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('branch') ?></th>
+                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('category') ?></th>
+                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('type') ?></th>
+                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('amount') ?></th>
+                            <th class="text-center py-3 px-4 text-base font-medium text-gray-600"><?= lang_text('action') ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -243,9 +243,9 @@
                                     </td>
                                     <td class="py-4 px-4 text-center">
                                         <?php if ($item->tipe_transaksi == 'pemasukan'): ?>
-                                            <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Pemasukan</span>
+                                            <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full"><?= lang_text('income') ?></span>
                                         <?php else: ?>
-                                            <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">Pengeluaran</span>
+                                            <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full"><?= lang_text('expense') ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="py-4 px-4 text-center font-semibold <?php echo $item->tipe_transaksi == 'pemasukan' ? 'text-emerald-500' : 'text-red-500'; ?>">
@@ -263,7 +263,7 @@
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="7" class="py-8 text-center text-gray-500">Tidak ada data transaksi</td>
+                                <td colspan="7" class="py-8 text-center text-gray-500"><?= lang_text('no_transaction_data') ?></td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -277,7 +277,7 @@
 <div id="filterModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
         <div class="flex items-center justify-between p-6 border-b">
-            <h3 class="text-xl font-semibold text-gray-800">Filter Keuangan</h3>
+            <h3 class="text-xl font-semibold text-gray-800"><?= lang_text('filter_finance') ?></h3>
             <button onclick="toggleFilterModal()" class="text-gray-400 hover:text-gray-600">
                 <i class="fas fa-times text-xl"></i>
             </button>
@@ -286,9 +286,9 @@
             <div class="p-6 space-y-4">
                 <!-- Cabang -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Cabang</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('branch') ?></label>
                     <select name="id_cabang" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="">Semua Cabang</option>
+                        <option value=""><?= lang_text('all_branches') ?></option>
                         <?php if (!empty($cabang_list)): ?>
                             <?php foreach ($cabang_list as $cabang): ?>
                                 <option value="<?php echo $cabang->id_cabang; ?>" <?php echo (isset($_GET['id_cabang']) && $_GET['id_cabang'] == $cabang->id_cabang) ? 'selected' : ''; ?>>
@@ -315,9 +315,9 @@
 
                 <!-- Bulan -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Bulan</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('month') ?></label>
                     <select name="bulan" id="filterBulan" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="">Semua Bulan</option>
+                        <option value=""><?= lang_text('all_months') ?></option>
                         <?php 
                         $bulan_list = [
                             '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
@@ -350,10 +350,10 @@
             </div>
             <div class="flex gap-3 p-6 border-t">
                 <button type="button" onclick="resetFilter()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-                    Reset
+                    <?= lang_text('reset') ?>
                 </button>
                 <button type="submit" class="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">
-                    Terapkan Filter
+                    <?= lang_text('apply_filter') ?>
                 </button>
             </div>
         </form>
@@ -365,7 +365,7 @@
 <div id="pemasukanModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 my-8">
         <div class="flex items-center justify-between p-6 border-b">
-            <h3 class="text-xl font-semibold text-gray-800" id="pemasukanModalTitle">Tambah Pemasukan</h3>
+            <h3 class="text-xl font-semibold text-gray-800" id="pemasukanModalTitle"><?= lang_text('add_income') ?></h3>
             <button onclick="closePemasukanModal()" class="text-gray-400 hover:text-gray-600">
                 <i class="fas fa-times text-xl"></i>
             </button>
