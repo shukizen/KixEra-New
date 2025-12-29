@@ -94,7 +94,8 @@ class Pesanan_model extends CI_Model
             pelanggan.no_telp,
             layanan.nama_layanan,
             karyawan.nama AS nama_karyawan,
-            cabang.nama_cabang
+            cabang.nama_cabang,
+            (SELECT COUNT(*) FROM detail_pesanan WHERE detail_pesanan.id_pesanan = pesanan.id_pesanan AND (foto_sesudah IS NULL OR foto_sesudah = "")) as pending_photos
         ');
         $this->db->from($this->table);
         $this->db->join('pelanggan', 'pelanggan.id_pelanggan = pesanan.id_pelanggan', 'left');
@@ -206,7 +207,8 @@ class Pesanan_model extends CI_Model
             layanan.nama_layanan,
             layanan.harga AS harga_layanan,
             karyawan.nama AS nama_karyawan,
-            cabang.nama_cabang
+            cabang.nama_cabang,
+            (SELECT COUNT(*) FROM detail_pesanan WHERE detail_pesanan.id_pesanan = pesanan.id_pesanan AND (foto_sesudah IS NULL OR foto_sesudah = "")) as pending_photos
         ');
         $this->db->from($this->table);
         $this->db->join('pelanggan', 'pelanggan.id_pelanggan = pesanan.id_pelanggan', 'left');
@@ -353,5 +355,75 @@ class Pesanan_model extends CI_Model
         $this->db->limit(5); // Top 5 services
         
         return $this->db->get()->result();
+    }
+
+    /**
+     * Confirm payment and trigger revenue entry
+     * @param int $id_pesanan
+     * @param string $metode_pembayaran (tunai, debit, qris)
+     * @param int|null $id_karyawan
+     * @return bool
+     */
+    public function confirmPayment($id_pesanan, $metode_pembayaran = null, $id_karyawan = null)
+    {
+        // Get pesanan data
+        $pesanan = $this->getPesananById($id_pesanan);
+        if (!$pesanan) {
+            return false;
+        }
+
+        // Check if already paid
+        if (isset($pesanan->status_pembayaran) && $pesanan->status_pembayaran === 'sudah_bayar') {
+            return true; // Already paid, no need to process again
+        }
+
+        // Update payment status
+        $data = [
+            'status_pembayaran' => 'sudah_bayar',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        // Update metode_pembayaran if provided
+        if ($metode_pembayaran) {
+            $data['metode_pembayaran'] = $metode_pembayaran;
+        }
+
+        $this->db->where('id_pesanan', $id_pesanan);
+        $updated = $this->db->update($this->table, $data);
+
+        if ($updated) {
+            // Trigger revenue entry
+            $CI =& get_instance();
+            $CI->load->model('Keuangan_model');
+            
+            $pemasukan_data = [
+                'id_cabang' => $pesanan->id_cabang,
+                'nama_transaksi' => 'Pembayaran Pesanan #' . $pesanan->nomor_pesanan,
+                'kategori' => 'pesanan',
+                'jumlah' => $pesanan->total_harga,
+                'tgl_transaksi' => date('Y-m-d'),
+                'id_pesanan' => $id_pesanan,
+                'keterangan' => 'Pembayaran ' . ($metode_pembayaran ?? $pesanan->metode_pembayaran ?? 'tunai') . ' - ' . ($pesanan->nama_pelanggan ?? 'Pelanggan'),
+                'id_karyawan' => $id_karyawan
+            ];
+            
+            $CI->Keuangan_model->insert_pemasukan($pemasukan_data);
+            
+            // Add progress timeline entry for payment
+            $metode_label = [
+                'tunai' => 'Tunai',
+                'debit' => 'Debit/Transfer', 
+                'qris' => 'QRIS'
+            ];
+            $metode_text = $metode_label[$metode_pembayaran ?? $pesanan->metode_pembayaran] ?? 'Tunai';
+            $this->insertProgres(
+                $id_pesanan, 
+                'pembayaran', 
+                'Pembayaran ' . $metode_text . ' - Rp ' . number_format($pesanan->total_harga, 0, ',', '.'),
+                $id_karyawan
+            );
+        }
+
+        return $updated;
     }
 }

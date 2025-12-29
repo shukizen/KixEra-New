@@ -80,6 +80,25 @@
                                 <p class="text-sm text-gray-500 mb-1">Total Harga</p>
                                 <p class="font-semibold text-emerald-600 text-lg">Rp <?= number_format($pesanan->total_harga ?? 0, 0, ',', '.') ?></p>
                             </div>
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">Status Pembayaran</p>
+                                <?php
+                                $status_bayar = strtolower($pesanan->status_pembayaran ?? 'belum_bayar');
+                                $badge_bayar = 'bg-red-100 text-red-600';
+                                $label_bayar = 'Belum Bayar';
+                                $icon_bayar = 'fa-clock';
+                                
+                                if ($status_bayar === 'sudah_bayar') {
+                                    $badge_bayar = 'bg-emerald-100 text-emerald-600';
+                                    $label_bayar = 'Sudah Bayar';
+                                    $icon_bayar = 'fa-check-circle';
+                                }
+                                ?>
+                                <span class="<?= $badge_bayar ?> px-3 py-1.5 rounded-full text-sm font-medium inline-flex items-center gap-1.5">
+                                    <i class="fas <?= $icon_bayar ?> text-xs"></i>
+                                    <?= $label_bayar ?>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -183,41 +202,7 @@
                                     </div>
                                 </div>
 
-                                <?php if ($item->foto_sebelum || $item->foto_sesudah): ?>
-                                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                                    <?php if ($item->foto_sebelum): ?>
-                                    <div class="text-center">
-                                        <p class="text-xs text-gray-500 mb-2"><i class="fas fa-camera text-orange-400 mr-1"></i>Sebelum</p>
-                                        <a href="<?= base_url($item->foto_sebelum) ?>" target="_blank">
-                                            <img src="<?= base_url($item->foto_sebelum) ?>" alt="Sebelum" class="w-full max-w-[200px] mx-auto h-40 object-cover rounded-lg border-2 border-orange-200 hover:scale-105 transition-transform cursor-pointer">
-                                        </a>
-                                    </div>
-                                    <?php else: ?>
-                                    <div class="text-center">
-                                        <p class="text-xs text-gray-500 mb-2"><i class="fas fa-camera text-orange-400 mr-1"></i>Sebelum</p>
-                                        <div class="w-40 h-40 mx-auto bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-                                            <i class="fas fa-image text-gray-300 text-3xl"></i>
-                                        </div>
-                                    </div>
-                                    <?php endif; ?>
 
-                                    <?php if ($item->foto_sesudah): ?>
-                                    <div class="text-center">
-                                        <p class="text-xs text-gray-500 mb-2"><i class="fas fa-camera-retro text-green-500 mr-1"></i>Sesudah</p>
-                                        <a href="<?= base_url($item->foto_sesudah) ?>" target="_blank">
-                                            <img src="<?= base_url($item->foto_sesudah) ?>" alt="Sesudah" class="w-full max-w-[200px] mx-auto h-40 object-cover rounded-lg border-2 border-green-200 hover:scale-105 transition-transform cursor-pointer">
-                                        </a>
-                                    </div>
-                                    <?php else: ?>
-                                    <div class="text-center">
-                                        <p class="text-xs text-gray-500 mb-2"><i class="fas fa-camera-retro text-green-500 mr-1"></i>Sesudah</p>
-                                        <div class="w-40 h-40 mx-auto bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-                                            <i class="fas fa-image text-gray-300 text-3xl"></i>
-                                        </div>
-                                    </div>
-                                    <?php endif; ?>
-                                </div>
-                                <?php endif; ?>
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -227,6 +212,67 @@
 
                 <!-- Sidebar - 1/3 -->
                 <div class="space-y-6">
+                    <!-- Dokumentasi Foto (Moved here) -->
+                    <?php 
+                    $has_photos = false;
+                    foreach ($detail_items as $item) {
+                        if ($item->foto_sebelum || $item->foto_sesudah) {
+                            $has_photos = true;
+                            break;
+                        }
+                    }
+                    ?>
+                    <?php if ($has_photos): ?>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center gap-3 mb-4 pb-4 border-b">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-images text-indigo-600"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800">Dokumentasi</h3>
+                        </div>
+                        <div class="space-y-6">
+                            <?php foreach ($detail_items as $idx => $item): ?>
+                                <?php if ($item->foto_sebelum || $item->foto_sesudah): ?>
+                                    <div>
+                                        <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                            <span class="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-xs text-gray-600"><?= $idx + 1 ?></span>
+                                            <?= htmlspecialchars($item->jenis_sepatu) ?>
+                                        </h4>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <!-- Sebelum -->
+                                            <div class="relative group">
+                                                <?php if ($item->foto_sebelum): ?>
+                                                    <a href="<?= base_url($item->foto_sebelum) ?>" target="_blank" class="block">
+                                                        <img src="<?= base_url($item->foto_sebelum) ?>" class="w-full h-24 object-cover rounded-lg border border-gray-200 hover:border-orange-400 transition">
+                                                        <span class="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[10px] rounded backdrop-blur-sm">Sebelum</span>
+                                                    </a>
+                                                <?php else: ?>
+                                                    <div class="w-full h-24 bg-gray-50 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-gray-300">
+                                                        <i class="fas fa-image"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <!-- Sesudah -->
+                                            <div class="relative group">
+                                                <?php if ($item->foto_sesudah): ?>
+                                                    <a href="<?= base_url($item->foto_sesudah) ?>" target="_blank" class="block">
+                                                        <img src="<?= base_url($item->foto_sesudah) ?>" class="w-full h-24 object-cover rounded-lg border border-gray-200 hover:border-green-400 transition">
+                                                        <span class="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[10px] rounded backdrop-blur-sm">Sesudah</span>
+                                                    </a>
+                                                <?php else: ?>
+                                                    <div class="w-full h-24 bg-gray-50 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-gray-300">
+                                                        <i class="fas fa-image"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Quick Info -->
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Informasi Singkat</h3>

@@ -112,9 +112,9 @@
                                 <th class="px-4 py-3 text-left text-gray-500">Tanggal</th>
                                 <th class="px-4 py-3 text-left text-gray-500">Pelanggan</th>
                                 <th class="px-4 py-3 text-left text-gray-500">Layanan</th>
-                                <th class="px-4 py-3 text-left text-gray-500">Qty</th>
                                 <th class="px-4 py-3 text-left text-gray-500">Total</th>
                                 <th class="px-4 py-3 text-left text-gray-500">Status</th>
+                                <th class="px-4 py-3 text-left text-gray-500">Pembayaran</th>
                                 <th class="px-4 py-3 text-left text-gray-500">Aksi</th>
                             </tr>
                         </thead>
@@ -148,12 +148,36 @@
                                         <td class="px-4 py-3"><?= date('d M Y', strtotime($p->tgl_masuk)) ?></td>
                                         <td class="px-4 py-3"><?= htmlspecialchars($p->nama_pelanggan ?? '-') ?></td>
                                         <td class="px-4 py-3"><?= htmlspecialchars($p->nama_layanan ?? '-') ?></td>
-                                        <td class="px-4 py-3"><?= $p->jumlah_item ?? 0 ?></td>
                                         <td class="px-4 py-3 font-semibold">Rp <?= number_format($p->total_harga ?? 0, 0, ',', '.') ?></td>
                                         <td class="px-4 py-3">
                                             <span class="<?= $badge ?> px-3 py-1 rounded-full text-xs font-medium">
                                                 <?= htmlspecialchars($status_label ?: '-') ?>
                                             </span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <?php
+                                            $status_bayar = $p->status_pembayaran ?? 'belum_bayar';
+                                            $metode = $p->metode_pembayaran ?? '';
+                                            $metode_icon = '';
+                                            if ($metode === 'tunai') $metode_icon = '💵';
+                                            elseif ($metode === 'debit') $metode_icon = '💳';
+                                            elseif ($metode === 'qris') $metode_icon = '📱';
+                                            ?>
+                                            <?php if ($status_bayar === 'sudah_bayar'): ?>
+                                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                                                    <?= $metode_icon ?> Lunas
+                                                </span>
+                                            <?php else: ?>
+                                                <button class="btn-confirm-payment bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded-lg text-xs flex items-center gap-1"
+                                                    data-id="<?= $p->id_pesanan ?>"
+                                                    data-nomor="<?= htmlspecialchars($p->nomor_pesanan) ?>"
+                                                    data-total="<?= $p->total_harga ?>"
+                                                    data-metode="<?= $metode ?>"
+                                                    title="Konfirmasi Pembayaran">
+                                                    <i class="fas fa-money-bill-wave"></i>
+                                                    <span>Bayar</span>
+                                                </button>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="flex gap-1 flex-wrap">
@@ -202,7 +226,7 @@
                                                 </button>
                                                 <?php endif; ?>
                                                 
-                                                <?php if (in_array($status, ['selesai', 'siap_diambil', 'sudah_diambil'])): ?>
+                                                <?php if (in_array($status, ['selesai', 'siap_diambil', 'sudah_diambil']) && isset($p->pending_photos) && $p->pending_photos > 0): ?>
                                                 <button class="btn-upload-foto bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded-lg text-xs"
                                                     data-id="<?= $p->id_pesanan ?>" 
                                                     title="Upload Foto Sesudah">
@@ -246,20 +270,20 @@
             </div>
 
             <!-- Modal Tambah Pesanan -->
-            <div id="modalTambahPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
-                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden">
+            <div id="modalTambahPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden">
                     <!-- Header -->
-                    <div class="bg-teal-700 p-6 flex items-center justify-between">
+                    <div class="bg-white border-b p-6 flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                                <i class="fas fa-plus text-white text-xl"></i>
+                            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-plus text-emerald-600 text-xl"></i>
                             </div>
                             <div>
-                                <h2 class="text-xl font-bold text-white">Tambah Pesanan Baru</h2>
-                                <p class="text-teal-100 text-sm">Buat pesanan untuk pelanggan</p>
+                                <h2 class="text-xl font-bold text-gray-800">Tambah Pesanan Baru</h2>
+                                <p class="text-gray-500 text-sm">Buat pesanan untuk pelanggan</p>
                             </div>
                         </div>
-                        <button id="btnCloseModal" class="text-white/80 hover:text-white text-3xl hover:bg-white/10 rounded-lg w-10 h-10 flex items-center justify-center transition-all">
+                        <button id="btnCloseModal" class="text-gray-400 hover:text-gray-600 text-2xl hover:bg-gray-100 rounded-lg w-10 h-10 flex items-center justify-center transition-all">
                             &times;
                         </button>
                     </div>
@@ -273,8 +297,8 @@
                             <!-- Info Pesanan Section -->
                             <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-6">
                                 <div class="flex items-center gap-2 mb-4">
-                                    <div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-info-circle text-teal-600 text-sm"></i>
+                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-info-circle text-emerald-600 text-sm"></i>
                                     </div>
                                     <h3 class="font-semibold text-gray-800">Informasi Pesanan</h3>
                                 </div>
@@ -348,12 +372,53 @@
                                 </div>
                             </div>
                             
+                            <!-- Payment Section -->
+                            <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-6">
+                                <div class="flex items-center gap-2 mb-4">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-credit-card text-blue-600 text-sm"></i>
+                                    </div>
+                                    <h3 class="font-semibold text-gray-800">Pembayaran</h3>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Metode Pembayaran -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                                            <i class="fas fa-wallet text-blue-500 mr-1"></i>Metode Pembayaran
+                                        </label>
+                                        <select name="metode_pembayaran" id="add-metode_pembayaran"
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all">
+                                            <option value="">-- Pilih Metode --</option>
+                                            <option value="tunai">💵 Tunai</option>
+                                            <option value="debit">💳 Debit/Transfer</option>
+                                            <option value="qris">📱 QRIS</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Status Pembayaran -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                                            <i class="fas fa-check-circle text-blue-500 mr-1"></i>Status Pembayaran
+                                        </label>
+                                        <div class="flex items-center gap-4 h-[42px]">
+                                            <label class="inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" name="sudah_bayar" id="add-sudah_bayar" class="sr-only peer">
+                                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                                <span class="ms-3 text-sm font-medium text-gray-700" id="sudah-bayar-label">Belum Dibayar</span>
+                                            </label>
+                                            <input type="hidden" name="status_pembayaran" id="add-status_pembayaran" value="belum_bayar">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <!-- Detail Items Section -->
-                            <div class="bg-teal-50 rounded-xl p-5 border border-teal-200 mb-6">
+                            <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="flex items-center gap-2">
-                                        <div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-shoe-prints text-teal-600 text-sm"></i>
+                                        <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-shoe-prints text-emerald-600 text-sm"></i>
                                         </div>
                                         <h3 class="font-semibold text-gray-800">Detail Sepatu</h3>
                                     </div>
@@ -368,12 +433,12 @@
                             </div>
                             
                             <!-- Total Harga Preview -->
-                            <div class="bg-teal-700 rounded-xl p-4">
+                            <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-teal-100 font-medium">
-                                        <i class="fas fa-receipt mr-2"></i>Total Harga:
+                                    <span class="text-gray-600 font-medium">
+                                        <i class="fas fa-receipt mr-2 text-emerald-600"></i>Total Harga:
                                     </span>
-                                    <span id="totalHarga" class="text-2xl font-bold text-white">Rp 0</span>
+                                    <span id="totalHarga" class="text-2xl font-bold text-emerald-600">Rp 0</span>
                                     <input type="hidden" name="total_harga" id="add-total_harga" value="0">
                                 </div>
                             </div>
@@ -385,7 +450,7 @@
                         <button type="button" id="btnBatalModal" class="px-6 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-all flex items-center gap-2">
                             <i class="fas fa-times"></i>Batal
                         </button>
-                        <button type="submit" form="formTambahPesanan" class="px-6 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-medium transition-all flex items-center gap-2">
+                        <button type="submit" form="formTambahPesanan" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all flex items-center gap-2">
                             <i class="fas fa-save"></i>Simpan Pesanan
                         </button>
                     </div>
@@ -394,20 +459,20 @@
 
 
             <!-- Modal Edit Pesanan -->
-            <div id="modalEditPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
-                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden">
+            <div id="modalEditPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden">
                     <!-- Header -->
-                    <div class="bg-teal-700 p-6 flex items-center justify-between">
+                    <div class="bg-white border-b p-6 flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                                <i class="fas fa-edit text-white text-xl"></i>
+                            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-edit text-emerald-600 text-xl"></i>
                             </div>
                             <div>
-                                <h2 class="text-xl font-bold text-white">Edit Pesanan</h2>
-                                <p class="text-teal-100 text-sm">Perbarui informasi pesanan</p>
+                                <h2 class="text-xl font-bold text-gray-800">Edit Pesanan</h2>
+                                <p class="text-gray-500 text-sm">Perbarui informasi pesanan</p>
                             </div>
                         </div>
-                        <button id="btnCloseEditModal" class="text-white/80 hover:text-white text-3xl hover:bg-white/10 rounded-lg w-10 h-10 flex items-center justify-center transition-all">
+                        <button id="btnCloseEditModal" class="text-gray-400 hover:text-gray-600 text-2xl hover:bg-gray-100 rounded-lg w-10 h-10 flex items-center justify-center transition-all">
                             &times;
                         </button>
                     </div>
@@ -420,8 +485,8 @@
                             <!-- Info Pesanan Section -->
                             <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-6">
                                 <div class="flex items-center gap-2 mb-4">
-                                    <div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-info-circle text-teal-600 text-sm"></i>
+                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-info-circle text-emerald-600 text-sm"></i>
                                     </div>
                                     <h3 class="font-semibold text-gray-800">Informasi Pesanan</h3>
                                 </div>
@@ -429,10 +494,10 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-flag text-teal-500 mr-1"></i>Status Pesanan
+                                            <i class="fas fa-flag text-emerald-500 mr-1"></i>Status Pesanan
                                         </label>
                                         <select name="status_pesanan" id="edit-status_pesanan"
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
                                             <?php foreach ($status_list as $value => $label): ?>
                                                 <option value="<?= $value ?>"><?= $label ?></option>
                                             <?php endforeach; ?>
@@ -441,10 +506,10 @@
                                     
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-concierge-bell text-teal-500 mr-1"></i>Layanan
+                                            <i class="fas fa-concierge-bell text-emerald-500 mr-1"></i>Layanan
                                         </label>
                                         <select name="id_layanan" id="edit-id_layanan"
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
                                             <?php foreach ($layanan_list as $lay): ?>
                                                 <option value="<?= $lay->id_layanan ?>" data-harga="<?= $lay->harga ?>">
                                                     <?= htmlspecialchars($lay->nama_layanan) ?>
@@ -455,7 +520,7 @@
                                     
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-shoe-prints text-teal-500 mr-1"></i>Jumlah Item
+                                            <i class="fas fa-shoe-prints text-emerald-500 mr-1"></i>Jumlah Item
                                         </label>
                                         <input type="number" name="jumlah_item" id="edit-jumlah_item" min="1" readonly
                                             class="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-100 text-gray-600">
@@ -463,43 +528,43 @@
                                     
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-money-bill-wave text-teal-500 mr-1"></i>Total Harga
+                                            <i class="fas fa-money-bill-wave text-emerald-500 mr-1"></i>Total Harga
                                         </label>
                                         <div class="relative">
                                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Rp</span>
                                             <input type="number" name="total_harga" id="edit-total_harga"
-                                                class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all">
+                                                class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                                         </div>
                                     </div>
                                     
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-calendar-check text-teal-500 mr-1"></i>Estimasi Selesai
+                                            <i class="fas fa-calendar-check text-emerald-500 mr-1"></i>Estimasi Selesai
                                         </label>
                                         <input type="datetime-local" name="tgl_estimasi_selesai" id="edit-tgl_estimasi_selesai"
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all">
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                                     </div>
                                     
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-sticky-note text-teal-500 mr-1"></i>Catatan
+                                            <i class="fas fa-sticky-note text-emerald-500 mr-1"></i>Catatan
                                         </label>
                                         <textarea name="catatan" id="edit-catatan" rows="2" placeholder="Catatan tambahan..."
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none transition-all"></textarea>
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all"></textarea>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Detail Items Section -->
-                            <div class="bg-teal-50 rounded-xl p-5 border border-teal-200">
+                            <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="flex items-center gap-2">
-                                        <div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-shoe-prints text-teal-600 text-sm"></i>
+                                        <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-shoe-prints text-emerald-600 text-sm"></i>
                                         </div>
                                         <h3 class="font-semibold text-gray-800">Detail Sepatu</h3>
                                     </div>
-                                    <span class="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                    <span class="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border">
                                         <i class="fas fa-camera mr-1"></i>Upload foto saat selesai
                                     </span>
                                 </div>
@@ -520,12 +585,13 @@
                         <button type="button" id="btnBatalEditModal" class="px-6 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-all flex items-center gap-2">
                             <i class="fas fa-times"></i>Batal
                         </button>
-                        <button type="submit" form="formEditPesanan" class="px-6 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-medium transition-all flex items-center gap-2">
+                        <button type="submit" form="formEditPesanan" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all flex items-center gap-2">
                             <i class="fas fa-save"></i>Simpan Perubahan
                         </button>
                     </div>
                 </div>
             </div>
+
 
             <!-- Modal View Detail Pesanan -->
             <div id="modalViewPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
@@ -661,6 +727,28 @@
                         <button id="btnCancelStatus" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
                         <button id="btnConfirmStatus" class="px-5 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg">
                             <i class="fas fa-check mr-1"></i>Konfirmasi
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Success with Print Option -->
+            <div id="modalSuccessPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+                <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4 text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-teal-100">
+                        <i class="fas fa-check-circle text-teal-500 text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Pesanan Berhasil Disimpan!</h3>
+                    <p class="text-gray-600 mb-2">Nomor Pesanan:</p>
+                    <p id="success-nomor-pesanan" class="text-2xl font-bold text-teal-600 mb-6">#-</p>
+                    <input type="hidden" id="success-id-pesanan">
+                    <div class="flex flex-col gap-3">
+                        <button id="btnCetakNota" class="w-full px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all">
+                            <i class="fas fa-print"></i>
+                            <span>Cetak Nota</span>
+                        </button>
+                        <button id="btnCloseSuccess" class="w-full px-5 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-medium transition-all">
+                            Tutup
                         </button>
                     </div>
                 </div>
@@ -875,9 +963,9 @@
                     const json = await res.json();
                     
                     if (json.status === 'success') {
-                        showNotification(json.message);
                         closeModal();
-                        setTimeout(() => location.reload(), 500);
+                        // Show success modal with print option
+                        showSuccessModal(json.data.id_pesanan, json.data.nomor_pesanan);
                     } else {
                         showNotification(json.message, 'error');
                     }
@@ -885,6 +973,40 @@
                     showNotification('Terjadi kesalahan: ' + err.message, 'error');
                 }
             });
+        })();
+
+        // ============ MODAL SUCCESS PESANAN ============
+        (function() {
+            const modal = document.getElementById('modalSuccessPesanan');
+            const btnCetak = document.getElementById('btnCetakNota');
+            const btnClose = document.getElementById('btnCloseSuccess');
+            const nomorEl = document.getElementById('success-nomor-pesanan');
+            const idInput = document.getElementById('success-id-pesanan');
+
+            window.showSuccessModal = function(idPesanan, nomorPesanan) {
+                idInput.value = idPesanan;
+                nomorEl.textContent = nomorPesanan;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            };
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                location.reload();
+            }
+
+            btnCetak.addEventListener('click', function() {
+                const id = idInput.value;
+                if (id) {
+                    // Open nota in new tab
+                    window.open(BASE_URL + 'cetak_nota/' + id, '_blank');
+                }
+                closeModal();
+            });
+
+            btnClose.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
         })();
 
         // ============ MODAL EDIT PESANAN ============
@@ -1449,6 +1571,124 @@
                     const id = this.dataset.id;
                     // Open edit modal which has foto upload
                     document.querySelector(`.btn-edit[data-id="${id}"]`).click();
+                });
+            });
+        })();
+
+        // ============ PAYMENT TOGGLE HANDLER ============
+        (function() {
+            const toggle = document.getElementById('add-sudah_bayar');
+            const hiddenInput = document.getElementById('add-status_pembayaran');
+            const label = document.getElementById('sudah-bayar-label');
+            
+            if (toggle) {
+                toggle.addEventListener('change', function() {
+                    if (this.checked) {
+                        hiddenInput.value = 'sudah_bayar';
+                        label.textContent = 'Sudah Dibayar';
+                        label.classList.remove('text-gray-700');
+                        label.classList.add('text-green-600');
+                    } else {
+                        hiddenInput.value = 'belum_bayar';
+                        label.textContent = 'Belum Dibayar';
+                        label.classList.remove('text-green-600');
+                        label.classList.add('text-gray-700');
+                    }
+                });
+            }
+        })();
+
+        // ============ CONFIRM PAYMENT HANDLER ============
+        (function() {
+            document.querySelectorAll('.btn-confirm-payment').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const id = this.dataset.id;
+                    const nomor = this.dataset.nomor;
+                    const total = this.dataset.total;
+                    const currentMetode = this.dataset.metode;
+                    
+                    // Create confirmation modal
+                    const modalHtml = `
+                        <div id="modalConfirmPayment" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+                                <div class="bg-white border-b p-5">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                            <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h2 class="text-lg font-bold text-gray-800">Konfirmasi Pembayaran</h2>
+                                            <p class="text-gray-500 text-sm">Pesanan ${nomor}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-5">
+                                    <div class="text-center mb-4">
+                                        <p class="text-gray-600 mb-2">Total Pembayaran:</p>
+                                        <p class="text-3xl font-bold text-green-600">Rp ${Number(total).toLocaleString('id-ID')}</p>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                                            <i class="fas fa-wallet text-blue-500 mr-1"></i>Metode Pembayaran
+                                        </label>
+                                        <select id="confirm-metode-pembayaran" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white">
+                                            <option value="tunai" ${currentMetode === 'tunai' ? 'selected' : ''}>💵 Tunai</option>
+                                            <option value="debit" ${currentMetode === 'debit' ? 'selected' : ''}>💳 Debit/Transfer</option>
+                                            <option value="qris" ${currentMetode === 'qris' ? 'selected' : ''}>📱 QRIS</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                                    <button type="button" id="btnCancelPayment" class="px-4 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 font-medium">
+                                        Batal
+                                    </button>
+                                    <button type="button" id="btnConfirmPayment" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium flex items-center gap-2">
+                                        <i class="fas fa-check"></i>Konfirmasi Bayar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    const modal = document.getElementById('modalConfirmPayment');
+                    
+                    // Cancel button
+                    document.getElementById('btnCancelPayment').addEventListener('click', () => {
+                        modal.remove();
+                    });
+                    
+                    // Close on overlay click
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) modal.remove();
+                    });
+                    
+                    // Confirm button
+                    document.getElementById('btnConfirmPayment').addEventListener('click', async () => {
+                        const metode = document.getElementById('confirm-metode-pembayaran').value;
+                        
+                        try {
+                            const res = await fetch(BASE_URL + 'confirm_payment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    id_pesanan: id, 
+                                    metode_pembayaran: metode 
+                                })
+                            });
+                            const json = await res.json();
+                            
+                            if (json.status === 'success') {
+                                showNotification(json.message);
+                                modal.remove();
+                                setTimeout(() => location.reload(), 500);
+                            } else {
+                                showNotification(json.message, 'error');
+                            }
+                        } catch (err) {
+                            showNotification('Gagal mengkonfirmasi pembayaran: ' + err.message, 'error');
+                        }
+                    });
                 });
             });
         })();

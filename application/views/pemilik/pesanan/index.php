@@ -271,110 +271,89 @@
                 <!-- Detail Modal REMOVED: User redirects to separate detail page -->
 
                 <!-- Main Content Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    <!-- Data Pesanan Table -->
-                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-xl font-semibold text-gray-800 mb-6">Data Pesanan</h2>
+                <!-- Data Pesanan Table (Full Width) -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Data Pesanan</h2>
 
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="border-b border-gray-200">
-                                    <tr>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Nomor Pesanan</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Tanggal</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Pelanggan</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Cabang</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Layanan</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Total</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Status</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (!empty($pesanan)) : ?>
-                                        <?php foreach ($pesanan as $p) : ?>
-                                            <tr class="border-b border-gray-100 hover:bg-gray-50" data-status="<?= strtolower($p->status_pesanan ?? '') ?>" data-cabang="<?= $p->id_cabang ?? '' ?>">
-                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nomor_pesanan ?? '-'); ?></td>
-                                                <td class="text-center py-4 px-2"><?php echo date('d/m/Y', strtotime($p->tgl_masuk)); ?></td>
-                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_pelanggan ?? '-'); ?></td>
-                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_cabang ?? '-'); ?></td>
-                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_layanan ?? '-'); ?></td>
-                                                <td class="text-center py-4 px-2">Rp <?php echo number_format($p->total_harga ?? 0, 0, ',', '.'); ?></td>
-                                                <td class="text-center py-4 px-2">
-                                                    <?php
-                                                    $status = strtolower($p->status_pesanan ?? '');
-                                                    $badge = 'bg-gray-100 text-gray-700';
-                                                    $status_label = ucfirst(str_replace('_', ' ', $status));
-                                                    
-                                                    if ($status === 'sudah_diambil') {
-                                                        $badge = 'bg-emerald-500/10 text-emerald-500';
-                                                        $status_label = 'Sudah Diambil';
-                                                    } elseif ($status === 'siap_diambil') {
-                                                        $badge = 'bg-green-500/10 text-green-500';
-                                                        $status_label = 'Siap Diambil';
-                                                    } elseif ($status === 'selesai') {
-                                                        $badge = 'bg-teal-500/10 text-teal-500';
-                                                    } elseif ($status === 'dalam_proses') {
-                                                        $badge = 'bg-yellow-500/10 text-yellow-600';
-                                                        $status_label = 'Dalam Proses';
-                                                    } elseif ($status === 'diterima') {
-                                                        $badge = 'bg-blue-500/10 text-blue-500';
-                                                    } elseif ($status === 'dibatalkan') {
-                                                        $badge = 'bg-red-500/10 text-red-500';
-                                                    }
-                                                    ?>
-                                                    <span class="<?php echo $badge; ?> px-3 py-1 rounded-full text-xs font-medium"><?php echo htmlspecialchars($status_label ?: '-'); ?></span>
-                                                </td>
-                                                <td class="text-center py-4 px-2">
-                                                    <div class="flex items-center justify-center gap-2">
-                                                        <button data-id="<?php echo $p->id_pesanan; ?>"
-                                                            data-nomor="<?php echo htmlspecialchars($p->id_pesanan); ?>"
-                                                            class="text-emerald-500 hover:text-emerald-600 btn-view"
-                                                            title="Detail">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan ?? $p->id_pesanan); ?>" class="text-blue-500 hover:text-blue-600 btn-edit" title="Edit">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan ?? $p->id_pesanan); ?>" class="text-red-500 hover:text-red-600 btn-delete" title="Delete">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="8" class="text-center py-6 text-gray-500">Tidak ada pesanan.</td>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="border-b border-gray-200">
+                                <tr>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Nomor Pesanan</th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Tanggal</th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Pelanggan</th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Cabang</th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Layanan</th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Total</th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Status</th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($pesanan)) : ?>
+                                    <?php foreach ($pesanan as $p) : ?>
+                                        <tr class="border-b border-gray-100 hover:bg-gray-50" data-status="<?= strtolower($p->status_pesanan ?? '') ?>" data-cabang="<?= $p->id_cabang ?? '' ?>">
+                                            <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nomor_pesanan ?? '-'); ?></td>
+                                            <td class="text-center py-4 px-2"><?php echo date('d/m/Y', strtotime($p->tgl_masuk)); ?></td>
+                                            <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_pelanggan ?? '-'); ?></td>
+                                            <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_cabang ?? '-'); ?></td>
+                                            <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_layanan ?? '-'); ?></td>
+                                            <td class="text-center py-4 px-2">Rp <?php echo number_format($p->total_harga ?? 0, 0, ',', '.'); ?></td>
+                                            <td class="text-center py-4 px-2">
+                                                <?php
+                                                $status = strtolower($p->status_pesanan ?? '');
+                                                $badge = 'bg-gray-100 text-gray-700';
+                                                $status_label = ucfirst(str_replace('_', ' ', $status));
+                                                
+                                                if ($status === 'sudah_diambil') {
+                                                    $badge = 'bg-emerald-500/10 text-emerald-500';
+                                                    $status_label = 'Sudah Diambil';
+                                                } elseif ($status === 'siap_diambil') {
+                                                    $badge = 'bg-green-500/10 text-green-500';
+                                                    $status_label = 'Siap Diambil';
+                                                } elseif ($status === 'selesai') {
+                                                    $badge = 'bg-teal-500/10 text-teal-500';
+                                                } elseif ($status === 'dalam_proses') {
+                                                    $badge = 'bg-yellow-500/10 text-yellow-600';
+                                                    $status_label = 'Dalam Proses';
+                                                } elseif ($status === 'diterima') {
+                                                    $badge = 'bg-blue-500/10 text-blue-500';
+                                                } elseif ($status === 'dibatalkan') {
+                                                    $badge = 'bg-red-500/10 text-red-500';
+                                                }
+                                                ?>
+                                                <span class="<?php echo $badge; ?> px-3 py-1 rounded-full text-xs font-medium"><?php echo htmlspecialchars($status_label ?: '-'); ?></span>
+                                            </td>
+                                            <td class="text-center py-4 px-2">
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <button data-id="<?php echo $p->id_pesanan; ?>"
+                                                        data-nomor="<?php echo htmlspecialchars($p->id_pesanan); ?>"
+                                                        class="text-emerald-500 hover:text-emerald-600 btn-view"
+                                                        title="Detail">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan ?? $p->id_pesanan); ?>" class="text-blue-500 hover:text-blue-600 btn-edit" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan ?? $p->id_pesanan); ?>" class="text-red-500 hover:text-red-600 btn-delete" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Right Sidebar Charts -->
-                    <div class="space-y-6">
-                        <!-- Pesanan per Cabang -->
-                        <div class="bg-white rounded-2xl shadow-lg p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Pesanan per Cabang</h2>
-                            <div class="h-64">
-                                <canvas id="branchChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Jenis Layanan -->
-                        <div class="bg-white rounded-2xl shadow-lg p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Jenis Layanan</h2>
-                            <div class="h-64">
-                                <canvas id="serviceTypeChart"></canvas>
-                            </div>
-                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="8" class="text-center py-6 text-gray-500">Tidak ada pesanan.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <!-- Bottom Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Statistics Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Tren Pesanan -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4">Tren Pesanan (7 Hari)</h2>
@@ -383,23 +362,34 @@
                         </div>
                     </div>
 
+                    <!-- Pesanan per Cabang -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Pesanan per Cabang</h2>
+                        <div class="h-64">
+                            <canvas id="branchChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Jenis Layanan -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Jenis Layanan</h2>
+                        <div class="h-64">
+                            <canvas id="serviceTypeChart"></canvas>
+                        </div>
+                    </div>
+
                     <!-- Insight Ringkas -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4">Insight Ringkas</h2>
                         <div class="space-y-4">
-                            <!-- Insight 1 -->
                             <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
                                 <i class="fas fa-chart-line text-emerald-500 mt-1"></i>
                                 <p class="text-sm text-gray-700">Cabang Condongcatur memiliki peningkatan 25% minggu ini</p>
                             </div>
-
-                            <!-- Insight 2 -->
                             <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
                                 <i class="fas fa-star text-emerald-500 mt-1"></i>
                                 <p class="text-sm text-gray-700">Layanan Whitening paling diminati bulan ini</p>
                             </div>
-
-                            <!-- Insight 3 -->
                             <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
                                 <i class="fas fa-clock text-emerald-500 mt-1"></i>
                                 <p class="text-sm text-gray-700">Rata-rata waktu penyelesaian: 2,3 hari</p>

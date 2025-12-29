@@ -159,6 +159,8 @@ class Pesanan extends CI_Controller
             'total_harga' => $input['total_harga'],
             'status_pesanan' => 'diterima',
             'catatan' => $input['catatan'] ?? null,
+            'metode_pembayaran' => $input['metode_pembayaran'] ?? null,
+            'status_pembayaran' => $input['status_pembayaran'] ?? 'belum_bayar',
         ];
 
         $id_pesanan = $this->Pesanan_model->insertPesanan($data);
@@ -195,6 +197,11 @@ class Pesanan extends CI_Controller
                     'foto_sebelum' => $foto_sebelum,
                 ];
                 $this->Pesanan_model->insertDetailPesanan($detail_data);
+            }
+            
+            // If already paid, trigger revenue entry
+            if (isset($data['status_pembayaran']) && $data['status_pembayaran'] === 'sudah_bayar') {
+                $this->Pesanan_model->confirmPayment($id_pesanan, $data['metode_pembayaran'], $data['id_karyawan']);
             }
             
             $pesanan = $this->Pesanan_model->getPesananById($id_pesanan);
@@ -499,5 +506,82 @@ class Pesanan extends CI_Controller
         return $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode(['status' => 'error', 'message' => 'Gagal mengubah status']));
+    }
+
+    // Confirm payment and trigger revenue
+    public function confirm_payment()
+    {
+        $raw = $this->input->raw_input_stream;
+        $input = json_decode($raw, true);
+
+        // Also try POST data
+        if (empty($input)) {
+            $input = $this->input->post();
+        }
+
+        $id_pesanan = isset($input['id_pesanan']) ? $input['id_pesanan'] : null;
+        $metode_pembayaran = isset($input['metode_pembayaran']) ? $input['metode_pembayaran'] : null;
+
+        if (empty($id_pesanan)) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['status' => 'error', 'message' => 'Missing id_pesanan']));
+        }
+
+        // Validate metode_pembayaran
+        $valid_methods = ['tunai', 'debit', 'qris'];
+        if ($metode_pembayaran && !in_array($metode_pembayaran, $valid_methods)) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['status' => 'error', 'message' => 'Metode pembayaran tidak valid']));
+        }
+
+        // Get karyawan id from session
+        $id_karyawan = $this->session->userdata('id_karyawan');
+
+        // Confirm payment
+        $result = $this->Pesanan_model->confirmPayment($id_pesanan, $metode_pembayaran, $id_karyawan);
+
+        if ($result) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status' => 'success',
+                    'message' => 'Pembayaran berhasil dikonfirmasi dan tercatat ke pendapatan'
+                ]));
+        }
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode(['status' => 'error', 'message' => 'Gagal mengkonfirmasi pembayaran']));
+    }
+
+    // Cetak nota pesanan
+    public function cetak_nota($id = null)
+    {
+        if (!$id) {
+            redirect('karyawan/pesanan');
+        }
+
+        // Get pesanan data
+        $pesanan = $this->Pesanan_model->getPesananById($id);
+        
+        if (!$pesanan) {
+            redirect('karyawan/pesanan');
+        }
+
+        // Get detail items
+        $detail_items = $this->Pesanan_model->getDetailPesanan($id);
+
+        // Get cabang info
+        $cabang = $this->db->where('id_cabang', $pesanan->id_cabang)->get('cabang')->row();
+
+        $data = [
+            'pesanan' => $pesanan,
+            'detail_items' => $detail_items,
+            'cabang' => $cabang
+        ];
+
+        $this->load->view('karyawan/pesanan/nota', $data);
     }
 }
