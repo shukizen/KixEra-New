@@ -35,10 +35,16 @@
                         <h1 class="text-2xl font-bold text-gray-800">Detail Pesanan</h1>
                         <p class="text-gray-500">No. <?= htmlspecialchars($pesanan->nomor_pesanan) ?></p>
                     </div>
-                    <a href="<?= site_url('pemilik/pesanan') ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Kembali</span>
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <a href="<?= site_url('pemilik/pesanan/cetak_nota/' . $pesanan->id_pesanan) ?>" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition border border-emerald-200">
+                            <i class="fas fa-print"></i>
+                            <span>Cetak Nota</span>
+                        </a>
+                        <a href="<?= site_url('pemilik/pesanan') ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Kembali</span>
+                        </a>
+                    </div>
                 </div>
             </div>
 
