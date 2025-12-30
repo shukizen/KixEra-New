@@ -31,28 +31,28 @@ $segment2 = $CI->uri->segment(2);
         <a href="<?= base_url('pemilik/pemilik_dashboard') ?>" 
            class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'pemilik_dashboard') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
             <i class="fas fa-chart-line mr-3"></i>
-            Dashboard
+            <?= lang_text('dashboard') ?>
         </a>
         
         <!-- Pesanan -->
         <a href="<?= base_url('pemilik/pesanan') ?>" 
            class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'pesanan') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
             <i class="fas fa-shopping-bag mr-3"></i>
-            Pesanan
+            <?= lang_text('orders') ?>
         </a>
         
         <!-- Pelanggan -->
         <a href="<?= base_url('pemilik/pelanggan') ?>" 
            class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'pelanggan') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
             <i class="fas fa-users mr-3"></i>
-            Pelanggan
+            <?= lang_text('customers') ?>
         </a>
         
         <!-- Keuangan -->
         <a href="<?= base_url('pemilik/keuangan') ?>" 
            class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'keuangan') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
             <i class="fas fa-dollar-sign mr-3"></i>
-            Keuangan
+            <?= lang_text('finance') ?>
         </a>
         
         <!-- Layanan -->
@@ -66,21 +66,21 @@ $segment2 = $CI->uri->segment(2);
         <a href="<?= base_url('pemilik/inventori') ?>" 
            class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'inventori') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
             <i class="fas fa-boxes mr-3"></i>
-            Inventori
+            <?= lang_text('inventory') ?>
         </a>
         
         <!-- Pengaturan -->
         <a href="<?= base_url('pemilik/pengaturan') ?>" 
            class="flex items-center px-4 py-3 rounded-xl mb-6 transition-colors <?= ($segment2 == 'pengaturan') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
             <i class="fas fa-cog mr-3"></i>
-            Pengaturan
+            <?= lang_text('settings') ?>
         </a>
         
         <!-- Logout -->
         <a href="<?= base_url('auth/logout') ?>" 
            class="gradient-red flex items-center px-4 py-3 rounded-xl text-white font-medium hover:opacity-90 transition-opacity">
             <i class="fas fa-sign-out-alt mr-3"></i>
-            Logout
+            <?= lang_text('logout') ?>
         </a>
     </nav>
 </aside>

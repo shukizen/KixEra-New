@@ -48,10 +48,12 @@ class Pesanan extends CI_Controller
         $this->load->model('Pelanggan_model');
         $this->load->model('Layanan_model');
         $this->load->model('Karyawan_model');
+        $this->load->model('Cabang_model');
 
         $data['pelanggan_list'] = method_exists($this->Pelanggan_model, 'getAllPelanggan') ? $this->Pelanggan_model->getAllPelanggan() : [];
         $data['layanan_list'] = method_exists($this->Layanan_model, 'getAllLayananByOwner') ? $this->Layanan_model->getAllLayananByOwner($id_pemilik) : [];
         $data['karyawan_list'] = method_exists($this->Karyawan_model, 'getAllKaryawanByOwner') ? $this->Karyawan_model->getAllKaryawanByOwner($id_pemilik) : [];
+        $data['cabang_list'] = method_exists($this->Cabang_model, 'getAllCabangByOwner') ? $this->Cabang_model->getAllCabangByOwner($id_pemilik) : [];
 
         $this->load->view('template/header',);
         $this->load->view('template/sidebar',);

@@ -94,7 +94,8 @@ class Pesanan_model extends CI_Model
             pelanggan.no_telp,
             layanan.nama_layanan,
             karyawan.nama AS nama_karyawan,
-            cabang.nama_cabang
+            cabang.nama_cabang,
+            (SELECT COUNT(*) FROM detail_pesanan WHERE detail_pesanan.id_pesanan = pesanan.id_pesanan AND (foto_sesudah IS NULL OR foto_sesudah = "")) as pending_photos
         ');
         $this->db->from($this->table);
         $this->db->join('pelanggan', 'pelanggan.id_pelanggan = pesanan.id_pelanggan', 'left');
@@ -128,6 +129,7 @@ class Pesanan_model extends CI_Model
     {
         $this->db->select('
             v.*, 
+            p.nomor_pesanan,
             p.created_at,
             p.updated_at
         ');
@@ -194,6 +196,93 @@ class Pesanan_model extends CI_Model
         $row = $this->db->get('pesanan')->row();
         return $row ? $row->status_pesanan : null;
     }
+
+    // Get all pesanan by cabang (untuk karyawan)
+    public function getAllPesananByCabang($id_cabang)
+    {
+        $this->db->select('
+            pesanan.*,
+            pelanggan.nama AS nama_pelanggan,
+            pelanggan.no_telp,
+            layanan.nama_layanan,
+            layanan.harga AS harga_layanan,
+            karyawan.nama AS nama_karyawan,
+            cabang.nama_cabang,
+            (SELECT COUNT(*) FROM detail_pesanan WHERE detail_pesanan.id_pesanan = pesanan.id_pesanan AND (foto_sesudah IS NULL OR foto_sesudah = "")) as pending_photos
+        ');
+        $this->db->from($this->table);
+        $this->db->join('pelanggan', 'pelanggan.id_pelanggan = pesanan.id_pelanggan', 'left');
+        $this->db->join('layanan', 'layanan.id_layanan = pesanan.id_layanan', 'left');
+        $this->db->join('karyawan', 'karyawan.id_karyawan = pesanan.id_karyawan', 'left');
+        $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang', 'left');
+
+        $this->db->where('pesanan.id_cabang', $id_cabang);
+        $this->db->where('pesanan.deleted_at IS NULL');
+        $this->db->order_by('pesanan.created_at', 'DESC');
+
+        return $this->db->get()->result();
+    }
+
+    // Insert pesanan baru
+    public function insertPesanan($data)
+    {
+        $data['created_at'] = date('Y-m-d H:i:s');
+        if (empty($data['nomor_pesanan'])) {
+            $data['nomor_pesanan'] = $this->generateNomorPesanan();
+        }
+        $this->db->insert($this->table, $data);
+        return $this->db->insert_id();
+    }
+
+    // Generate nomor pesanan unik
+    public function generateNomorPesanan()
+    {
+        $prefix = 'PES-' . date('Ymd') . '-';
+        
+        $this->db->select('nomor_pesanan');
+        $this->db->from($this->table);
+        $this->db->like('nomor_pesanan', $prefix, 'after');
+        $this->db->order_by('nomor_pesanan', 'DESC');
+        $this->db->limit(1);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $last = $query->row()->nomor_pesanan;
+            $last_number = (int) substr($last, -3);
+            $new_number = $last_number + 1;
+        } else {
+            $new_number = 1;
+        }
+
+        return $prefix . str_pad($new_number, 3, '0', STR_PAD_LEFT);
+    }
+
+    // Insert detail pesanan
+    public function insertDetailPesanan($data)
+    {
+        $data['created_at'] = date('Y-m-d H:i:s');
+        $this->db->insert('detail_pesanan', $data);
+        return $this->db->insert_id();
+    }
+
+    // Get detail pesanan by id_pesanan
+    public function getDetailPesananByPesananId($id_pesanan)
+    {
+        $this->db->select('detail_pesanan.*, layanan.nama_layanan');
+        $this->db->from('detail_pesanan');
+        $this->db->join('layanan', 'layanan.id_layanan = detail_pesanan.id_layanan', 'left');
+        $this->db->where('detail_pesanan.id_pesanan', $id_pesanan);
+        $this->db->where('detail_pesanan.deleted_at IS NULL');
+        return $this->db->get()->result();
+    }
+
+    // Update detail pesanan
+    public function updateDetailPesanan($id_detail, $data)
+    {
+        $this->db->where('id_detail', $id_detail);
+        return $this->db->update('detail_pesanan', $data);
+    }
+
     // =============================================
     // DASHBOARD STATISTICS
     // =============================================
@@ -266,5 +355,75 @@ class Pesanan_model extends CI_Model
         $this->db->limit(5); // Top 5 services
         
         return $this->db->get()->result();
+    }
+
+    /**
+     * Confirm payment and trigger revenue entry
+     * @param int $id_pesanan
+     * @param string $metode_pembayaran (tunai, debit, qris)
+     * @param int|null $id_karyawan
+     * @return bool
+     */
+    public function confirmPayment($id_pesanan, $metode_pembayaran = null, $id_karyawan = null)
+    {
+        // Get pesanan data
+        $pesanan = $this->getPesananById($id_pesanan);
+        if (!$pesanan) {
+            return false;
+        }
+
+        // Check if already paid
+        if (isset($pesanan->status_pembayaran) && $pesanan->status_pembayaran === 'sudah_bayar') {
+            return true; // Already paid, no need to process again
+        }
+
+        // Update payment status
+        $data = [
+            'status_pembayaran' => 'sudah_bayar',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        // Update metode_pembayaran if provided
+        if ($metode_pembayaran) {
+            $data['metode_pembayaran'] = $metode_pembayaran;
+        }
+
+        $this->db->where('id_pesanan', $id_pesanan);
+        $updated = $this->db->update($this->table, $data);
+
+        if ($updated) {
+            // Trigger revenue entry
+            $CI =& get_instance();
+            $CI->load->model('Keuangan_model');
+            
+            $pemasukan_data = [
+                'id_cabang' => $pesanan->id_cabang,
+                'nama_transaksi' => 'Pembayaran Pesanan #' . $pesanan->nomor_pesanan,
+                'kategori' => 'pesanan',
+                'jumlah' => $pesanan->total_harga,
+                'tgl_transaksi' => date('Y-m-d'),
+                'id_pesanan' => $id_pesanan,
+                'keterangan' => 'Pembayaran ' . ($metode_pembayaran ?? $pesanan->metode_pembayaran ?? 'tunai') . ' - ' . ($pesanan->nama_pelanggan ?? 'Pelanggan'),
+                'id_karyawan' => $id_karyawan
+            ];
+            
+            $CI->Keuangan_model->insert_pemasukan($pemasukan_data);
+            
+            // Add progress timeline entry for payment
+            $metode_label = [
+                'tunai' => 'Tunai',
+                'debit' => 'Debit/Transfer', 
+                'qris' => 'QRIS'
+            ];
+            $metode_text = $metode_label[$metode_pembayaran ?? $pesanan->metode_pembayaran] ?? 'Tunai';
+            $this->insertProgres(
+                $id_pesanan, 
+                'pembayaran', 
+                'Pembayaran ' . $metode_text . ' - Rp ' . number_format($pesanan->total_harga, 0, ',', '.'),
+                $id_karyawan
+            );
+        }
+
+        return $updated;
     }
 }

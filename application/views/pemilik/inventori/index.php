@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelola Inventory - KixEra</title>
+    <title><?= lang_text('manage_inventory') ?> - KixEra</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -18,29 +18,23 @@
             <!-- Header -->
             <header class="bg-white border-b border-gray-100 shadow-sm px-6 py-4">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <h1 class="text-2xl font-semibold text-gray-800">Kelola Inventory</h1>
+                    <h1 class="text-2xl font-semibold text-gray-800"><?= lang_text('manage_inventory') ?></h1>
                     
                     <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
                         <!-- Search -->
                         <div class="relative flex-1 md:w-80">
-                            <input type="text" id="searchInput" placeholder="Search..." 
+                            <input type="text" id="searchInput" placeholder="<?= lang_text('search') ?>..." 
                                    class="w-full px-4 py-2 pl-10 border border-gray-200 rounded-xl text-gray-600 focus:outline-none focus:border-emerald-500">
                             <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                         </div>
                         
                         <!-- Category Filter -->
                         <select id="categoryFilter" class="px-4 py-2 border border-gray-200 rounded-xl text-black focus:outline-none focus:border-emerald-500">
-                            <option value="">Semua Kategori</option>
-                            <option value="bahan">bahan</option>
-                            <option value="alat">alat</option>
-                            <option value="perlengkapan">perlengkapan</option>
+                            <option value=""><?= lang_text('all_categories') ?></option>
+                            <option value="bahan"><?= lang_text('material') ?></option>
+                            <option value="alat"><?= lang_text('tools') ?></option>
+                            <option value="perlengkapan"><?= lang_text('supplies') ?></option>
                         </select>
-                        
-                        <!-- Add Item Button -->
-                        <button onclick="openAddModal()" class="bg-emerald-500 text-white px-6 py-3 rounded-xl hover:bg-emerald-600 transition flex items-center justify-center gap-2">
-                            <i class="fas fa-plus"></i>
-                            <span>Tambah Item Baru</span>
-                        </button>
                     </div>
                 </div>
             </header>
@@ -51,7 +45,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     <!-- Top Penggunaan Item -->
                     <div class="bg-white rounded-2xl shadow-lg p-8">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Top Penggunaan Item</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('top_item_usage') ?></h2>
                         <div class="h-64 relative">
                             <canvas id="usageChart"></canvas>
                         </div>
@@ -59,7 +53,7 @@
                     
                     <!-- Inventory Per Kategori -->
                     <div class="bg-white rounded-2xl shadow-lg p-8">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Inventory Per Kategori</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('inventory_by_category') ?></h2>
                         <div class="h-64 relative">
                             <canvas id="categoryChart"></canvas>
                         </div>
@@ -67,7 +61,7 @@
                     
                     <!-- Tren Jumlah Stok -->
                     <div class="bg-white rounded-2xl shadow-lg p-8">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Tren Jumlah Stok</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('stock_trend') ?></h2>
                         <div class="h-64 relative">
                             <canvas id="trendChart"></canvas>
                         </div>
@@ -79,16 +73,16 @@
                         <table class="w-full">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold">Item ID</th>
-                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold">Nama Item</th>
-                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold">Kategori</th>
-                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold">Jumlah Stok</th>
-                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold">Satuan</th>
-                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold">Stok Terakhir</th>
-                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold">Harga</th>
-                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold">Supplier</th>
-                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold">Status</th>
-                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold">Aksi</th>
+                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold"><?= lang_text('item_id') ?></th>
+                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold"><?= lang_text('item_name') ?></th>
+                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold"><?= lang_text('category') ?></th>
+                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold"><?= lang_text('stock_qty') ?></th>
+                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold"><?= lang_text('unit') ?></th>
+                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold"><?= lang_text('last_stock') ?></th>
+                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold"><?= lang_text('price') ?></th>
+                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold"><?= lang_text('supplier') ?></th>
+                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold"><?= lang_text('status') ?></th>
+                                    <th class="text-center py-4 px-3 text-gray-700 text-sm font-semibold"><?= lang_text('action') ?></th>
                                 </tr>
                             </thead>
                             <tbody id="inventoryTableBody">
@@ -107,19 +101,19 @@
                                             <td class="text-center py-5 px-3">
                                                 <?php 
                                                     if($item->stok_tersedia == 0) {
-                                                        echo '<span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-medium">Out Of Stock</span>';
+                                                        echo '<span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-medium">' . lang_text('out_of_stock') . '</span>';
                                                     } elseif($item->stok_tersedia <= $item->stok_minimal) {
-                                                        echo '<span class="bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full text-xs font-medium">Low Stock</span>';
+                                                        echo '<span class="bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full text-xs font-medium">' . lang_text('low_stock') . '</span>';
                                                     } else {
-                                                        echo '<span class="bg-emerald-500/20 text-emerald-500 px-3 py-1 rounded-full text-xs font-medium">Available</span>';
+                                                        echo '<span class="bg-emerald-500/20 text-emerald-500 px-3 py-1 rounded-full text-xs font-medium">' . lang_text('available') . '</span>';
                                                     }
                                                 ?>
                                             </td>
                                             <td class="text-center py-5 px-3">
                                                 <div class="flex items-center justify-center gap-2">
-                                                    <button onclick="viewItem(<?= $item->id_inventori ?>)" class="text-emerald-500 hover:text-emerald-600 p-2" title="View">
+                                                    <a href="<?= base_url('pemilik/inventori/detail/' . $item->id_inventori) ?>" class="text-emerald-500 hover:text-emerald-600 p-2" title="View">
                                                         <i class="fas fa-eye"></i>
-                                                    </button>
+                                                    </a>
                                                     <button onclick="editItem(<?= $item->id_inventori ?>)" class="text-blue-600 hover:text-blue-700 p-2" title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
@@ -143,7 +137,7 @@
         </main>
     </div>
 
-    <!-- Modal Add/Edit Item -->
+    <!-- Modal Edit Item -->
     <div id="itemModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b border-gray-200">
@@ -229,26 +223,17 @@
         </div>
     </div>
 
-    <!-- Modal View Item -->
-    <div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-2xl font-semibold text-gray-800">Detail Item</h2>
-            </div>
-            <div id="viewContent" class="p-6">
-                <!-- Content will be loaded dynamically -->
-            </div>
-            <div class="p-6 border-t border-gray-200 flex justify-end">
-                <button onclick="closeViewModal()" 
-                        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
-                    Tutup
-                </button>
-            </div>
-        </div>
-    </div>
 
 <script>
     const BASE_URL = '<?= base_url() ?>';
+    
+    // Translation constants from PHP
+    const LANG = {
+        out_of_stock: '<?= lang_text("out_of_stock") ?>',
+        low_stock: '<?= lang_text("low_stock") ?>',
+        available: '<?= lang_text("available") ?>',
+        no_data: '<?= lang_text("no_data") ?>'
+    };
     
     let usageChart, categoryChart, trendChart;
     
@@ -340,11 +325,11 @@
             items.forEach(item => {
                 let status = '';
                 if(item.stok_tersedia == 0) {
-                    status = '<span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-medium">Out Of Stock</span>';
+                    status = '<span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-medium">' + LANG.out_of_stock + '</span>';
                 } else if(item.stok_tersedia <= item.stok_minimal) {
-                    status = '<span class="bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full text-xs font-medium">Low Stock</span>';
+                    status = '<span class="bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full text-xs font-medium">' + LANG.low_stock + '</span>';
                 } else {
-                    status = '<span class="bg-emerald-500/20 text-emerald-500 px-3 py-1 rounded-full text-xs font-medium">Available</span>';
+                    status = '<span class="bg-emerald-500/20 text-emerald-500 px-3 py-1 rounded-full text-xs font-medium">' + LANG.available + '</span>';
                 }
                 
                 let lastUpdate = item.updated_at ? new Date(item.updated_at).toLocaleDateString('id-ID') : (item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : '-');
@@ -366,9 +351,9 @@
                         <td class="text-center py-5 px-3">${status}</td>
                         <td class="text-center py-5 px-3">
                             <div class="flex items-center justify-center gap-2">
-                                <button onclick="viewItem(${item.id_inventori})" class="text-emerald-500 hover:text-emerald-600 p-2" title="View">
+                                <a href="${BASE_URL}pemilik/inventori/detail/${item.id_inventori}" class="text-emerald-500 hover:text-emerald-600 p-2" title="View">
                                     <i class="fas fa-eye"></i>
-                                </button>
+                                </a>
                                 <button onclick="editItem(${item.id_inventori})" class="text-blue-600 hover:text-blue-700 p-2" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </button>

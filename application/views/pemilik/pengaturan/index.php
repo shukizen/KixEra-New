@@ -14,11 +14,39 @@
         
         <!-- Main Content -->
         <main class="flex-1 ml-64">
+            <!-- Header with Subscription Badge -->
+            <div class="p-6 pb-0 flex justify-between items-start">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800"><?= lang_text('settings') ?></h1>
+                    <p class="text-gray-600 text-sm"><?= lang_text('manage_profile_preferences') ?></p>
+                </div>
+                
+                <!-- Langganan Widget (Pojok Kanan) -->
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-2xl shadow-lg p-4 text-white min-w-[320px]">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-crown text-yellow-300 text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm"><?= lang_text('upgrade_subscription') ?></h3>
+                            <?php if(isset($pemilik->subscription_plan) && $pemilik->subscription_plan): ?>
+                            <p class="text-xs text-emerald-100"><?= lang_text('current_plan') ?>: <strong><?= ucfirst($pemilik->subscription_plan) ?></strong></p>
+                            <?php else: ?>
+                            <p class="text-xs text-emerald-100"><?= lang_text('upgrade_desc') ?></p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <a href="<?= base_url('pemilik/pengaturan/langganan') ?>" class="block w-full py-2 bg-white text-emerald-600 rounded-xl hover:bg-gray-100 transition text-center font-semibold text-sm shadow">
+                        <i class="fas fa-rocket mr-1"></i> <?= lang_text('view_packages') ?>
+                    </a>
+                </div>
+            </div>
+            
             <!-- Dashboard Content -->
             <div class="p-6">
                 <!-- Pengaturan Profile -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-6">Pengaturan Profile</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-6"><?= lang_text('profile_settings') ?></h2>
                     
             <!-- Photo Section -->
                     <div class="flex items-center gap-6 mb-8">
@@ -30,7 +58,7 @@
                         </div>
                         <button type="button" onclick="document.getElementById('photoInput').click()" 
                                 class="px-6 py-2 border border-emerald-600 text-emerald-600 rounded-xl hover:bg-emerald-50 transition">
-                            Ubah Foto
+                            <?= lang_text('change_photo') ?>
                         </button>
                         <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhotoChange()">
                     </div>
@@ -41,7 +69,7 @@
                         
                         <!-- Nama Lengkap -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('full_name') ?></label>
                             <input type="text" id="nama_lengkap" name="nama_lengkap" 
                                    value="<?= htmlspecialchars($pemilik->nama) ?>"
                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
@@ -49,7 +77,7 @@
                         
                         <!-- Email -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('email') ?></label>
                             <input type="email" id="email" name="email" 
                                    value="<?= htmlspecialchars($pemilik->email) ?>"
                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
@@ -57,7 +85,7 @@
                         
                         <!-- Telepon -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Telepon</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('phone') ?></label>
                             <input type="tel" id="telepon" name="telepon" 
                                    value="<?= htmlspecialchars($pemilik->no_telp ?? '') ?>"
                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
@@ -65,10 +93,10 @@
                         
                         <!-- Password -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('password') ?></label>
                             <button type="button" onclick="openChangePasswordModal()" 
                                     class="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-50 text-center transition">
-                                Change Password
+                                <?= lang_text('change_password') ?>
                             </button>
                         </div>
                     </form>
@@ -76,10 +104,10 @@
                     <!-- Action Buttons -->
                     <div class="flex gap-4">
                         <button onclick="updateProfile()" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition font-medium">
-                            Simpan Perubahan
+                            <?= lang_text('save_changes') ?>
                         </button>
                         <button type="button" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition font-medium" onclick="location.reload()">
-                            Batal
+                            <?= lang_text('cancel') ?>
                         </button>
                     </div>
                 </div>
@@ -88,12 +116,12 @@
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-800 leading-7">Kelola Akun Karyawan</h2>
-                            <p class="text-sm text-gray-600 leading-5">Tambahkan dan kelola akun staf untuk cabang Anda</p>
+                            <h2 class="text-lg font-semibold text-gray-800 leading-7"><?= lang_text('manage_employees') ?></h2>
+                            <p class="text-sm text-gray-600 leading-5"><?= lang_text('manage_employees_desc') ?></p>
                         </div>
                         <button onclick="openAddEmployeeModal()" class="px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition flex items-center gap-2">
                             <i class="fas fa-user-plus"></i>
-                            <span>Tambah Akun Karyawan</span>
+                            <span><?= lang_text('add_employee') ?></span>
                         </button>
                     </div>
                     
@@ -102,13 +130,13 @@
                         <table class="w-full" id="employeeTable">
                             <thead class="border-b border-gray-200">
                                 <tr>
-                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium">ID Karyawan</th>
-                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium">Nama Lengkap</th>
-                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium">Email</th>
-                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium">Role</th>
-                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium">Cabang</th>
-                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium">Status</th>
-                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium">Aksi</th>
+                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium"><?= lang_text('employee_id') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium"><?= lang_text('full_name') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium"><?= lang_text('email') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium"><?= lang_text('position') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium"><?= lang_text('branch') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium"><?= lang_text('status') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-700 text-base font-medium"><?= lang_text('action') ?></th>
                                 </tr>
                             </thead>
                             <tbody id="employeeTableBody">
@@ -152,7 +180,7 @@
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="7" class="text-center py-8 text-gray-500">Tidak ada data karyawan</td>
+                                        <td colspan="7" class="text-center py-8 text-gray-500"><?= lang_text('no_employees') ?></td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -163,9 +191,9 @@
                 <!-- Kelola Cabang Bisnis -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-lg font-semibold text-gray-800">Kelola Cabang Bisnis</h2>
+                        <h2 class="text-lg font-semibold text-gray-800"><?= lang_text('manage_branches') ?></h2>
                         <button onclick="openAddBranchModal()" class="px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition">
-                            Tambah Cabang
+                            <?= lang_text('add_branch') ?>
                         </button>
                     </div>
                     
@@ -196,76 +224,91 @@
                 
                 <!-- Pengaturan Notifikasi -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-6">Pengaturan Notifikasi</h2>
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800"><?= lang_text('notification_settings') ?></h2>
+                        <button onclick="saveNotificationSettings()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition font-medium text-sm flex items-center gap-2">
+                            <i class="fas fa-save"></i>
+                            <?= lang_text('save') ?>
+                        </button>
+                    </div>
                     
                     <div class="space-y-6">
                         <!-- Notification 1 -->
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base font-medium text-gray-800 mb-1">Update Pesanan</h3>
-                                <p class="text-sm text-gray-600">Dapatkan pemberitahuan saat pesanan dilakukan atau diperbarui</p>
+                                <h3 class="text-base font-medium text-gray-800 mb-1"><?= lang_text('order_updates') ?></h3>
+                                <p class="text-sm text-gray-600"><?= lang_text('order_updates_desc') ?></p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked class="sr-only peer">
-                                <div class="w-11 h-6 bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                <input type="checkbox" id="notif_pesanan" <?= (isset($pemilik->notif_pesanan) && $pemilik->notif_pesanan == '1') || !isset($pemilik->notif_pesanan) ? 'checked' : '' ?> class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-300 peer-checked:bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                             </label>
                         </div>
                         
                         <!-- Notification 2 -->
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base font-medium text-gray-800 mb-1">Stok Inventory</h3>
-                                <p class="text-sm text-gray-600">Dapatkan alert saat stok barang menipis</p>
+                                <h3 class="text-base font-medium text-gray-800 mb-1"><?= lang_text('inventory_stock') ?></h3>
+                                <p class="text-sm text-gray-600"><?= lang_text('inventory_stock_desc') ?></p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked class="sr-only peer">
-                                <div class="w-11 h-6 bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                <input type="checkbox" id="notif_stok" <?= (isset($pemilik->notif_stok) && $pemilik->notif_stok == '1') || !isset($pemilik->notif_stok) ? 'checked' : '' ?> class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-300 peer-checked:bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                            </label>
+                        </div>
+
+                        <!-- Notification 3 -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-base font-medium text-gray-800 mb-1"><?= lang_text('daily_report') ?></h3>
+                                <p class="text-sm text-gray-600"><?= lang_text('daily_report_desc') ?></p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="notif_laporan" <?= isset($pemilik->notif_laporan) && $pemilik->notif_laporan == '1' ? 'checked' : '' ?> class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-300 peer-checked:bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                             </label>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Preferensi Sistem -->
-                <div class="bg-white rounded-2xl shadow-lg p-6">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-6">Preferensi Sistem</h2>
+                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-6"><?= lang_text('system_preferences') ?></h2>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <!-- Bahasa -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Bahasa</label>
-                            <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
-                                <option>Indonesia</option>
-                                <option>English</option>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('language') ?></label>
+                            <select id="bahasa" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
+                                <option value="id" <?= (isset($pemilik->bahasa) && $pemilik->bahasa == 'id') || !isset($pemilik->bahasa) ? 'selected' : '' ?>>Indonesia</option>
+                                <option value="en" <?= isset($pemilik->bahasa) && $pemilik->bahasa == 'en' ? 'selected' : '' ?>>English</option>
                             </select>
                         </div>
                         
                         <!-- Mata Uang -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Mata Uang</label>
-                            <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
-                                <option>Rupiah (Rp)</option>
-                                <option>Dollar ($)</option>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('currency') ?></label>
+                            <select id="mata_uang" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
+                                <option value="IDR" <?= (isset($pemilik->mata_uang) && $pemilik->mata_uang == 'IDR') || !isset($pemilik->mata_uang) ? 'selected' : '' ?>>Rupiah (Rp)</option>
+                                <option value="USD" <?= isset($pemilik->mata_uang) && $pemilik->mata_uang == 'USD' ? 'selected' : '' ?>>Dollar ($)</option>
+                                <option value="EUR" <?= isset($pemilik->mata_uang) && $pemilik->mata_uang == 'EUR' ? 'selected' : '' ?>>Euro (€)</option>
+                                <option value="SGD" <?= isset($pemilik->mata_uang) && $pemilik->mata_uang == 'SGD' ? 'selected' : '' ?>>Singapore Dollar (S$)</option>
+                                <option value="MYR" <?= isset($pemilik->mata_uang) && $pemilik->mata_uang == 'MYR' ? 'selected' : '' ?>>Ringgit (RM)</option>
                             </select>
                         </div>
+                    </div>
+                    
+                    <!-- Save Button -->
+                    <div class="flex justify-end">
+                        <button onclick="savePreferences()" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition font-medium flex items-center gap-2">
+                            <i class="fas fa-save"></i>
+                            <?= lang_text('save_preferences') ?>
+                        </button>
                     </div>
                 </div>
             </div>
 
 
-
-                  <!-- Kelola Layanan -->
-    <div class="bg-white rounded-2xl shadow-lg p-6">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h2 class="text-lg font-semibold text-gray-800"> Uprage Langganan</h2>
-                    <p class="text-sm text-gray-600">Aktifkan fitur premium untuk meningkatkan bisnis Anda</p>
-                    </div>
-                    <button onclick="openAddServiceModal()" class="px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition flex items-center gap-2">
-                        <i class="fas fa-plus"></i>
-                        <span>Berlangganan</span>
-                    </button>
-            </div>
-            </div>
         </main>
     </div>
 
@@ -419,7 +462,6 @@
                             <option value="aktif">Aktif</option>
                             <option value="nonaktif">Nonaktif</option>
                         </select>
-                    </div>
                 </div>
                 <div class="flex gap-3 mt-6">
                     <button type="button" onclick="closeAddBranchModal()" 
@@ -434,6 +476,137 @@
         </div>
     </div>
 
+    <!-- Modal Subscription Plans -->
+    <div id="subscriptionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto py-8">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl mx-4 my-auto">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Pilih Paket Langganan</h2>
+                    <p class="text-gray-600 text-sm mt-1">Pilih paket yang sesuai dengan kebutuhan bisnis Anda</p>
+                </div>
+                <button onclick="closeSubscriptionModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Free Plan -->
+                    <div class="bg-gray-50 rounded-2xl p-6 border-2 border-gray-200 hover:border-emerald-300 transition-all">
+                        <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Free</h3>
+                        <div class="text-center mb-2">
+                            <span class="text-3xl font-bold text-gray-900">Rp 0</span>
+                        </div>
+                        <p class="text-center text-gray-500 text-sm mb-6">Gratis Selamanya</p>
+                        
+                        <ul class="space-y-3 mb-6 text-sm">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Hingga 100 pesanan/bulan</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Tracking inventaris dasar</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Dukungan email</span>
+                            </li>
+                            <li class="flex items-start gap-2 opacity-50">
+                                <i class="fas fa-times text-gray-400 mt-0.5"></i>
+                                <span class="text-gray-400">Analitik lanjutan</span>
+                            </li>
+                            <li class="flex items-start gap-2 opacity-50">
+                                <i class="fas fa-times text-gray-400 mt-0.5"></i>
+                                <span class="text-gray-400">Rekomendasi AI</span>
+                            </li>
+                        </ul>
+                        
+                        <button onclick="selectPlan('free')" class="block w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-semibold transition-colors text-center">
+                            Paket Saat Ini
+                        </button>
+                    </div>
+
+                    <!-- Pro Plan (Popular) -->
+                    <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border-2 border-emerald-400 shadow-lg relative transform hover:scale-105 transition-all">
+                        <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                            <span class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-1 rounded-full text-xs font-semibold shadow">Paling Populer</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 text-center mb-2 mt-2">Pro</h3>
+                        <div class="text-center mb-2">
+                            <span class="text-3xl font-bold text-emerald-600">Rp 99.000</span>
+                            <span class="text-gray-600 text-sm">/ bulan</span>
+                        </div>
+                        <p class="text-center text-gray-500 text-sm mb-6">Ideal untuk bisnis berkembang</p>
+                        
+                        <ul class="space-y-3 mb-6 text-sm">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Hingga 10.000 pesanan/bulan</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Analitik lanjutan</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Rekomendasi AI</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Dukungan prioritas</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Laporan otomatis</span>
+                            </li>
+                        </ul>
+                        
+                        <a href="<?= base_url('pembayaran/checkout/2') ?>" class="block w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition-colors text-center shadow-lg">
+                            Upgrade Sekarang
+                        </a>
+                    </div>
+
+                    <!-- Premium Plan -->
+                    <div class="bg-gray-50 rounded-2xl p-6 border-2 border-gray-200 hover:border-purple-300 transition-all">
+                        <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Premium</h3>
+                        <div class="text-center mb-2">
+                            <span class="text-3xl font-bold text-gray-900">Rp 199.000</span>
+                            <span class="text-gray-600 text-sm">/ bulan</span>
+                        </div>
+                        <p class="text-center text-gray-500 text-sm mb-6">Untuk bisnis enterprise</p>
+                        
+                        <ul class="space-y-3 mb-6 text-sm">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Pesanan unlimited</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Integrasi kustom</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Multi-lokasi</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Dukungan 24/7</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-0.5"></i>
+                                <span class="text-gray-700">Account manager khusus</span>
+                            </li>
+                        </ul>
+                        
+                        <a href="<?= base_url('pembayaran/checkout/3') ?>" class="block w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition-colors text-center">
+                            Hubungi Sales
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <script>
     const BASE_URL = '<?= base_url() ?>';
@@ -947,6 +1120,98 @@
             toggleIcon.classList.add('fa-eye');
         }
     }
+
+    // ============ SAVE PREFERENCES (BAHASA & MATA UANG) ============
+    function savePreferences() {
+        const bahasa = $('#bahasa').val();
+        const mata_uang = $('#mata_uang').val();
+        const id_pemilik = $('#id_owner').val();
+        
+        $.ajax({
+            url: BASE_URL + 'pemilik/pengaturan/save_preferences',
+            type: 'POST',
+            data: {
+                id_pemilik: id_pemilik,
+                bahasa: bahasa,
+                mata_uang: mata_uang
+            },
+            dataType: 'json',
+            success: function(response) {
+                console.log('Response:', response);
+                showNotification(response.message, response.success ? 'success' : 'error');
+                if(response.success) {
+                    // Store in session/localStorage for immediate use
+                    localStorage.setItem('bahasa', bahasa);
+                    localStorage.setItem('mata_uang', mata_uang);
+                    
+                    // Reload page after 1.5 seconds to apply language changes
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Response:', xhr.responseText);
+                showNotification('Terjadi kesalahan: ' + error, 'error');
+            }
+        });
+    }
+
+    // ============ SAVE NOTIFICATION SETTINGS ============
+    function saveNotificationSettings() {
+        const notif_pesanan = $('#notif_pesanan').is(':checked') ? '1' : '0';
+        const notif_stok = $('#notif_stok').is(':checked') ? '1' : '0';
+        const notif_laporan = $('#notif_laporan').is(':checked') ? '1' : '0';
+        const id_pemilik = $('#id_owner').val();
+        
+        $.ajax({
+            url: BASE_URL + 'pemilik/pengaturan/save_notification_settings',
+            type: 'POST',
+            data: {
+                id_pemilik: id_pemilik,
+                notif_pesanan: notif_pesanan,
+                notif_stok: notif_stok,
+                notif_laporan: notif_laporan
+            },
+            dataType: 'json',
+            success: function(response) {
+                console.log('Response:', response);
+                showNotification(response.message, response.success ? 'success' : 'error');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Response:', xhr.responseText);
+                showNotification('Terjadi kesalahan: ' + error, 'error');
+            }
+        });
+    }
+
+    // ============ SUBSCRIPTION MODAL ============
+    function openSubscriptionModal() {
+        document.getElementById('subscriptionModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSubscriptionModal() {
+        document.getElementById('subscriptionModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function selectPlan(plan) {
+        if(plan === 'free') {
+            showNotification('Anda sudah menggunakan paket Free', 'info');
+        } else {
+            window.location.href = BASE_URL + 'pembayaran/checkout/' + (plan === 'pro' ? '2' : '3');
+        }
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('subscriptionModal')?.addEventListener('click', function(e) {
+        if(e.target === this) {
+            closeSubscriptionModal();
+        }
+    });
 </script>
 </body>
 </html>

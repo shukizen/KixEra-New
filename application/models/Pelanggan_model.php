@@ -12,20 +12,29 @@ class Pelanggan_model extends CI_Model {
 
     public function getAllPelanggan($id_pemilik = null)
     {
-        $this->db->select('pelanggan.*, COUNT(pesanan.id_pesanan) as total_pesanan');
-        $this->db->from('pelanggan');
-        $this->db->join('pesanan', 'pesanan.id_pelanggan = pelanggan.id_pelanggan AND pesanan.deleted_at IS NULL', 'left');
-        
         if ($id_pemilik) {
-            // Only show customers who have orders at owner's branches
-            $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang AND cabang.deleted_at IS NULL', 'left');
-            $this->db->where('(cabang.id_pemilik = ' . $id_pemilik . ' OR pesanan.id_pesanan IS NULL)');
+            // Show customers who ordered at owner's branches + new customers with no orders
+            $sql = "
+                SELECT DISTINCT p.* FROM pelanggan p
+                INNER JOIN pesanan ps ON ps.id_pelanggan = p.id_pelanggan
+                INNER JOIN cabang c ON c.id_cabang = ps.id_cabang
+                WHERE c.id_pemilik = ? AND p.deleted_at IS NULL
+                
+                UNION
+                
+                SELECT p.* FROM pelanggan p
+                WHERE p.deleted_at IS NULL
+                AND NOT EXISTS (SELECT 1 FROM pesanan ps WHERE ps.id_pelanggan = p.id_pelanggan)
+                
+                ORDER BY nama ASC
+            ";
+            return $this->db->query($sql, [$id_pemilik])->result();
         }
         
-        $this->db->where('pelanggan.deleted_at IS NULL');
-        $this->db->group_by('pelanggan.id_pelanggan');
-        $this->db->order_by('pelanggan.nama', 'ASC');
-        return $this->db->get()->result();
+        // No owner filter - return all customers
+        $this->db->where('deleted_at IS NULL');
+        $this->db->order_by('nama', 'ASC');
+        return $this->db->get($this->table)->result();
     }
 
     public function getPelangganById($id)
@@ -62,24 +71,36 @@ class Pelanggan_model extends CI_Model {
 
     public function searchPelanggan($keyword, $id_pemilik = null)
     {
-        $this->db->select('pelanggan.*, COUNT(pesanan.id_pesanan) as total_pesanan');
-        $this->db->from('pelanggan');
-        $this->db->join('pesanan', 'pesanan.id_pelanggan = pelanggan.id_pelanggan AND pesanan.deleted_at IS NULL', 'left');
-        
         if ($id_pemilik) {
-            $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang AND cabang.deleted_at IS NULL', 'left');
-            $this->db->where('(cabang.id_pemilik = ' . $id_pemilik . ' OR pesanan.id_pesanan IS NULL)');
+            $keyword = $this->db->escape_like_str($keyword);
+            $like = "%{$keyword}%";
+            
+            $sql = "
+                SELECT DISTINCT p.* FROM pelanggan p
+                INNER JOIN pesanan ps ON ps.id_pelanggan = p.id_pelanggan
+                INNER JOIN cabang c ON c.id_cabang = ps.id_cabang
+                WHERE c.id_pemilik = ? 
+                AND p.deleted_at IS NULL
+                AND (p.nama LIKE ? OR p.no_telp LIKE ? OR p.email LIKE ?)
+                
+                UNION
+                
+                SELECT p.* FROM pelanggan p
+                WHERE p.deleted_at IS NULL
+                AND NOT EXISTS (SELECT 1 FROM pesanan ps WHERE ps.id_pelanggan = p.id_pelanggan)
+                AND (p.nama LIKE ? OR p.no_telp LIKE ? OR p.email LIKE ?)
+                
+                ORDER BY nama ASC
+            ";
+            return $this->db->query($sql, [$id_pemilik, $like, $like, $like, $like, $like, $like])->result();
         }
-
-        $this->db->group_start();
-        $this->db->like('pelanggan.nama', $keyword);
-        $this->db->or_like('pelanggan.no_telp', $keyword);
-        $this->db->or_like('pelanggan.email', $keyword);
-        $this->db->group_end();
         
-        $this->db->where('pelanggan.deleted_at IS NULL');
-        $this->db->group_by('pelanggan.id_pelanggan');
-        return $this->db->get()->result();
+        // No owner filter
+        $this->db->like('nama', $keyword);
+        $this->db->or_like('no_telp', $keyword);
+        $this->db->or_like('email', $keyword);
+        $this->db->where('deleted_at IS NULL');
+        return $this->db->get($this->table)->result();
     }
 
     public function checkByPhone($no_telp)
@@ -90,6 +111,29 @@ class Pelanggan_model extends CI_Model {
             ->get($this->table)
             ->row();
     }
+
+    // Get all pelanggan for a specific cabang (untuk karyawan)
+    // Shows: customers who ordered at this branch + new customers with no orders yet
+    public function getAllPelangganForCabang($id_cabang)
+    {
+        // Use raw query with UNION for better flexibility
+        $sql = "
+            SELECT DISTINCT p.* FROM pelanggan p
+            INNER JOIN pesanan ps ON ps.id_pelanggan = p.id_pelanggan
+            WHERE ps.id_cabang = ? AND p.deleted_at IS NULL
+            
+            UNION
+            
+            SELECT p.* FROM pelanggan p
+            WHERE p.deleted_at IS NULL
+            AND NOT EXISTS (SELECT 1 FROM pesanan ps WHERE ps.id_pelanggan = p.id_pelanggan)
+            
+            ORDER BY nama ASC
+        ";
+        
+        return $this->db->query($sql, [$id_cabang])->result();
+    }
+
 
     // GRAFIK 1: Distribusi Pelanggan Per Cabang
     public function grafikCabang($id_pemilik = null)
@@ -189,8 +233,19 @@ class Pelanggan_model extends CI_Model {
         return $this->db->get()->result();
     }
 
-    // Check if owner has access to customer (via orders)
+    // Check if owner has access to customer (via orders or if new customer)
     public function checkAccess($id_pelanggan, $id_pemilik) {
+        // Check if customer has any orders
+        $has_orders = $this->db->where('id_pelanggan', $id_pelanggan)
+                               ->where('deleted_at IS NULL')
+                               ->count_all_results('pesanan') > 0;
+        
+        if (!$has_orders) {
+            // New customer with no orders - all pemilik can access
+            return true;
+        }
+        
+        // Check if customer has orders at owner's branches
         $this->db->select('1');
         $this->db->from('pesanan');
         $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
@@ -219,4 +274,55 @@ class Pelanggan_model extends CI_Model {
              return $this->db->count_all_results('pelanggan');
         }
     }
+
+    // Search pelanggan by cabang (untuk karyawan)
+    // Searches: customers who ordered at this branch + new customers with no orders yet
+    public function searchPelangganByCabang($keyword, $id_cabang)
+    {
+        $keyword = $this->db->escape_like_str($keyword);
+        
+        $sql = "
+            SELECT DISTINCT p.* FROM pelanggan p
+            INNER JOIN pesanan ps ON ps.id_pelanggan = p.id_pelanggan
+            WHERE ps.id_cabang = ? 
+            AND p.deleted_at IS NULL
+            AND (p.nama LIKE ? OR p.no_telp LIKE ? OR p.email LIKE ?)
+            
+            UNION
+            
+            SELECT p.* FROM pelanggan p
+            WHERE p.deleted_at IS NULL
+            AND NOT EXISTS (SELECT 1 FROM pesanan ps WHERE ps.id_pelanggan = p.id_pelanggan)
+            AND (p.nama LIKE ? OR p.no_telp LIKE ? OR p.email LIKE ?)
+            
+            ORDER BY nama ASC
+        ";
+        
+        $like = "%{$keyword}%";
+        return $this->db->query($sql, [$id_cabang, $like, $like, $like, $like, $like, $like])->result();
+    }
+
+    // Check if karyawan (via cabang) has access to customer
+    // Returns true if customer ordered at this branch OR has no orders yet (new customer)
+    public function checkAccessByCabang($id_pelanggan, $id_cabang) {
+        // Check if customer has any orders
+        $has_orders = $this->db->where('id_pelanggan', $id_pelanggan)
+                               ->where('deleted_at IS NULL')
+                               ->count_all_results('pesanan') > 0;
+        
+        if (!$has_orders) {
+            // New customer with no orders - all karyawan can access
+            return true;
+        }
+        
+        // Check if customer has orders at this specific branch
+        $this->db->select('1');
+        $this->db->from('pesanan');
+        $this->db->where('pesanan.id_pelanggan', $id_pelanggan);
+        $this->db->where('pesanan.id_cabang', $id_cabang);
+        $this->db->where('pesanan.deleted_at IS NULL');
+        $query = $this->db->get();
+        return $query->num_rows() > 0;
+    }
 }
+

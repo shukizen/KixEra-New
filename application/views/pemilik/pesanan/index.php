@@ -8,21 +8,21 @@
     <div class="flex min-h-screen">
         <!-- Sidebar -->
         <!-- Main Content -->
-        <main class="flex-1 lg:ml-64">
+        <main class="flex-1 ml-64">
             <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-6 py-6">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <h1 class="text-2xl font-semibold text-gray-800">Kelola Pesanan</h1>
+                        <h1 class="text-2xl font-semibold text-gray-800"><?= lang_text('manage_orders') ?></h1>
                         <div class="bg-emerald-100 px-4 py-1 rounded-full">
-                            <span class="text-teal-700 text-sm font-medium"><?php echo isset($pesanan) ? count($pesanan) . ' Total Pesanan' : '0 Total Pesanan'; ?></span>
+                            <span class="text-teal-700 text-sm font-medium"><?php echo isset($pesanan) ? count($pesanan) . ' ' . lang_text('total_orders') : '0 ' . lang_text('total_orders'); ?></span>
                         </div>
                     </div>
 
                     <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
                         <!-- Search -->
                         <div class="relative flex-1 md:w-80">
-                            <input type="text" id="searchInput" placeholder="Search by customer name or order"
+                            <input type="text" id="searchInput" placeholder="<?= lang_text('search') ?>..."
                                 class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-xl text-gray-600 focus:outline-none focus:border-emerald-500">
                             <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                         </div>
@@ -31,10 +31,21 @@
 
                         <select id="statusFilter"
                             class="px-4 py-2 border border-gray-300 rounded-xl text-black focus:outline-none focus:border-emerald-500">
-                            <option value="">All Status</option>
+                            <option value=""><?= lang_text('all_status') ?></option>
                             <?php foreach ($status_list as $value => $label): ?>
                                 <option value="<?= $value ?>"><?= $label ?></option>
                             <?php endforeach; ?>
+                        </select>
+
+                        <!-- Cabang Filter -->
+                        <select id="cabangFilter"
+                            class="px-4 py-2 border border-gray-300 rounded-xl text-black focus:outline-none focus:border-emerald-500">
+                            <option value=""><?= lang_text('all_branches') ?></option>
+                            <?php if (!empty($cabang_list)): ?>
+                                <?php foreach ($cabang_list as $c): ?>
+                                    <option value="<?= $c->id_cabang ?>"><?= htmlspecialchars($c->nama_cabang) ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
                     </div>
                 </div>
@@ -46,7 +57,7 @@
                 <div id="editModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
                     <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
                         <div class="p-4 border-b flex items-center justify-between">
-                            <h3 class="text-lg font-semibold">Edit Pesanan</h3>
+                            <h3 class="text-lg font-semibold"><?= lang_text('edit') ?> <?= lang_text('orders') ?></h3>
                             <button id="closeModal" class="text-gray-500">&times;</button>
                         </div>
                         <div class="p-6">
@@ -108,8 +119,8 @@
                                     </div>
                                 </div>
                                 <div class="mt-4 flex justify-end gap-3">
-                                    <button type="button" id="cancelEdit" class="px-4 py-2 rounded-xl border">Batal</button>
-                                    <button type="submit" class="bg-emerald-500 text-white px-6 py-2 rounded-xl">Simpan</button>
+                                    <button type="button" id="cancelEdit" class="px-4 py-2 rounded-xl border"><?= lang_text('cancel') ?></button>
+                                    <button type="submit" class="bg-emerald-500 text-white px-6 py-2 rounded-xl"><?= lang_text('save') ?></button>
                                 </div>
                             </form>
                         </div>
@@ -123,23 +134,22 @@
                             <div class="w-12 h-12 flex items-center justify-center rounded-full bg-red-100">
                                 <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
                             </div>
-                            <h3 class="text-xl font-semibold text-gray-800">Hapus Pesanan?</h3>
+                            <h3 class="text-xl font-semibold text-gray-800"><?= lang_text('confirm_delete') ?>?</h3>
                         </div>
 
                         <p class="text-gray-600 mb-6 leading-relaxed">
-                            Pesanan <span id="delete-id-text" class="font-semibold text-gray-800"></span> akan dihapus secara permanen.
-                            Tindakan ini tidak bisa dibatalkan.
+                            <?= lang_text('orders') ?> <span id="delete-id-text" class="font-semibold text-gray-800"></span> <?= lang_text('will_be_deleted') ?>.
                         </p>
 
                         <div class="flex justify-end gap-3">
                             <button id="cancelDeleteBtn"
                                 class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
-                                Batal
+                                <?= lang_text('cancel') ?>
                             </button>
 
                             <button id="confirmDeleteBtn"
                                 class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">
-                                Hapus
+                                <?= lang_text('delete') ?>
                             </button>
                         </div>
 
@@ -152,7 +162,7 @@
                     <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Total Pesanan Hari Ini</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('total_orders_today') ?></p>
                                 <h3 id="stat-today" class="text-3xl font-bold text-gray-800 mt-2"><?php
                                                                                                     $total_today = 0;
                                                                                                     if (!empty($pesanan)) {
@@ -173,7 +183,7 @@
                     <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Pesanan Selesai</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('orders_completed') ?></p>
                                 <h3 id="stat-selesai" class="text-3xl font-bold text-gray-800 mt-2"><?php
                                                                                                     $done = 0;
                                                                                                     if (!empty($pesanan)) {
@@ -195,7 +205,7 @@
                     <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Dalam Proses</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('in_process') ?></p>
                                 <h3 id="stat-proses" class="text-3xl font-bold text-gray-800 mt-2"><?php
                                                                                                     $processing = 0;
                                                                                                     if (!empty($pesanan)) {
@@ -213,17 +223,17 @@
                         </div>
                     </div>
 
-                    <!-- Menunggu -->
+                    <!-- Diterima -->
                     <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Menunggu</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('received') ?></p>
                                 <h3 id="stat-tunggu" class="text-3xl font-bold text-gray-800 mt-2"><?php
                                                                                                     $waiting = 0;
                                                                                                     if (!empty($pesanan)) {
                                                                                                         foreach ($pesanan as $p) {
                                                                                                             $s = strtolower($p->status_pesanan ?? '');
-                                                                                                            if ($s === 'menunggu') $waiting++;
+                                                                                                            if ($s === 'diterima') $waiting++;
                                                                                                         }
                                                                                                     }
                                                                                                     echo $waiting;
@@ -239,7 +249,7 @@
                     <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Dibatalkan</p>
+                                <p class="text-sm font-medium text-gray-500"><?= lang_text('cancelled') ?></p>
                                 <h3 id="stat-batal" class="text-3xl font-bold text-gray-800 mt-2"><?php
                                                                                                     $cancel = 0;
                                                                                                     if (!empty($pesanan)) {
@@ -259,11 +269,101 @@
                 </div>
                 <!-- Detail Modal REMOVED: User redirects to separate detail page -->
 
-                <!-- Visualisasi Charts Section - Moved to Top -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    <!-- Visualisasi Pesanan per Cabang -->
+                <!-- Main Content Grid -->
+                <!-- Data Pesanan Table (Full Width) -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6"><?= lang_text('order_data') ?></h2>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="border-b border-gray-200">
+                                <tr>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm"><?= lang_text('order_number') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm"><?= lang_text('date') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm"><?= lang_text('customer') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm"><?= lang_text('branch') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm"><?= lang_text('service') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm"><?= lang_text('total') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm"><?= lang_text('status') ?></th>
+                                    <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm"><?= lang_text('action') ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($pesanan)) : ?>
+                                    <?php foreach ($pesanan as $p) : ?>
+                                        <tr class="border-b border-gray-100 hover:bg-gray-50" data-status="<?= strtolower($p->status_pesanan ?? '') ?>" data-cabang="<?= $p->id_cabang ?? '' ?>">
+                                            <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nomor_pesanan ?? '-'); ?></td>
+                                            <td class="text-center py-4 px-2"><?php echo date('d/m/Y', strtotime($p->tgl_masuk)); ?></td>
+                                            <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_pelanggan ?? '-'); ?></td>
+                                            <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_cabang ?? '-'); ?></td>
+                                            <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_layanan ?? '-'); ?></td>
+                                            <td class="text-center py-4 px-2">Rp <?php echo number_format($p->total_harga ?? 0, 0, ',', '.'); ?></td>
+                                            <td class="text-center py-4 px-2">
+                                                <?php
+                                                $status = strtolower($p->status_pesanan ?? '');
+                                                $badge = 'bg-gray-100 text-gray-700';
+                                                $status_label = ucfirst(str_replace('_', ' ', $status));
+                                                
+                                                if ($status === 'sudah_diambil') {
+                                                    $badge = 'bg-emerald-500/10 text-emerald-500';
+                                                    $status_label = 'Sudah Diambil';
+                                                } elseif ($status === 'siap_diambil') {
+                                                    $badge = 'bg-green-500/10 text-green-500';
+                                                    $status_label = 'Siap Diambil';
+                                                } elseif ($status === 'selesai') {
+                                                    $badge = 'bg-teal-500/10 text-teal-500';
+                                                } elseif ($status === 'dalam_proses') {
+                                                    $badge = 'bg-yellow-500/10 text-yellow-600';
+                                                    $status_label = 'Dalam Proses';
+                                                } elseif ($status === 'diterima') {
+                                                    $badge = 'bg-blue-500/10 text-blue-500';
+                                                } elseif ($status === 'dibatalkan') {
+                                                    $badge = 'bg-red-500/10 text-red-500';
+                                                }
+                                                ?>
+                                                <span class="<?php echo $badge; ?> px-3 py-1 rounded-full text-xs font-medium"><?php echo htmlspecialchars($status_label ?: '-'); ?></span>
+                                            </td>
+                                            <td class="text-center py-4 px-2">
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <button data-id="<?php echo $p->id_pesanan; ?>"
+                                                        data-nomor="<?php echo htmlspecialchars($p->id_pesanan); ?>"
+                                                        class="text-emerald-500 hover:text-emerald-600 btn-view"
+                                                        title="Detail">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan ?? $p->id_pesanan); ?>" class="text-blue-500 hover:text-blue-600 btn-edit" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan ?? $p->id_pesanan); ?>" class="text-red-500 hover:text-red-600 btn-delete" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="8" class="text-center py-6 text-gray-500"><?= lang_text('no_order_data') ?></td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Statistics Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Tren Pesanan -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Visualisasi Pesanan per Cabang</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('order_trend') ?> (7 <?= lang_text('days') ?>)</h2>
+                        <div class="h-64">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Pesanan per Cabang -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('orders_by_branch') ?></h2>
                         <div class="h-64">
                             <canvas id="branchChart"></canvas>
                         </div>
@@ -271,101 +371,28 @@
 
                     <!-- Jenis Layanan -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Jenis Layanan</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('service_type') ?></h2>
                         <div class="h-64">
                             <canvas id="serviceTypeChart"></canvas>
                         </div>
                     </div>
 
-                    <!-- Tren Pesanan -->
+                    <!-- Insight Ringkas -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Tren Pesanan (7 Hari)</h2>
-                        <div class="h-64">
-                            <canvas id="trendChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Content Grid -->
-                <div class="mb-6">
-                    <!-- Data Pesanan Table - Full Width -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-xl font-semibold text-gray-800 mb-6">Data Pesanan</h2>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="border-b border-gray-200">
-                                    <tr>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Nomor Pesanan</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Tanggal</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Pelanggan</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Cabang</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Layanan</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Total</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Status</th>
-                                        <th class="text-center py-3 px-2 text-gray-600 font-medium text-sm">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (!empty($pesanan)) : ?>
-                                        <?php foreach ($pesanan as $p) : ?>
-                                            <tr class="border-b border-gray-100 hover:bg-gray-50">
-                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nomor_pesanan ?? '-'); ?></td>
-                                                <td class="text-center py-4 px-2"><?php echo date('d/m/Y', strtotime($p->tgl_masuk)); ?></td>
-                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_pelanggan ?? '-'); ?></td>
-                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_cabang ?? '-'); ?></td>
-                                                <td class="text-center py-4 px-2"><?php echo htmlspecialchars($p->nama_layanan ?? '-'); ?></td>
-                                                <td class="text-center py-4 px-2">Rp <?php echo number_format($p->total_harga ?? 0, 0, ',', '.'); ?></td>
-                                                <td class="text-center py-4 px-2">
-                                                    <?php
-                                                    $status = strtolower($p->status_pesanan ?? '');
-                                                    $badge = 'bg-gray-100 text-gray-700';
-                                                    $status_label = ucfirst(str_replace('_', ' ', $status));
-                                                    
-                                                    if ($status === 'sudah_diambil') {
-                                                        $badge = 'bg-emerald-500/10 text-emerald-500';
-                                                        $status_label = 'Sudah Diambil';
-                                                    } elseif ($status === 'siap_diambil') {
-                                                        $badge = 'bg-green-500/10 text-green-500';
-                                                        $status_label = 'Siap Diambil';
-                                                    } elseif ($status === 'selesai') {
-                                                        $badge = 'bg-teal-500/10 text-teal-500';
-                                                    } elseif ($status === 'dalam_proses') {
-                                                        $badge = 'bg-yellow-500/10 text-yellow-600';
-                                                        $status_label = 'Dalam Proses';
-                                                    } elseif ($status === 'diterima') {
-                                                        $badge = 'bg-blue-500/10 text-blue-500';
-                                                    } elseif ($status === 'dibatalkan') {
-                                                        $badge = 'bg-red-500/10 text-red-500';
-                                                    }
-                                                    ?>
-                                                    <span class="<?php echo $badge; ?> px-3 py-1 rounded-full text-xs font-medium"><?php echo htmlspecialchars($status_label ?: '-'); ?></span>
-                                                </td>
-                                                <td class="text-center py-4 px-2">
-                                                    <div class="flex items-center justify-center gap-2">
-                                                        <button data-id="<?php echo $p->id_pesanan; ?>"
-                                                            data-nomor="<?php echo htmlspecialchars($p->id_pesanan); ?>"
-                                                            class="text-emerald-500 hover:text-emerald-600 btn-view"
-                                                            title="Detail">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan ?? $p->id_pesanan); ?>" class="text-blue-500 hover:text-blue-600 btn-edit" title="Edit">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <button data-id="<?php echo $p->id_pesanan; ?>" data-nomor="<?php echo htmlspecialchars($p->nomor_pesanan ?? $p->id_pesanan); ?>" class="text-red-500 hover:text-red-600 btn-delete" title="Delete">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="8" class="text-center py-6 text-gray-500">Tidak ada pesanan.</td>
-                                        </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('quick_insights') ?></h2>
+                        <div class="space-y-4">
+                            <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
+                                <i class="fas fa-chart-line text-emerald-500 mt-1"></i>
+                                <p class="text-sm text-gray-700">Cabang Condongcatur memiliki peningkatan 25% minggu ini</p>
+                            </div>
+                            <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
+                                <i class="fas fa-star text-emerald-500 mt-1"></i>
+                                <p class="text-sm text-gray-700">Layanan Whitening paling diminati bulan ini</p>
+                            </div>
+                            <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
+                                <i class="fas fa-clock text-emerald-500 mt-1"></i>
+                                <p class="text-sm text-gray-700">Rata-rata waktu penyelesaian: 2,3 hari</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -613,11 +640,11 @@
                 const tglMasuk = p.tgl_masuk ? p.tgl_masuk.split(' ')[0] : '';
 
                 if (tglMasuk === todayDate) today++;
-                if (status === 'selesai' || status === 'diambil') {
+                if (status === 'selesai' || status === 'siap_diambil' || status === 'sudah_diambil') {
                     selesai++;
-                } else if (status === 'diterima' || status === 'dalam_proses') {
+                } else if (status === 'dalam_proses') {
                     proses++;
-                } else if (status === 'menunggu') {
+                } else if (status === 'diterima') {
                     tunggu++;
                 } else if (status === 'dibatalkan') {
                     batal++;
@@ -967,6 +994,86 @@
             });
         })();
 
+
+
+        // ============ SEARCH & FILTER TABLE ============
+        (function() {
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const cabangFilter = document.getElementById('cabangFilter');
+            const tableBody = document.querySelector('table tbody');
+            const rows = tableBody ? tableBody.querySelectorAll('tr[data-status]') : [];
+
+            // Update statistics based on visible rows
+            function updateStats() {
+                let today = 0, selesai = 0, proses = 0, tunggu = 0, batal = 0;
+                const todayDate = new Date().toISOString().split('T')[0];
+
+                rows.forEach(row => {
+                    if (row.style.display === 'none') return; // Skip hidden rows
+                    
+                    const status = row.dataset.status || '';
+                    const tglMasukCell = row.querySelector('td:nth-child(2)');
+                    
+                    // Parse date from table (format: dd/mm/yyyy)
+                    if (tglMasukCell) {
+                        const parts = tglMasukCell.textContent.trim().split('/');
+                        if (parts.length === 3) {
+                            const rowDate = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+                            if (rowDate === todayDate) today++;
+                        }
+                    }
+
+                    if (status === 'selesai' || status === 'siap_diambil' || status === 'sudah_diambil') {
+                        selesai++;
+                    } else if (status === 'dalam_proses') {
+                        proses++;
+                    } else if (status === 'diterima') {
+                        tunggu++;
+                    } else if (status === 'dibatalkan') {
+                        batal++;
+                    }
+                });
+
+                // Update stat elements
+                const statToday = document.getElementById('stat-today');
+                const statSelesai = document.getElementById('stat-selesai');
+                const statProses = document.getElementById('stat-proses');
+                const statTunggu = document.getElementById('stat-tunggu');
+                const statBatal = document.getElementById('stat-batal');
+
+                if (statToday) statToday.textContent = today;
+                if (statSelesai) statSelesai.textContent = selesai;
+                if (statProses) statProses.textContent = proses;
+                if (statTunggu) statTunggu.textContent = tunggu;
+                if (statBatal) statBatal.textContent = batal;
+            }
+
+            function filterTable() {
+                const searchTerm = (searchInput?.value || '').toLowerCase();
+                const statusValue = statusFilter?.value || '';
+                const cabangValue = cabangFilter?.value || '';
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const rowStatus = row.dataset.status || '';
+                    const rowCabang = row.dataset.cabang || '';
+
+                    const matchSearch = !searchTerm || text.includes(searchTerm);
+                    const matchStatus = !statusValue || rowStatus === statusValue;
+                    const matchCabang = !cabangValue || rowCabang === cabangValue;
+
+                    row.style.display = (matchSearch && matchStatus && matchCabang) ? '' : 'none';
+                });
+
+                // Update stats after filtering
+                updateStats();
+            }
+
+            if (searchInput) searchInput.addEventListener('input', filterTable);
+            if (statusFilter) statusFilter.addEventListener('change', filterTable);
+            if (cabangFilter) cabangFilter.addEventListener('change', filterTable);
+        })();
 
         function showNotification(message, type = 'info') {
             const existing = document.getElementById('temp-notification');
