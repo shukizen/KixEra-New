@@ -58,7 +58,7 @@ class Keuangan_model extends CI_Model {
     }
 
     public function get_pemasukan_by_id($id_pemasukan) {
-        $this->db->select('p.*, c.nama_cabang, k.nama as nama_karyawan, ps.kode_pesanan');
+        $this->db->select('p.*, c.nama_cabang, k.nama as nama_karyawan, ps.nomor_pesanan as kode_pesanan');
         $this->db->from('pemasukan p');
         $this->db->join('cabang c', 'c.id_cabang = p.id_cabang', 'left');
         $this->db->join('karyawan k', 'k.id_karyawan = p.id_karyawan', 'left');
@@ -69,7 +69,7 @@ class Keuangan_model extends CI_Model {
     }
 
     public function get_all_pemasukan($filters = array()) {
-        $this->db->select('p.*, c.nama_cabang, k.nama as nama_karyawan, ps.kode_pesanan');
+        $this->db->select('p.*, c.nama_cabang, k.nama as nama_karyawan, ps.nomor_pesanan as kode_pesanan');
         $this->db->from('pemasukan p');
         $this->db->join('cabang c', 'c.id_cabang = p.id_cabang', 'left');
         $this->db->join('karyawan k', 'k.id_karyawan = p.id_karyawan', 'left');

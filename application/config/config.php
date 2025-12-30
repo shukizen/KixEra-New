@@ -532,3 +532,18 @@ $config['rewrite_short_tags'] = FALSE;
 | Comma-separated:	'10.0.1.200,192.168.5.0/24'
 | Array:		array('10.0.1.200', '192.168.5.0/24')
 */
+$config['proxy_ips'] = '';
+
+/*
+|--------------------------------------------------------------------------
+| Fonnte WhatsApp API Configuration
+|--------------------------------------------------------------------------
+|
+| Configuration for WhatsApp message sending via Fonnte API.
+| Used for admin login verification codes (2FA).
+|
+*/
+$config['fonnte_api_token'] = 'dNdMeBx2FvCZBZ82yEx2';
+$config['fonnte_api_url'] = 'https://api.fonnte.com/send';
+$config['verification_code_expire'] = 300; // 5 menit dalam detik
+$config['verification_code_resend_cooldown'] = 90; // 90 detik cooldown

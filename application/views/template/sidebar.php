@@ -55,6 +55,13 @@ $segment2 = $CI->uri->segment(2);
             Keuangan
         </a>
         
+        <!-- Layanan -->
+        <a href="<?= base_url('pemilik/layanan') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'layanan') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+            <i class="fas fa-concierge-bell mr-3"></i>
+            Layanan
+        </a>
+        
         <!-- Inventory -->
         <a href="<?= base_url('pemilik/inventori') ?>" 
            class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'inventori') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">

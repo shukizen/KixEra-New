@@ -24,9 +24,24 @@ class Export_keuangan extends CI_Controller {
     {
         parent::__construct();
         $this->load->model('Export_keuangan_model', 'keuangan_model');
-        $this->load->library('session');
+        $this->load->library(['session', 'auth_library']);
         $this->load->helper(['url', 'form']);
         
+        // Require owner role
+        $this->auth_library->require_role('owner');
+    }
+    
+    // Helper to get id_pemilik
+    private function get_id_pemilik() {
+        $id_pemilik = $this->session->userdata('id_pemilik');
+        if (empty($id_pemilik)) {
+            $user_id = $this->session->userdata('id_user');
+            if ($user_id) {
+                $owner = $this->db->get_where('pemilik', ['id_user' => $user_id])->row();
+                if ($owner) return $owner->id_pemilik;
+            }
+        }
+        return $id_pemilik;
     }
 
     public function index()
@@ -111,17 +126,21 @@ class Export_keuangan extends CI_Controller {
 
     private function prepare_export_data($filters, $export_type)
     {
+        // Add id_pemilik to filters for owner-based filtering
+        $id_pemilik = $this->get_id_pemilik();
+        $filters['id_pemilik'] = $id_pemilik;
+        
         $data = array(
             'filters' => $filters,
             'export_type' => $export_type,
             'generated_at' => date('d/m/Y H:i:s'),
-            'generated_by' => $this->session->userdata('nama_lengkap') ?? 'System',
+            'generated_by' => $this->session->userdata('nama') ?? 'System',
             'period_info' => $this->get_period_info($filters),
             'company_info' => $this->get_company_info()
         );
 
         $cabang_id = !empty($filters['id_cabang']) ? $filters['id_cabang'] : null;
-        $data['summary'] = $this->keuangan_model->get_financial_summary($cabang_id);
+        $data['summary'] = $this->keuangan_model->get_financial_summary($id_pemilik, $cabang_id);
 
         if (empty($data['summary'])) {
             $data['summary'] = [
@@ -139,7 +158,7 @@ class Export_keuangan extends CI_Controller {
                 
             case 'expense_only':
                 $data['transactions'] = $this->keuangan_model->get_filtered_transactions_by_type($filters, 'expense');
-                $data['expense_breakdown'] = $this->keuangan_model->get_expense_breakdown(12, $cabang_id);
+                $data['expense_breakdown'] = $this->keuangan_model->get_expense_breakdown(12, $id_pemilik, $cabang_id);
                 $data['title'] = 'Laporan Pengeluaran';
                 break;
                 
@@ -149,7 +168,7 @@ class Export_keuangan extends CI_Controller {
                 break;
                 
             case 'cabang_summary':
-                $data['cabang_summary'] = $this->keuangan_model->get_saldo_per_cabang($cabang_id);
+                $data['cabang_summary'] = $this->keuangan_model->get_saldo_per_cabang($id_pemilik, $cabang_id);
                 $data['title'] = 'Laporan Saldo Per Cabang';
                 break;
                 
@@ -157,8 +176,8 @@ class Export_keuangan extends CI_Controller {
                 $data['transactions'] = $this->keuangan_model->get_filtered_transactions($filters);
                 $data['income_transactions'] = $this->keuangan_model->get_filtered_transactions_by_type($filters, 'income');
                 $data['expense_transactions'] = $this->keuangan_model->get_filtered_transactions_by_type($filters, 'expense');
-                $data['expense_breakdown'] = $this->keuangan_model->get_expense_breakdown(12, $cabang_id);
-                $data['cabang_summary'] = $this->keuangan_model->get_saldo_per_cabang($cabang_id);
+                $data['expense_breakdown'] = $this->keuangan_model->get_expense_breakdown(12, $id_pemilik, $cabang_id);
+                $data['cabang_summary'] = $this->keuangan_model->get_saldo_per_cabang($id_pemilik, $cabang_id);
                 $data['title'] = 'Laporan Keuangan Lengkap';
                 break;
         }
@@ -168,10 +187,10 @@ class Export_keuangan extends CI_Controller {
 
     private function get_company_info()
     {
-        $pemilik_id = $this->session->userdata('pemilik_id');
+        $id_pemilik = $this->get_id_pemilik(); // Fixed: use correct helper method
         
-        if ($pemilik_id) {
-            $pemilik = $this->keuangan_model->get_pemilik_by_id($pemilik_id);
+        if ($id_pemilik) {
+            $pemilik = $this->keuangan_model->get_pemilik_by_id($id_pemilik);
             if ($pemilik) {
                 return [
                     'nama_perusahaan' => $pemilik['nama_usaha'] ?? 'Kixera Shoes',

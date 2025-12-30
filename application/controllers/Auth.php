@@ -80,6 +80,25 @@ class Auth extends CI_Controller {
         $user = $this->user_model->validate_login($username_or_email, $password);
         
         if ($user) {
+            // Security: Prevent Admin from logging in via Standard Portal
+            if ($user['role'] === 'admin') {
+                $response = [
+                    'success' => false,
+                    'message' => 'Akses Ditolak. Akun Admin tidak diizinkan login di halaman ini.'
+                ];
+                
+                if ($this->input->is_ajax_request()) {
+                    $this->output
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode($response));
+                    return;
+                }
+                
+                $this->session->set_flashdata('error', $response['message']);
+                redirect('auth/login');
+                return;
+            }
+
             // Cek status user
             if ($user['status'] !== 'aktif') {
                 $response = [
@@ -103,10 +122,15 @@ class Auth extends CI_Controller {
             if ($user['role'] === 'owner') {
                 $subscription_valid = $this->check_subscription($user);
                 if (!$subscription_valid) {
+                    // Set session users first so they can access payment page
+                    $this->set_user_session($user);
+                    $this->session->set_userdata('subscription_expired', true);
+                    
                     $response = [
                         'success' => false,
                         'message' => 'Langganan Anda telah berakhir. Silakan perpanjang langganan.',
-                        'subscription_expired' => true
+                        'subscription_expired' => true,
+                        'redirect' => base_url('auth/subscription_expired')
                     ];
                     
                     if ($this->input->is_ajax_request()) {
@@ -388,7 +412,10 @@ class Auth extends CI_Controller {
         // Log activity sebelum destroy session
         if ($this->is_logged_in()) {
             $id_user = $this->session->userdata('id_user');
-            $this->user_model->log_activity($id_user, 'Logout', 'User logout dari sistem');
+            // Only log if id_user is valid (not null or empty)
+            if (!empty($id_user)) {
+                $this->user_model->log_activity($id_user, 'Logout', 'User logout dari sistem');
+            }
         }
         
         // Destroy session sepenuhnya

@@ -12,29 +12,75 @@
                 <div class="flex items-center justify-between">
                     <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
                     
-                    <div class="flex items-center gap-4">
-                        <!-- Search -->
+                    <div class="flex items-center gap-6">
+                        <!-- Notification Bell with Dropdown -->
                         <div class="relative">
-                            <input type="text" placeholder="Search..." class="w-80 px-4 py-2 pr-10 border border-gray-300 rounded-xl text-gray-600 focus:outline-none focus:border-emerald-500">
-                            <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
-                        </div>
-                        
-                        <!-- Notification Bell -->
-                        <div class="relative">
-                            <i class="fas fa-bell text-gray-600 text-xl"></i>
-                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
-                        </div>
-                        
-                        <!-- User Profile -->
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-white"></i>
-                            </div>
-                            <div>
-                                <div class="text-sm font-medium text-gray-800">
-                                    <?php echo $this->session->userdata('nama') ? $this->session->userdata('nama') : 'Owner'; ?>
+                            <button id="notificationBtn" class="relative hover:text-emerald-500 transition">
+                                <i class="fas fa-bell text-gray-600 text-xl"></i>
+                                <span id="headerBadge" class="notification-badge absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                            </button>
+                            
+                            <!-- Notification Dropdown -->
+                            <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50">
+                                <div class="p-4 border-b border-gray-200">
+                                    <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+                                        <i class="fas fa-bell text-emerald-500"></i>
+                                        Notifikasi
+                                    </h3>
                                 </div>
-                                <div class="text-xs text-gray-500">Owner</div>
+                                <div id="headerNotificationsList" class="max-h-96 overflow-y-auto">
+                                    <!-- Notifications will be loaded dynamically -->
+                                    <div class="text-center py-8 text-gray-400">
+                                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                        <p class="text-sm">Memuat...</p>
+                                    </div>
+                                </div>
+                                <div class="p-3 border-t border-gray-200">
+                                    <button onclick="markAllAsRead()" class="text-sm text-emerald-500 hover:text-emerald-600 font-medium flex items-center justify-center gap-2 w-full">
+                                        Tandai Semua Dibaca
+                                        <i class="fas fa-check text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- User Profile with Dropdown -->
+                        <div class="relative">
+                            <button id="profileBtn" class="flex items-center gap-3 hover:bg-gray-50 rounded-xl px-3 py-2 transition">
+                                <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                                <div class="text-left">
+                                    <div class="text-sm font-medium text-gray-800">
+                                        <?php echo $this->session->userdata('nama') ? $this->session->userdata('nama') : 'Owner'; ?>
+                                    </div>
+                                    <div class="text-xs text-gray-500">Owner</div>
+                                </div>
+                                <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                            </button>
+                            
+                            <!-- Profile Dropdown -->
+                            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 z-50">
+                                <div class="p-4 border-b border-gray-200">
+                                    <p class="font-semibold text-gray-800"><?php echo $this->session->userdata('nama') ? $this->session->userdata('nama') : 'Owner'; ?></p>
+                                    <p class="text-xs text-gray-500 mt-1"><?php echo $this->session->userdata('email') ? $this->session->userdata('email') : 'owner@kixera.com'; ?></p>
+                                </div>
+                                <div class="py-2">
+                                    <a href="<?= base_url('pemilik/pengaturan') ?>" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition text-gray-700">
+                                        <i class="fas fa-cog text-gray-400"></i>
+                                        <span class="text-sm font-medium">Pengaturan</span>
+                                    </a>
+                                    <a href="<?= base_url('pemilik/pengaturan#password') ?>" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition text-gray-700">
+                                        <i class="fas fa-key text-gray-400"></i>
+                                        <span class="text-sm font-medium">Ganti Password</span>
+                                    </a>
+                                </div>
+                                <div class="border-t border-gray-200">
+                                    <a href="<?= base_url('auth/logout') ?>" class="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition text-red-600">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span class="text-sm font-medium">Logout</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -235,35 +281,26 @@
                         </div>
                     </div>
                     
-                    <!-- Right Column -->
+                    <!-- Right Column - Extended Notifications -->
                     <div class="space-y-6">
-                        <!-- Notifications & Alerts -->
+                        <!-- Notifications & Alerts (Extended) -->
                          <div class="bg-white rounded-2xl shadow-lg p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Notifications & Alerts</h2>
-                            <div class="space-y-4">
-                                <!-- Alert 1 -->
-                                <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-                                    <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-medium text-red-800">System Update</p>
-                                        <p class="text-xs text-red-600">Dashboard kini menampilkan data real-time.</p>
-                                    </div>
-                                </div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                    <i class="fas fa-bell text-emerald-500"></i>
+                                    Notifikasi
+                                </h2>
+                                <button onclick="markAllAsRead()" class="text-xs text-emerald-500 hover:text-emerald-600 font-medium">
+                                    Tandai semua dibaca
+                                </button>
                             </div>
-                        </div>
-                        
-                        <!-- Quick Actions -->
-                        <div class="bg-white rounded-2xl shadow-lg p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
-                            <div class="space-y-3">
-                                <button onclick="window.location='<?= base_url('pemilik/pesanan/add') ?>'" class="w-full bg-emerald-500 text-white py-3 rounded-xl hover:bg-emerald-600 transition flex items-center justify-center gap-2">
-                                    <i class="fas fa-plus"></i>
-                                    Tambah Pesanan
-                                </button>
-                                <button onclick="window.location='<?= base_url('pemilik/pelanggan/add') ?>'" class="w-full border border-emerald-500 text-emerald-500 py-3 rounded-xl hover:bg-emerald-50 transition flex items-center justify-center gap-2">
-                                    <i class="fas fa-user-plus"></i>
-                                    Tambah Pelanggan
-                                </button>
+                            
+                            <div id="notificationsList" class="space-y-3">
+                                <!-- Notifications will be loaded dynamically here -->
+                                <div class="text-center py-8 text-gray-400">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p class="text-sm">Memuat notifikasi...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -450,6 +487,214 @@
                 }
             }
         });
+        
+        // Dropdown Toggle Functionality
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        const profileBtn = document.getElementById('profileBtn');
+        const profileDropdown = document.getElementById('profileDropdown');
+        
+        // Toggle Notification Dropdown
+        notificationBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            notificationDropdown.classList.toggle('hidden');
+            profileDropdown.classList.add('hidden'); // Close profile dropdown
+        });
+        
+        // Toggle Profile Dropdown
+        profileBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('hidden');
+            notificationDropdown.classList.add('hidden'); // Close notification dropdown
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!notificationBtn.contains(e.target) && !notificationDropdown.contains(e.target)) {
+                notificationDropdown.classList.add('hidden');
+            }
+            if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.add('hidden');
+            }
+        });
+        
+        // Close dropdowns with ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                notificationDropdown.classList.add('hidden');
+                profileDropdown.classList.add('hidden');
+            }
+        });
+
+        // ============================================
+        // NOTIFICATION SYSTEM
+        // ============================================
+        const BASE_URL = '<?= base_url() ?>';
+        
+        // Format relative time
+        function timeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            
+            if (seconds < 60) return 'Baru saja';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' menit yang lalu';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' jam yang lalu';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + ' hari yang lalu';
+            return Math.floor(seconds / 604800) + ' minggu yang lalu';
+        }
+
+        // Get icon and color based on notification type
+        function getNotificationStyle(type) {
+            const styles = {
+                'order': { icon: 'fas fa-shopping-cart', color: 'emerald' },
+                'payment': { icon: 'fas fa-money-bill-wave', color: 'blue' },
+                'pickup': { icon: 'fas fa-truck', color: 'orange' },
+                'general': { icon: 'fas fa-info-circle', color: 'gray' }
+            };
+            return styles[type] || styles.general;
+        }
+
+        // Fetch notifications from API
+        function loadNotifications() {
+           fetch(BASE_URL + 'pemilik/pemilik_dashboard/get_notifications')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderNotifications(data.notifications);
+                        renderHeaderNotifications(data.notifications);
+                        updateBadgeCount(data.unread_count);
+                    } else {
+                        // Show error message from API
+                        const errorMsg = data.error || data.message || 'Gagal memuat notifikasi';
+                        const errorHtml = '<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle text-2xl mb-2"></i><p class="text-sm">' + errorMsg + '</p></div>';
+                        document.getElementById('notificationsList').innerHTML = errorHtml;
+                        document.getElementById('headerNotificationsList').innerHTML = errorHtml;
+                        console.error('API Error:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    const errorHtml = '<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle text-2xl mb-2"></i><p class="text-sm">Gagal memuat notifikasi</p></div>';
+                    document.getElementById('notificationsList').innerHTML = errorHtml;
+                    document.getElementById('headerNotificationsList').innerHTML = errorHtml;
+                });
+        }
+
+        // Render notifications in sidebar
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notificationsList');
+            
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-gray-400"><i class="fas fa-bell-slash text-2xl mb-2"></i><p class="text-sm">Belum ada notifikasi</p></div>';
+                return;
+            }
+
+            let html = '';
+            notifications.forEach(notif => {
+                const style = getNotificationStyle(notif.type);
+                const isRead = notif.is_read == 1;
+                const bgClass = isRead ? 'bg-gray-50' : 'bg-white';
+                const dotColor = style.color;
+                
+                html += '<div class="' + bgClass + ' border border-' + dotColor + '-200 rounded-xl p-4 hover:shadow-md transition cursor-pointer" onclick="markAsRead(' + notif.id_notification + ')">';
+                html += '<div class="flex items-start gap-3">';
+                html += '<div class="w-8 h-8 bg-' + dotColor + '-100 rounded-full flex items-center justify-center flex-shrink-0">';
+                html += '<i class="' + style.icon + ' text-' + dotColor + '-500 text-sm"></i>';
+                html += '</div>';
+                html += '<div class="flex-1 min-w-0">';
+                html += '<div class="flex items-start justify-between gap-2">';
+                html += '<p class="text-sm font-medium text-gray-800 ' + (isRead ? 'opacity-70' : '') + '">' + notif.title + '</p>';
+                if (!isRead) html += '<div class="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0 mt-1"></div>';
+                html += '</div>';
+                if (notif.message) html += '<p class="text-xs text-gray-600 mt-1 ' + (isRead ? 'opacity-60' : '') + '">' + notif.message + '</p>';
+                html += '<p class="text-xs text-gray-400 mt-2">' + timeAgo(notif.created_at) + '</p>';
+                html += '</div></div></div>';
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Render notifications in header dropdown  
+        function renderHeaderNotifications(notifications) {
+            const container = document.getElementById('headerNotificationsList');
+            
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-gray-400"><i class="fas fa-bell-slash text-2xl mb-2"></i><p class="text-sm">Belum ada notifikasi</p></div>';
+                return;
+            }
+
+            let html = '';
+            const displayNotifs = notifications.slice(0, 5); // Only show 5 in header
+            displayNotifs.forEach(notif => {
+                const style = getNotificationStyle(notif.type);
+                const isRead = notif.is_read == 1;
+                const dotColor = style.color;
+                
+                html += '<div class="p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition" onclick="markAsRead(' + notif.id_notification + ')">';
+                html += '<div class="flex items-start gap-3">';
+                if (!isRead) {
+                    html += '<div class="w-2 h-2 bg-' + dotColor + '-500 rounded-full mt-2"></div>';
+                } else {
+                    html += '<div class="w-2 h-2 bg-gray-300 rounded-full mt-2"></div>';
+                }
+                html += '<div class="flex-1">';
+                html += '<p class="text-sm font-medium text-gray-800 ' + (isRead ? 'opacity-60' : '') + '">' + notif.title + '</p>';
+                html += '<p class="text-xs text-gray-500 mt-1">' + timeAgo(notif.created_at) + '</p>';
+                html += '</div></div></div>';
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Update badge count
+        function updateBadgeCount(count) {
+            const badgeElements = document.querySelectorAll('.notification-badge');
+            badgeElements.forEach(badge => {
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            });
+        }
+
+        // Mark notification as read
+        function markAsRead(id) {
+            fetch(BASE_URL + 'pemilik/pemilik_dashboard/mark_notification_read/' + id, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications(); // Reload notifications
+                }
+            });
+        }
+
+        // Mark all as read
+        function markAllAsRead() {
+            fetch(BASE_URL + 'pemilik/pemilik_dashboard/mark_all_read', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications(); // Reload notifications
+                }
+            });
+        }
+
+        // Load notifications on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotifications();
+            
+            // Refresh notifications every 30 seconds
+            setInterval(loadNotifications, 30000);
+        });
+    
+    
     </script>
 </body>
 </html>

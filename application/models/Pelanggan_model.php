@@ -12,18 +12,18 @@ class Pelanggan_model extends CI_Model {
 
     public function getAllPelanggan($id_pemilik = null)
     {
-        $this->db->select('pelanggan.*');
+        $this->db->select('pelanggan.*, COUNT(pesanan.id_pesanan) as total_pesanan');
         $this->db->from('pelanggan');
+        $this->db->join('pesanan', 'pesanan.id_pelanggan = pelanggan.id_pelanggan AND pesanan.deleted_at IS NULL', 'left');
         
         if ($id_pemilik) {
             // Only show customers who have orders at owner's branches
-            $this->db->join('pesanan', 'pesanan.id_pelanggan = pelanggan.id_pelanggan');
-            $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
-            $this->db->where('cabang.id_pemilik', $id_pemilik);
-            $this->db->group_by('pelanggan.id_pelanggan'); // Distinct customers
+            $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang AND cabang.deleted_at IS NULL', 'left');
+            $this->db->where('(cabang.id_pemilik = ' . $id_pemilik . ' OR pesanan.id_pesanan IS NULL)');
         }
         
         $this->db->where('pelanggan.deleted_at IS NULL');
+        $this->db->group_by('pelanggan.id_pelanggan');
         $this->db->order_by('pelanggan.nama', 'ASC');
         return $this->db->get()->result();
     }
@@ -62,14 +62,13 @@ class Pelanggan_model extends CI_Model {
 
     public function searchPelanggan($keyword, $id_pemilik = null)
     {
-        $this->db->select('pelanggan.*');
+        $this->db->select('pelanggan.*, COUNT(pesanan.id_pesanan) as total_pesanan');
         $this->db->from('pelanggan');
+        $this->db->join('pesanan', 'pesanan.id_pelanggan = pelanggan.id_pelanggan AND pesanan.deleted_at IS NULL', 'left');
         
         if ($id_pemilik) {
-            $this->db->join('pesanan', 'pesanan.id_pelanggan = pelanggan.id_pelanggan');
-            $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
-            $this->db->where('cabang.id_pemilik', $id_pemilik);
-            $this->db->group_by('pelanggan.id_pelanggan');
+            $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang AND cabang.deleted_at IS NULL', 'left');
+            $this->db->where('(cabang.id_pemilik = ' . $id_pemilik . ' OR pesanan.id_pesanan IS NULL)');
         }
 
         $this->db->group_start();
@@ -79,6 +78,7 @@ class Pelanggan_model extends CI_Model {
         $this->db->group_end();
         
         $this->db->where('pelanggan.deleted_at IS NULL');
+        $this->db->group_by('pelanggan.id_pelanggan');
         return $this->db->get()->result();
     }
 

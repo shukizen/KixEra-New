@@ -18,12 +18,11 @@ class Pelanggan extends CI_Controller {
     private function get_id_pemilik() {
         $id_pemilik = $this->session->userdata('id_pemilik');
         if (empty($id_pemilik)) {
-             $user_id = $this->session->userdata('user_id');
-             if ($user_id) {
-                 $this->load->model('Owner_model');
-                 $owner = $this->Owner_model->getOwnerByUserId($user_id);
-                 if ($owner) return $owner->id_pemilik;
-             }
+            $id_user = $this->session->userdata('id_user');
+            if ($id_user) {
+                $owner = $this->db->get_where('pemilik', ['id_user' => $id_user])->row();
+                if ($owner) return $owner->id_pemilik;
+            }
         }
         return $id_pemilik;
     }

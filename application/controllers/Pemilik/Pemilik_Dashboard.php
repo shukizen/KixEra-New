@@ -6,6 +6,7 @@ class Pemilik_Dashboard extends CI_Controller {
         parent::__construct();
         $this->load->library('auth_library');
         $this->load->library('session');
+        $this->load->model('Notification_model');
         
         // Require owner role
         $this->auth_library->require_role('owner');
@@ -14,12 +15,11 @@ class Pemilik_Dashboard extends CI_Controller {
         // Get id_pemilik
         $id_pemilik = $this->session->userdata('id_pemilik');
         if (empty($id_pemilik)) {
-             $user_id = $this->session->userdata('user_id');
-             if ($user_id) {
-                 $this->load->model('Owner_model');
-                 $owner = $this->Owner_model->getOwnerByUserId($user_id);
-                 if ($owner) $id_pemilik = $owner->id_pemilik;
-             }
+            $id_user = $this->session->userdata('id_user');
+            if ($id_user) {
+                $owner = $this->db->get_where('pemilik', ['id_user' => $id_user])->row();
+                if ($owner) $id_pemilik = $owner->id_pemilik;
+            }
         }
         
         // Load Models
@@ -91,5 +91,96 @@ class Pemilik_Dashboard extends CI_Controller {
         $this->load->view('template/sidebar');
         $this->load->view('pemilik/index', $data);
         $this->load->view('template/footer');
+    }
+
+    /**
+     * Get notifications (AJAX endpoint)
+     */
+    public function get_notifications() {
+        // Set header first
+        header('Content-Type: application/json');
+        
+        // Test basic response first
+        $id_pemilik = $this->session->userdata('id_pemilik');
+        
+        if (empty($id_pemilik)) {
+            $id_user = $this->session->userdata('id_user');
+            if ($id_user) {
+                $owner = $this->db->get_where('pemilik', ['id_user' => $id_user])->row();
+                if ($owner) $id_pemilik = $owner->id_pemilik;
+            }
+        }
+
+        if (empty($id_pemilik)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'ID Pemilik tidak ditemukan',
+                'notifications' => [],
+                'unread_count' => 0
+            ]);
+            return;
+        }
+        
+        // Check if table exists
+        if (!$this->db->table_exists('notifications')) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Table notifications tidak ditemukan',
+                'notifications' => [],
+                'unread_count' => 0
+            ]);
+            return;
+        }
+        
+        // Simple query without model
+        $query = $this->db->query("SELECT * FROM notifications WHERE id_pemilik = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 10", [$id_pemilik]);
+        $notifications = $query->result();
+        
+        $count_query = $this->db->query("SELECT COUNT(*) as count FROM notifications WHERE id_pemilik = ? AND is_read = 0 AND deleted_at IS NULL", [$id_pemilik]);
+        $unread_count = $count_query->row()->count;
+
+        echo json_encode([
+            'success' => true,
+            'notifications' => $notifications,
+            'unread_count' => (int)$unread_count
+        ]);
+    }
+
+    /**
+     * Mark notification as read (AJAX endpoint)
+     */
+    public function mark_notification_read($id) {
+        $this->load->model('Notification_model');
+        
+        $result = $this->Notification_model->mark_as_read($id);
+        
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => $result,
+            'message' => $result ? 'Notifikasi ditandai sudah dibaca' : 'Gagal menandai notifikasi'
+        ]);
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    public function mark_all_read() {
+        $id_pemilik = $this->session->userdata('id_pemilik');
+        if (empty($id_pemilik)) {
+            $id_user = $this->session->userdata('id_user');
+            if ($id_user) {
+                $owner = $this->db->get_where('pemilik', ['id_user' => $id_user])->row();
+                if ($owner) $id_pemilik = $owner->id_pemilik;
+            }
+        }
+
+        $this->load->model('Notification_model');
+        $result = $this->Notification_model->mark_all_as_read($id_pemilik);
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => $result,
+            'message' => $result ? 'Semua notifikasi ditandai sudah dibaca' : 'Gagal menandai notifikasi'
+        ]);
     }
 }

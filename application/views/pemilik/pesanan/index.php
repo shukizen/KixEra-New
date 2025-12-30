@@ -259,10 +259,37 @@
                 </div>
                 <!-- Detail Modal REMOVED: User redirects to separate detail page -->
 
-                <!-- Main Content Grid -->
+                <!-- Visualisasi Charts Section - Moved to Top -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    <!-- Data Pesanan Table -->
-                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
+                    <!-- Visualisasi Pesanan per Cabang -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Visualisasi Pesanan per Cabang</h2>
+                        <div class="h-64">
+                            <canvas id="branchChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Jenis Layanan -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Jenis Layanan</h2>
+                        <div class="h-64">
+                            <canvas id="serviceTypeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Tren Pesanan -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Tren Pesanan (7 Hari)</h2>
+                        <div class="h-64">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="mb-6">
+                    <!-- Data Pesanan Table - Full Width -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h2 class="text-xl font-semibold text-gray-800 mb-6">Data Pesanan</h2>
 
                         <div class="overflow-x-auto">
@@ -341,60 +368,6 @@
                             </table>
                         </div>
                     </div>
-
-                    <!-- Right Sidebar Charts -->
-                    <div class="space-y-6">
-                        <!-- Pesanan per Cabang -->
-                        <div class="bg-white rounded-2xl shadow-lg p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Pesanan per Cabang</h2>
-                            <div class="h-64">
-                                <canvas id="branchChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Jenis Layanan -->
-                        <div class="bg-white rounded-2xl shadow-lg p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Jenis Layanan</h2>
-                            <div class="h-64">
-                                <canvas id="serviceTypeChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Tren Pesanan -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Tren Pesanan (7 Hari)</h2>
-                        <div class="h-64">
-                            <canvas id="trendChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Insight Ringkas -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Insight Ringkas</h2>
-                        <div class="space-y-4">
-                            <!-- Insight 1 -->
-                            <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
-                                <i class="fas fa-chart-line text-emerald-500 mt-1"></i>
-                                <p class="text-sm text-gray-700">Cabang Condongcatur memiliki peningkatan 25% minggu ini</p>
-                            </div>
-
-                            <!-- Insight 2 -->
-                            <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
-                                <i class="fas fa-star text-emerald-500 mt-1"></i>
-                                <p class="text-sm text-gray-700">Layanan Whitening paling diminati bulan ini</p>
-                            </div>
-
-                            <!-- Insight 3 -->
-                            <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
-                                <i class="fas fa-clock text-emerald-500 mt-1"></i>
-                                <p class="text-sm text-gray-700">Rata-rata waktu penyelesaian: 2,3 hari</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -410,7 +383,7 @@
 
         // Function to generate dynamic charts from pesananData
         function generateDynamicCharts() {
-            // 1. Pesanan per Cabang - Bar Chart
+            // 1. Visualisasi Pesanan per Cabang - Bar Chart
             const branchMap = {};
             pesananData.forEach(p => {
                 const cabang = p.nama_cabang || 'Unknown';
@@ -419,6 +392,18 @@
 
             const branchLabels = Object.keys(branchMap);
             const branchData = Object.values(branchMap);
+            
+            // Generate different colors for each branch
+            const branchColors = [
+                '#10b981', // emerald-500
+                '#3b82f6', // blue-500
+                '#f59e0b', // amber-500
+                '#ef4444', // red-500
+                '#8b5cf6', // purple-500
+                '#ec4899', // pink-500
+                '#14b8a6', // teal-500
+                '#f97316', // orange-500
+            ];
 
             const branchCtx = document.getElementById('branchChart').getContext('2d');
             new Chart(branchCtx, {
@@ -428,13 +413,15 @@
                     datasets: [{
                         label: 'Jumlah Pesanan',
                         data: branchData.length > 0 ? branchData : [0],
-                        backgroundColor: '#10b981',
+                        backgroundColor: branchData.length > 0 ? 
+                            branchData.map((_, index) => branchColors[index % branchColors.length]) : 
+                            ['#cccccc'],
                         borderRadius: 8
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             display: true,
@@ -461,7 +448,16 @@
 
             const layananLabels = Object.keys(layananMap);
             const layananData = Object.values(layananMap);
-            const colors = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#d1fae5', '#ecfdf5'];
+            
+            // Harmonious gradient colors - emerald to teal theme
+            const serviceColors = [
+                '#10b981', // emerald-500
+                '#14b8a6', // teal-500
+                '#34d399', // emerald-400
+                '#2dd4bf', // teal-400
+                '#6ee7b7', // emerald-300
+                '#5eead4', // teal-300
+            ];
 
             const serviceTypeCtx = document.getElementById('serviceTypeChart').getContext('2d');
             new Chart(serviceTypeCtx, {
@@ -470,22 +466,53 @@
                     labels: layananLabels.length > 0 ? layananLabels : ['Tidak ada data'],
                     datasets: [{
                         data: layananData.length > 0 ? layananData : [0],
-                        backgroundColor: layananData.length > 0 ? colors.slice(0, layananData.length) : ['#ccc'],
+                        backgroundColor: layananData.length > 0 ? 
+                            layananData.map((_, index) => serviceColors[index % serviceColors.length]) : 
+                            ['#cccccc'],
                         borderWidth: 2,
                         borderColor: '#fff'
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'right',
+                            position: 'bottom',
                             labels: {
                                 font: {
                                     size: 11
                                 },
-                                padding: 10
+                                padding: 10,
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const dataset = data.datasets[0];
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        return data.labels.map((label, i) => {
+                                            const value = dataset.data[i];
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return {
+                                                text: `${label} (${percentage}%)`,
+                                                fillStyle: dataset.backgroundColor[i],
+                                                hidden: false,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} pesanan (${percentage}%)`;
+                                }
                             }
                         }
                     }
@@ -539,7 +566,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             position: 'bottom'

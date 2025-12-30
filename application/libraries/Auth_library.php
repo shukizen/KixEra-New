@@ -152,6 +152,100 @@ class Auth_library {
         $this->CI =& get_instance();
         $this->CI->load->database();
         $this->CI->load->library('session');
+        $this->CI->load->helper('cookie');
+        
+        // Cek auto-login dari cookie jika tidak ada sesi aktif
+        if (!$this->is_logged_in()) {
+            $this->check_remember_token();
+        }
+    }
+    
+    /**
+     * Set persistent login cookie (Remember Me)
+     */
+    public function set_remember_cookie($id_user) {
+        $selector = bin2hex(random_bytes(9));
+        $validator = bin2hex(random_bytes(18));
+        
+        $token_hash = hash('sha256', $validator);
+        $expires = date('Y-m-d H:i:s', time() + 30 * 24 * 60 * 60); // 30 days
+        
+        $data = [
+            'id_user' => $id_user,
+            'selector' => $selector,
+            'token_hash' => $token_hash,
+            'expires_at' => $expires
+        ];
+        
+        $this->CI->db->insert('remember_tokens', $data);
+        
+        // Set cookie: selector:validator
+        $cookie_value = $selector . ':' . $validator;
+        
+        $cookie = [
+            'name' => 'remember_me',
+            'value' => $cookie_value,
+            'expire' => 30 * 24 * 60 * 60,
+            'path'   => '/',
+            'httponly' => true,
+            'secure' => false // Set true if using HTTPS
+        ];
+        
+        $this->CI->input->set_cookie($cookie);
+    }
+    
+    /**
+     * Check remember me token and auto-login
+     */
+    public function check_remember_token() {
+        $cookie = $this->CI->input->cookie('remember_me');
+        
+        if (!$cookie) {
+            return false;
+        }
+        
+        $parts = explode(':', $cookie);
+        if (count($parts) !== 2) {
+            return false;
+        }
+        
+        list($selector, $validator) = $parts;
+        
+        $token = $this->CI->db->get_where('remember_tokens', ['selector' => $selector])->row_array();
+        
+        if (!$token) {
+            return false;
+        }
+        
+        if (strtotime($token['expires_at']) < time()) {
+            // Delete expired token
+            $this->CI->db->delete('remember_tokens', ['id_token' => $token['id_token']]);
+            return false;
+        }
+        
+        if (hash_equals($token['token_hash'], hash('sha256', $validator))) {
+            // Token valid! Login user.
+            $user = $this->CI->db->get_where('users', ['id_user' => $token['id_user']])->row_array();
+            
+            if ($user && $user['status'] === 'aktif') {
+                $user_details = $this->get_user_details($user);
+                
+                if ($user_details) {
+                    // Check subscription if owner
+                     if ($user['role'] === 'owner') {
+                         $sub = $this->check_subscription_status($user_details['id_pemilik']);
+                         if (!$sub['active']) return false;
+                         $user_details['subscription'] = $sub;
+                     }
+                     
+                    $this->set_user_session($user_details);
+                    $this->log_activity($user['id_user'], 'Auto-login via Remember Me', 'users');
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -452,6 +546,8 @@ class Auth_library {
                 break;
         }
         
+        
+        $this->CI->session->unset_userdata(['verify_id_user', 'verify_phone', 'verify_time', 'verify_remember_me']);
         $this->CI->session->set_userdata($session_data);
     }
     
@@ -693,6 +789,20 @@ class Auth_library {
             $this->log_activity($id_user, 'User logout', 'users');
         }
         
+        // Clear Remember Me Cookie & Token
+        $cookie = $this->CI->input->cookie('remember_me');
+        if ($cookie) {
+            $parts = explode(':', $cookie);
+            if (count($parts) === 2) {
+                $selector = $parts[0];
+                $this->CI->db->delete('remember_tokens', ['selector' => $selector]);
+            }
+        }
+        
+        // Delete cookie
+        $this->CI->load->helper('cookie');
+        delete_cookie('remember_me');
+        
         $this->CI->session->sess_destroy();
         
         return [
@@ -716,6 +826,14 @@ class Auth_library {
      */
     public function require_role($role) {
         $this->require_login();
+        
+        // Check for subscription expiration
+        if ($role === 'owner' && $this->CI->session->userdata('subscription_expired') === true) {
+             // Allow ajax to handle it gracefully if needed, or just redirect
+             if (!$this->CI->input->is_ajax_request()) {
+                 redirect('auth/subscription_expired');
+             }
+        }
         
         if (!$this->has_role($role)) {
             $this->CI->session->set_flashdata('error', 'Anda tidak memiliki akses ke halaman ini');

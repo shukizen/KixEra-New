@@ -216,9 +216,9 @@ class Rekomendasi extends CI_Controller {
         $id_pemilik = $this->session->userdata('id_pemilik');
         
         if (empty($id_pemilik)) {
-            $user_id = $this->session->userdata('user_id');
-            if ($user_id) {
-                $owner = $this->Owner_model->getOwnerByUserId($user_id);
+            $id_user = $this->session->userdata('id_user');
+            if ($id_user) {
+                $owner = $this->db->get_where('pemilik', ['id_user' => $id_user])->row();
                 if ($owner) {
                     $id_pemilik = $owner->id_pemilik;
                 }

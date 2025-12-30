@@ -10,22 +10,30 @@ class Export_keuangan_model extends CI_Model {
     }
 
     // ==================== SUMMARY & ANALYTICS ====================
-    public function get_financial_summary($cabang_id = null)
+    public function get_financial_summary($id_pemilik = null, $cabang_id = null)
     {
-        // Query untuk total pemasukan
-        $this->db->select('COALESCE(SUM(jumlah), 0) as total_income');
-        $this->db->from('pemasukan');
+        // Query untuk total pemasukan - filter by owner's branches
+        $this->db->select('COALESCE(SUM(p.jumlah), 0) as total_income');
+        $this->db->from('pemasukan p');
+        $this->db->join('cabang c', 'p.id_cabang = c.id_cabang');
+        if ($id_pemilik) {
+            $this->db->where('c.id_pemilik', $id_pemilik);
+        }
         if ($cabang_id) {
-            $this->db->where('id_cabang', $cabang_id);
+            $this->db->where('p.id_cabang', $cabang_id);
         }
         $query_income = $this->db->get();
         $income = $query_income->row_array();
         
-        // Query untuk total pengeluaran
-        $this->db->select('COALESCE(SUM(jumlah), 0) as total_expenses');
-        $this->db->from('pengeluaran');
+        // Query untuk total pengeluaran - filter by owner's branches
+        $this->db->select('COALESCE(SUM(pg.jumlah), 0) as total_expenses');
+        $this->db->from('pengeluaran pg');
+        $this->db->join('cabang c', 'pg.id_cabang = c.id_cabang');
+        if ($id_pemilik) {
+            $this->db->where('c.id_pemilik', $id_pemilik);
+        }
         if ($cabang_id) {
-            $this->db->where('id_cabang', $cabang_id);
+            $this->db->where('pg.id_cabang', $cabang_id);
         }
         $query_expense = $this->db->get();
         $expense = $query_expense->row_array();
@@ -154,6 +162,11 @@ class Export_keuangan_model extends CI_Model {
 
     private function apply_common_filters($filters, $table_alias)
     {
+        // Filter by owner's branches if id_pemilik is provided
+        if (!empty($filters['id_pemilik'])) {
+            $this->db->where('c.id_pemilik', $filters['id_pemilik']);
+        }
+        
         if (!empty($filters['id_cabang'])) {
             $this->db->where($table_alias . '.id_cabang', $filters['id_cabang']);
         }
@@ -179,25 +192,29 @@ class Export_keuangan_model extends CI_Model {
     }
 
     // ==================== ANALYTICS METHODS ====================
-    public function get_expense_breakdown($months = 12, $cabang_id = null)
+    public function get_expense_breakdown($months = 12, $id_pemilik = null, $cabang_id = null)
     {
         $this->db->select("
-            kategori,
+            pg.kategori,
             COUNT(*) as count,
-            SUM(jumlah) as total,
-            AVG(jumlah) as avg_amount
+            SUM(pg.jumlah) as total,
+            AVG(pg.jumlah) as avg_amount
         ");
         
-        $this->db->from('pengeluaran');
+        $this->db->from('pengeluaran pg');
+        $this->db->join('cabang c', 'pg.id_cabang = c.id_cabang');
         
+        if ($id_pemilik) {
+            $this->db->where('c.id_pemilik', $id_pemilik);
+        }
         if ($cabang_id) {
-            $this->db->where('id_cabang', $cabang_id);
+            $this->db->where('pg.id_cabang', $cabang_id);
         }
         
         $date_limit = date('Y-m-d', strtotime("-$months months"));
-        $this->db->where('tgl_transaksi >=', $date_limit);
+        $this->db->where('pg.tgl_transaksi >=', $date_limit);
         
-        $this->db->group_by('kategori');
+        $this->db->group_by('pg.kategori');
         $this->db->order_by('total', 'DESC');
         
         $query = $this->db->get();
@@ -230,6 +247,11 @@ class Export_keuangan_model extends CI_Model {
         $this->db->join('pemasukan p', 'c.id_cabang = p.id_cabang', 'left');
         $this->db->join('pengeluaran pg', 'c.id_cabang = pg.id_cabang', 'left');
         
+        // Filter by owner's branches
+        if (!empty($filters['id_pemilik'])) {
+            $this->db->where('c.id_pemilik', $filters['id_pemilik']);
+        }
+        
         if (!empty($filters['date_start'])) {
             $this->db->group_start();
             $this->db->where('p.tgl_transaksi >=', $filters['date_start']);
@@ -251,7 +273,7 @@ class Export_keuangan_model extends CI_Model {
         return $query->result_array();
     }
 
-    public function get_saldo_per_cabang($cabang_id = null)
+    public function get_saldo_per_cabang($id_pemilik = null, $cabang_id = null)
     {
         $this->db->select("
             c.id_cabang,
@@ -265,6 +287,9 @@ class Export_keuangan_model extends CI_Model {
         $this->db->join('pemasukan p', 'c.id_cabang = p.id_cabang', 'left');
         $this->db->join('pengeluaran pg', 'c.id_cabang = pg.id_cabang', 'left');
         
+        if ($id_pemilik) {
+            $this->db->where('c.id_pemilik', $id_pemilik);
+        }
         if ($cabang_id) {
             $this->db->where('c.id_cabang', $cabang_id);
         }

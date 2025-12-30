@@ -20,13 +20,12 @@ class Keuangan extends CI_Controller {
     private function get_id_pemilik() {
         $id_pemilik = $this->session->userdata('id_pemilik');
         if (empty($id_pemilik)) {
-            // Fallback for testing or if session structure is different
-             $user_id = $this->session->userdata('user_id');
-             if ($user_id) {
-                 $this->load->model('Owner_model');
-                 $owner = $this->Owner_model->getOwnerByUserId($user_id);
-                 if ($owner) return $owner->id_pemilik;
-             }
+            // Fallback: get from database using id_user (correct key)
+            $id_user = $this->session->userdata('id_user');
+            if ($id_user) {
+                $owner = $this->db->get_where('pemilik', ['id_user' => $id_user])->row();
+                if ($owner) return $owner->id_pemilik;
+            }
         }
         return $id_pemilik;
     }
@@ -158,28 +157,46 @@ class Keuangan extends CI_Controller {
     public function get_pemasukan($id) {
         header('Content-Type: application/json');
         
-        $item = $this->Keuangan_model->get_pemasukan_by_id($id);
-        
-        if ($item) {
-            // Verify ownership via branch
+        try {
             $id_pemilik = $this->get_id_pemilik();
-            if (!$this->verify_branch_ownership($item->id_cabang, $id_pemilik)) {
-                 echo json_encode(['success' => false, 'message' => 'Akses ditolak']);
-                 return;
+            
+            // If we can't identify the owner, return error (don't crash)
+            if (!$id_pemilik) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Sesi tidak valid atau ID Pemilik tidak ditemukan. Silakan login ulang.'
+                ]);
+                return;
             }
 
-            // Get bukti transaksi
-            $bukti = $this->Keuangan_model->get_bukti_by_pemasukan($id);
-            $item->bukti_transaksi = $bukti;
+            $item = $this->Keuangan_model->get_pemasukan_by_id($id);
             
-            echo json_encode([
-                'success' => true,
-                'data' => $item
-            ]);
-        } else {
+            if ($item) {
+                // Verify ownership via branch
+                if (!$this->verify_branch_ownership($item->id_cabang, $id_pemilik)) {
+                     echo json_encode(['success' => false, 'message' => 'Akses ditolak']);
+                     return;
+                }
+
+                // Get bukti transaksi
+                $bukti = $this->Keuangan_model->get_bukti_by_pemasukan($id);
+                $item->bukti_transaksi = $bukti;
+                
+                echo json_encode([
+                    'success' => true,
+                    'data' => $item
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Data tidak ditemukan'
+                ]);
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'Get Pemasukan Error: ' . $e->getMessage());
             echo json_encode([
                 'success' => false,
-                'message' => 'Data tidak ditemukan'
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ]);
         }
     }
@@ -248,24 +265,43 @@ class Keuangan extends CI_Controller {
     public function delete_pemasukan($id) {
         header('Content-Type: application/json');
         
-        $id_pemilik = $this->get_id_pemilik();
-        // Verify exist & ownership
-        $existing = $this->Keuangan_model->get_pemasukan_by_id($id);
-        if (!$existing || !$this->verify_branch_ownership($existing->id_cabang, $id_pemilik)) {
-            echo json_encode(['success' => false, 'message' => 'Akses ditolak atau data tidak ditemukan']);
-            return;
-        }
-        
-        if ($this->Keuangan_model->delete_pemasukan($id)) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'Pemasukan berhasil dihapus'
-            ]);
-        } else {
-            echo json_encode([
+        try {
+            $id_pemilik = $this->get_id_pemilik();
+            
+            if (!$id_pemilik) {
+                echo json_encode(['success' => false, 'message' => 'Sesi tidak valid. Silakan login ulang.']);
+                return;
+            }
+
+            // Verify exist & ownership
+            $existing = $this->Keuangan_model->get_pemasukan_by_id($id);
+            if (!$existing) {
+                 echo json_encode(['success' => false, 'message' => 'Data tidak ditemukan']);
+                 return;
+            }
+            
+            if (!$this->verify_branch_ownership($existing->id_cabang, $id_pemilik)) {
+                echo json_encode(['success' => false, 'message' => 'Akses ditolak']);
+                return;
+            }
+            
+            if ($this->Keuangan_model->delete_pemasukan($id)) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Pemasukan berhasil dihapus'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Gagal menghapus pemasukan'
+                ]);
+            }
+        } catch (\Throwable $e) {
+             log_message('error', 'Delete Pemasukan Error: ' . $e->getMessage());
+             echo json_encode([
                 'success' => false,
-                'message' => 'Gagal menghapus pemasukan'
-            ]);
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+             ]);
         }
     }
     
@@ -603,7 +639,7 @@ class Keuangan extends CI_Controller {
                 'periode' => ($bulan ? $this->get_nama_bulan($bulan) . ' ' : '') . $tahun
             ));
                 
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             echo json_encode(array(
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()

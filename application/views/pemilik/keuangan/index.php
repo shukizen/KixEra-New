@@ -734,7 +734,7 @@ function closePemasukanModal() {
 }
 
 function editPemasukan(id) {
-    fetch(BASE_URL + 'pemilik/keuangan//get_pemasukan/' + id)
+    fetch(BASE_URL + 'pemilik/keuangan/get_pemasukan/' + id)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok: ' + response.status);
@@ -779,8 +779,8 @@ function submitPemasukan(event) {
     const id = document.getElementById('pemasukan_id').value;
     
     const url = id ? 
-        BASE_URL + 'pemilik/keuangan//update_pemasukan/' + id : 
-        BASE_URL + 'pemilik/keuangan//add_pemasukan';
+        BASE_URL + 'pemilik/keuangan/update_pemasukan/' + id : 
+        BASE_URL + 'pemilik/keuangan/add_pemasukan';
     
     fetch(url, {
         method: 'POST',
@@ -843,7 +843,7 @@ function closePengeluaranModal() {
 }
 
 function editPengeluaran(id) {
-    fetch(BASE_URL + 'pemilik/keuangan//get_pengeluaran/' + id)
+    fetch(BASE_URL + 'pemilik/keuangan/get_pengeluaran/' + id)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok: ' + response.status);
@@ -888,8 +888,8 @@ function submitPengeluaran(event) {
     const id = document.getElementById('pengeluaran_id').value;
     
     const url = id ? 
-        BASE_URL + 'pemilik/keuangan//update_pengeluaran/' + id : 
-        BASE_URL + 'pemilik/keuangan//add_pengeluaran';
+        BASE_URL + 'pemilik/keuangan/update_pengeluaran/' + id : 
+        BASE_URL + 'pemilik/keuangan/add_pengeluaran';
     
     fetch(url, {
         method: 'POST',
@@ -925,8 +925,8 @@ function deleteTransaksi(tipe, id) {
     }
     
     const url = tipe === 'pemasukan' ? 
-        BASE_URL + 'pemilik/keuangan//delete_pemasukan/' + id : 
-        BASE_URL + 'pemilik/keuangan//delete_pengeluaran/' + id;
+        BASE_URL + 'pemilik/keuangan/delete_pemasukan/' + id : 
+        BASE_URL + 'pemilik/keuangan/delete_pengeluaran/' + id;
     
     fetch(url, {
         method: 'POST'

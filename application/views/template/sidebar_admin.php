@@ -35,8 +35,8 @@ $segment2 = $CI->uri->segment(2);
         </a>
         
         <!-- Manajemen Pengguna -->
-        <a href="<?= base_url('admin/manajemen_pengguna') ?>" 
-           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'manajemen_pengguna') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
+        <a href="<?= base_url('admin/user_management') ?>" 
+           class="flex items-center px-4 py-3 rounded-xl mb-2 transition-colors <?= ($segment2 == 'user_management') ? 'gradient-emerald text-white font-medium' : 'text-teal-200 hover:bg-teal-600' ?>">
             <i class="fas fa-users-cog mr-3"></i>
             Manajemen Pengguna
         </a>
@@ -105,7 +105,7 @@ $segment2 = $CI->uri->segment(2);
         </a>
         
         <!-- Logout -->
-        <a href="<?= base_url('auth/logout') ?>" 
+        <a href="<?= base_url('admin/logout') ?>" 
            class="gradient-red flex items-center px-4 py-3 rounded-xl text-white font-medium hover:opacity-90 transition-opacity mt-4">
             <i class="fas fa-sign-out-alt mr-3"></i>
             Logout

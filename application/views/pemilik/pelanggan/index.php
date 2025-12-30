@@ -180,7 +180,9 @@
                                         <td class="py-4 px-4 text-center text-gray-700"><?= htmlspecialchars($p->no_telp ?? '') ?></td>
                                         <td class="py-4 px-4 text-center text-gray-700"><?= htmlspecialchars($p->email ?? '-') ?></td>
                                         <td class="py-4 px-4 text-center text-gray-700"><?= htmlspecialchars($p->alamat ?? '-') ?></td>
-                                        <td class="py-4 px-4 text-center text-gray-700">-</td>
+                                        <td class="py-4 px-4 text-center text-gray-700">
+                                            <span class="font-medium text-emerald-600"><?= isset($p->total_pesanan) ? $p->total_pesanan : '0' ?></span>
+                                        </td>
                                         <td class="py-4 px-4 text-center">
                                             <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Aktif</span>
                                         </td>
@@ -349,7 +351,9 @@
                             <td class="py-4 px-4 text-center text-gray-700">${customer.no_telp || ''}</td>
                             <td class="py-4 px-4 text-center text-gray-700">${customer.email || '-'}</td>
                             <td class="py-4 px-4 text-center text-gray-700">${customer.alamat || '-'}</td>
-                            <td class="py-4 px-4 text-center text-gray-700">-</td>
+                            <td class="py-4 px-4 text-center text-gray-700">
+                                <span class="font-medium text-emerald-600">${customer.total_pesanan || '0'}</span>
+                            </td>
                             <td class="py-4 px-4 text-center">
                                 <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Aktif</span>
                             </td>

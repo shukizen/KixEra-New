@@ -1,11 +1,13 @@
 <?php 
 defined('BASEPATH') OR exit('No direct script access allowed');
+
 class Transaksi_langganan_model extends CI_Model {
     
     private $table = 'transaksi_langganan';
     
     public function __construct() {
         parent::__construct();
+        $this->load->database();
     }
     
     /**
@@ -22,10 +24,37 @@ class Transaksi_langganan_model extends CI_Model {
     }
     
     /**
+     * Get all transactions with filtering (for admin)
+     */
+    public function getAllTransactions($filters = []) {
+        $this->db->select('tl.*, p.nama_paket, p.harga as harga_paket, pm.nama as nama_pemilik, pm.nama_usaha, pm.email');
+        $this->db->from($this->table . ' tl');
+        $this->db->join('paket_langganan p', 'tl.id_paket = p.id_paket', 'left');
+        $this->db->join('pemilik pm', 'tl.id_pemilik = pm.id_pemilik', 'left');
+        $this->db->where('tl.deleted_at', NULL);
+        
+        if (isset($filters['status']) && !empty($filters['status'])) {
+            $this->db->where('tl.status_pembayaran', $filters['status']);
+        }
+        
+        if (isset($filters['search']) && !empty($filters['search'])) {
+            $keyword = $filters['search'];
+            $this->db->group_start();
+            $this->db->like('pm.nama', $keyword);
+            $this->db->or_like('pm.nama_usaha', $keyword);
+            $this->db->or_like('tl.kode_pembayaran', $keyword);
+            $this->db->group_end();
+        }
+        
+        $this->db->order_by('tl.created_at', 'DESC');
+        return $this->db->get()->result();
+    }
+    
+    /**
      * Get transaksi by ID
      */
     public function get_by_id($id) {
-        $this->db->select('tl.*, p.nama_paket, p.harga, p.deskripsi, pm.nama as nama_pemilik, pm.email, pm.telp, pm.alamat');
+        $this->db->select('tl.*, p.nama_paket, p.harga, p.deskripsi, p.durasi_hari as durasi, pm.nama as nama_pemilik, pm.email, pm.no_telp, pm.nama_usaha, pm.alamat_usaha');
         $this->db->from($this->table . ' tl');
         $this->db->join('paket_langganan p', 'tl.id_paket = p.id_paket', 'left');
         $this->db->join('pemilik pm', 'tl.id_pemilik = pm.id_pemilik', 'left');
@@ -58,6 +87,7 @@ class Transaksi_langganan_model extends CI_Model {
      * Insert transaksi baru
      */
     public function insert($data) {
+        $data['created_at'] = date('Y-m-d H:i:s');
         $this->db->insert($this->table, $data);
         return $this->db->insert_id();
     }
@@ -79,8 +109,19 @@ class Transaksi_langganan_model extends CI_Model {
             'status_pembayaran' => $status,
             'updated_at' => date('Y-m-d H:i:s')
         ];
+        
+        // If status is sukses, set tgl_bayar
+        if ($status === 'sukses') {
+            $data['tgl_bayar'] = date('Y-m-d H:i:s');
+        }
+        
         $this->db->where('id_transaksi_langganan', $id);
-        return $this->db->update($this->table, $data);
+        $result = $this->db->update($this->table, $data);
+        
+        if ($result) {
+            return ['success' => true, 'message' => 'Status berhasil diupdate'];
+        }
+        return ['success' => false, 'message' => 'Gagal mengupdate status'];
     }
     
     /**
@@ -106,5 +147,44 @@ class Transaksi_langganan_model extends CI_Model {
         $this->db->order_by('tl.tgl_akhir_langganan', 'DESC');
         return $this->db->get()->row();
     }
+    
+    /**
+     * Get statistics for dashboard
+     */
+    public function getStats() {
+        // Total transactions
+        $this->db->where('deleted_at IS NULL');
+        $total = $this->db->count_all_results($this->table);
+        
+        // Pending transactions
+        $this->db->where('deleted_at IS NULL');
+        $this->db->where('status_pembayaran', 'pending');
+        $pending = $this->db->count_all_results($this->table);
+        
+        // Sukses transactions
+        $this->db->where('deleted_at IS NULL');
+        $this->db->where('status_pembayaran', 'sukses');
+        $sukses = $this->db->count_all_results($this->table);
+        
+        // Gagal transactions
+        $this->db->where('deleted_at IS NULL');
+        $this->db->where('status_pembayaran', 'gagal');
+        $gagal = $this->db->count_all_results($this->table);
+        
+        // Total revenue
+        $this->db->select_sum('jumlah_bayar');
+        $this->db->where('deleted_at IS NULL');
+        $this->db->where('status_pembayaran', 'sukses');
+        $revenue_result = $this->db->get($this->table)->row();
+        $total_revenue = $revenue_result->jumlah_bayar ? $revenue_result->jumlah_bayar : 0;
+        
+        return [
+            'total' => $total,
+            'pending' => $pending,
+            'sukses' => $sukses,
+            'gagal' => $gagal,
+            'total_revenue' => $total_revenue
+        ];
+    }
 }
-?>   
+   

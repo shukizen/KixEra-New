@@ -59,7 +59,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Telepon</label>
                             <input type="tel" id="telepon" name="telepon" 
-                                   value="<?= htmlspecialchars($pemilik->no_telp) ?>"
+                                   value="<?= htmlspecialchars($pemilik->no_telp ?? '') ?>"
                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
                         </div>
                         

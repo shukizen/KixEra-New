@@ -59,3 +59,8 @@ $route['keuangan/(.+)'] = 'keuangan/$1';
 // Midtrans Webhook Routes
 $route['pembayaran/notification'] = 'pembayaran/notification';
 $route['admin/dashboard'] = 'admin/admin_dashboard';
+
+// Admin Auth Routes
+$route['admin/login'] = 'admin/auth/login';
+$route['admin/auth/process_login'] = 'admin/auth/process_login';
+$route['admin/logout'] = 'admin/auth/logout'; // Explicit logout route for admin if needed, or share generic one. Better to have dedicated to clear admin sessions properly if they differ.

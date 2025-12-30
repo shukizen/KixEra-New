@@ -13,21 +13,43 @@ class Notifikasi_model extends CI_Model {
     
     // ========== NOTIFIKASI ==========
     
-    // Get unread notifications
+    // Get unread notifications for Owner
     public function getUnreadByOwner($id_owner) {
-        $this->db->where('id_owner', $id_owner);
-        $this->db->where('status', 'terkirim');
+        $this->db->where('type', 'pemilik');
+        $this->db->where('id_user', $id_owner);
+        $this->db->where('status', 'unread');
         $this->db->where('deleted_at IS NULL');
-        $this->db->order_by('tgl_kirim', 'DESC');
+        $this->db->order_by('created_at', 'DESC');
         $query = $this->db->get($this->table);
         return $query->result();
     }
     
-    // Get all notifications
+    // Get all notifications for Owner
     public function getAllByOwner($id_owner, $limit = 50) {
-        $this->db->where('id_owner', $id_owner);
+        $this->db->where('type', 'pemilik');
+        $this->db->where('id_user', $id_owner);
         $this->db->where('deleted_at IS NULL');
-        $this->db->order_by('tgl_kirim', 'DESC');
+        $this->db->order_by('created_at', 'DESC');
+        $this->db->limit($limit);
+        $query = $this->db->get($this->table);
+        return $query->result();
+    }
+
+    // Get unread notifications for Admin
+    public function getUnreadAdmin() {
+        $this->db->where('type', 'admin');
+        $this->db->where('status', 'unread');
+        $this->db->where('deleted_at IS NULL');
+        $this->db->order_by('created_at', 'DESC');
+        $query = $this->db->get($this->table);
+        return $query->result();
+    }
+
+    // Get all notifications for Admin
+    public function getAllAdmin($limit = 50) {
+        $this->db->where('type', 'admin');
+        $this->db->where('deleted_at IS NULL');
+        $this->db->order_by('created_at', 'DESC');
         $this->db->limit($limit);
         $query = $this->db->get($this->table);
         return $query->result();
@@ -35,29 +57,49 @@ class Notifikasi_model extends CI_Model {
     
     // Insert notification
     public function insertNotification($data) {
-        $data['created_at'] = date('Y-m-d H:i:s');
+        // Ensure defaults
+        if (!isset($data['created_at'])) $data['created_at'] = date('Y-m-d H:i:s');
+        if (!isset($data['status'])) $data['status'] = 'unread';
         return $this->db->insert($this->table, $data);
     }
     
     // Mark as read
     public function markAsRead($id_notifikasi) {
-        $data = ['status' => 'dibaca'];
+        $data = ['status' => 'read', 'updated_at' => date('Y-m-d H:i:s')];
         $this->db->where('id_notifikasi', $id_notifikasi);
         return $this->db->update($this->table, $data);
     }
     
-    // Mark all as read
+    // Mark all as read for Owner
     public function markAllAsRead($id_owner) {
-        $data = ['status' => 'dibaca'];
-        $this->db->where('id_owner', $id_owner);
-        $this->db->where('status', 'terkirim');
+        $data = ['status' => 'read', 'updated_at' => date('Y-m-d H:i:s')];
+        $this->db->where('type', 'pemilik');
+        $this->db->where('id_user', $id_owner);
+        $this->db->where('status', 'unread');
+        return $this->db->update($this->table, $data);
+    }
+
+    // Mark all as read for Admin
+    public function markAllAsReadAdmin() {
+        $data = ['status' => 'read', 'updated_at' => date('Y-m-d H:i:s')];
+        $this->db->where('type', 'admin');
+        $this->db->where('status', 'unread');
         return $this->db->update($this->table, $data);
     }
     
-    // Count unread
+    // Count unread for Owner
     public function countUnread($id_owner) {
-        $this->db->where('id_owner', $id_owner);
-        $this->db->where('status', 'terkirim');
+        $this->db->where('type', 'pemilik');
+        $this->db->where('id_user', $id_owner);
+        $this->db->where('status', 'unread');
+        $this->db->where('deleted_at IS NULL');
+        return $this->db->count_all_results($this->table);
+    }
+
+    // Count unread for Admin
+    public function countUnreadAdmin() {
+        $this->db->where('type', 'admin');
+        $this->db->where('status', 'unread');
         $this->db->where('deleted_at IS NULL');
         return $this->db->count_all_results($this->table);
     }
