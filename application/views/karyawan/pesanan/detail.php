@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -28,7 +28,7 @@
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
                         <nav class="text-sm text-gray-500 mb-2">
-                            <a href="<?= site_url('karyawan/pesanan') ?>" class="hover:text-teal-600">Pesanan</a>
+                            <a href="<?= site_url('karyawan/pesanan') ?>" class="hover:text-emerald-600">Pesanan</a>
                             <span class="mx-2">/</span>
                             <span class="text-gray-800">Detail</span>
                         </nav>
@@ -47,10 +47,10 @@
                 <!-- Main Content - 2/3 -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Informasi Pesanan -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-6 pb-4 border-b">
-                            <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-info-circle text-teal-600"></i>
+                            <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-info-circle text-emerald-600"></i>
                             </div>
                             <h2 class="text-lg font-semibold text-gray-800">Informasi Pesanan</h2>
                         </div>
@@ -78,7 +78,7 @@
                             </div>
                             <div>
                                 <p class="text-sm text-gray-500 mb-1">Total Harga</p>
-                                <p class="font-semibold text-teal-600 text-lg">Rp <?= number_format($pesanan->total_harga ?? 0, 0, ',', '.') ?></p>
+                                <p class="font-semibold text-emerald-600 text-lg">Rp <?= number_format($pesanan->total_harga ?? 0, 0, ',', '.') ?></p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-500 mb-1">Status Pembayaran</p>
@@ -89,7 +89,7 @@
                                 $icon_bayar = 'fa-clock';
                                 
                                 if ($status_bayar === 'sudah_bayar') {
-                                    $badge_bayar = 'bg-teal-100 text-teal-600';
+                                    $badge_bayar = 'bg-emerald-100 text-emerald-600';
                                     $label_bayar = 'Sudah Bayar';
                                     $icon_bayar = 'fa-check-circle';
                                 }
@@ -103,7 +103,7 @@
                     </div>
 
                     <!-- Tanggal & Status -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-6 pb-4 border-b">
                             <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-calendar-alt text-blue-600"></i>
@@ -140,7 +140,7 @@
                                 } elseif ($status === 'siap_diambil') {
                                     $badge = 'bg-green-100 text-green-600';
                                 } elseif ($status === 'selesai') {
-                                    $badge = 'bg-teal-100 text-teal-600';
+                                    $badge = 'bg-emerald-100 text-emerald-600';
                                 } elseif ($status === 'dalam_proses') {
                                     $badge = 'bg-yellow-100 text-yellow-600';
                                 } elseif ($status === 'diterima') {
@@ -155,7 +155,7 @@
                     </div>
 
                     <!-- Catatan -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-4 pb-4 border-b">
                             <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-sticky-note text-orange-600"></i>
@@ -169,7 +169,7 @@
 
                     <!-- Detail Item Pesanan -->
                     <?php if (!empty($detail_items)): ?>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-6 pb-4 border-b">
                             <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-shoe-prints text-purple-600"></i>
@@ -182,7 +182,7 @@
                             <?php foreach ($detail_items as $idx => $item): ?>
                             <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
                                 <div class="flex items-center gap-3 mb-4">
-                                    <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
                                         <span class="text-white font-bold"><?= $idx + 1 ?></span>
                                     </div>
                                     <div>
@@ -274,7 +274,7 @@
                     <?php endif; ?>
 
                     <!-- Quick Info -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Informasi Singkat</h3>
 
                         <div class="space-y-4">
@@ -295,15 +295,15 @@
 
                             <div class="border-t pt-4">
                                 <p class="text-sm text-gray-500">Total Harga</p>
-                                <p class="text-2xl font-bold text-teal-600">Rp <?= number_format($pesanan->total_harga ?? 0, 0, ',', '.') ?></p>
+                                <p class="text-2xl font-bold text-emerald-600">Rp <?= number_format($pesanan->total_harga ?? 0, 0, ',', '.') ?></p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Timeline Progres -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
                         <div class="flex items-center gap-2 mb-6">
-                            <i class="fas fa-history text-teal-600"></i>
+                            <i class="fas fa-history text-emerald-600"></i>
                             <h3 class="text-lg font-semibold text-gray-800">Timeline Progres</h3>
                         </div>
                         
@@ -330,7 +330,7 @@
                                         $icon_color = 'text-yellow-500';
                                     } elseif ($status === 'selesai') {
                                         $icon = 'fa-check-double';
-                                        $icon_color = 'text-teal-500';
+                                        $icon_color = 'text-emerald-500';
                                     } elseif ($status === 'siap_diambil') {
                                         $icon = 'fa-box-open';
                                         $icon_color = 'text-green-500';
@@ -343,8 +343,8 @@
                                     }
                                     
                                     $status_label = ucfirst(str_replace('_', ' ', $status));
-                                    $dot_color = $is_first ? 'bg-teal-500' : 'bg-gray-300';
-                                    $text_color = $is_first ? 'text-teal-600 font-semibold' : 'text-gray-700';
+                                    $dot_color = $is_first ? 'bg-emerald-500' : 'bg-gray-300';
+                                    $text_color = $is_first ? 'text-emerald-600 font-semibold' : 'text-gray-700';
                                     ?>
                                     <div class="flex gap-4 <?= !$is_last ? 'pb-6' : '' ?>">
                                         <!-- Timeline dot and line -->
@@ -380,11 +380,11 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Aksi</h3>
 
                         <div class="space-y-3">
-                            <a href="<?= site_url('karyawan/pesanan') ?>" class="block w-full px-4 py-2.5 bg-teal-600 text-white text-center rounded-lg hover:bg-teal-700 transition">
+                            <a href="<?= site_url('karyawan/pesanan') ?>" class="block w-full px-4 py-2.5 bg-emerald-600 text-white text-center rounded-lg hover:bg-emerald-700 transition">
                                 <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar
                             </a>
                         </div>

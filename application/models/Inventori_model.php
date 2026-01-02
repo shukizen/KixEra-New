@@ -10,14 +10,18 @@ class Inventori_model extends CI_Model {
         $this->load->database(); 
     }
     
-    // Get all inventory with optional filters and id_pemilik
-    public function get_all_inventory($search = null, $category = null, $id_pemilik = null) {
+    // Get all inventory with optional filters, id_pemilik, and id_cabang
+    public function get_all_inventory($search = null, $category = null, $id_pemilik = null, $id_cabang = null) {
         $this->db->select('inventori.*, cabang.nama_cabang as nama_cabang');
         $this->db->from('inventori');
         $this->db->join('cabang', 'cabang.id_cabang = inventori.id_cabang', 'left');
         
         if ($id_pemilik) {
             $this->db->where('cabang.id_pemilik', $id_pemilik);
+        }
+
+        if ($id_cabang) {
+            $this->db->where('inventori.id_cabang', $id_cabang);
         }
         
         if ($search) {
@@ -53,9 +57,48 @@ class Inventori_model extends CI_Model {
         return $query->row();
     }
     
-    // Insert new inventory
-    public function insert_inventory($data) {
-        return $this->db->insert($this->table, $data);
+    // Insert new inventory with automatic logging to transaksi_inventori and pengeluaran
+    public function insert_inventory($data, $id_karyawan = null) {
+        $this->db->trans_start();
+        
+        // Insert inventory
+        $this->db->insert($this->table, $data);
+        $id_inventori = $this->db->insert_id();
+        
+        if ($id_inventori) {
+            // Log to transaksi_inventori
+            $transaksi_data = [
+                'id_inventori' => $id_inventori,
+                'id_cabang' => $data['id_cabang'],
+                'jenis_transaksi' => 'masuk',
+                'jumlah' => $data['stok_tersedia'],
+                'tgl_transaksi' => date('Y-m-d H:i:s'),
+                'id_karyawan' => $id_karyawan,
+                'keterangan' => 'Stok awal: ' . $data['nama_item'],
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            $this->db->insert('transaksi_inventori', $transaksi_data);
+            
+            // Log to pengeluaran if harga_satuan is set
+            if (!empty($data['harga_satuan']) && $data['harga_satuan'] > 0) {
+                $total_cost = $data['harga_satuan'] * $data['stok_tersedia'];
+                $pengeluaran_data = [
+                    'id_cabang' => $data['id_cabang'],
+                    'nama_transaksi' => 'Pembelian ' . $data['nama_item'],
+                    'kategori' => strtolower($data['jenis_item']),
+                    'jumlah' => $total_cost,
+                    'tgl_transaksi' => date('Y-m-d'),
+                    'keterangan' => 'Pembelian stok awal ' . $data['stok_tersedia'] . ' ' . $data['satuan'] . ' @ Rp ' . number_format($data['harga_satuan'], 0, ',', '.'),
+                    'id_karyawan' => $id_karyawan,
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+                $this->db->insert('pengeluaran', $pengeluaran_data);
+            }
+        }
+        
+        $this->db->trans_complete();
+        
+        return $this->db->trans_status() ? $id_inventori : false;
     }
     
     // Update inventory
@@ -70,42 +113,35 @@ class Inventori_model extends CI_Model {
         return $this->db->delete($this->table);
     }
     
-    // Get inventory statistics with id_pemilik filter
-    public function get_inventory_stats($id_pemilik = null) {
-        // Subquery untuk filter berdasarkan id_pemilik
-        if ($id_pemilik) {
-            $this->db->select('inventori.*');
-            $this->db->from('inventori');
-            $this->db->join('cabang', 'cabang.id_cabang = inventori.id_cabang', 'left');
-            $this->db->where('cabang.id_pemilik', $id_pemilik);
-            $subquery = $this->db->get_compiled_select();
-            
-            // Total items
-            $this->db->from("($subquery) as filtered_inventori");
-            $total = $this->db->count_all_results();
-            
-            // Low stock items
-            $this->db->from("($subquery) as filtered_inventori");
-            $this->db->where('stok_tersedia <=', 'stok_minimal', FALSE);
-            $low_stock = $this->db->count_all_results();
-            
-            // Out of stock items
-            $this->db->from("($subquery) as filtered_inventori");
-            $this->db->where('stok_tersedia', 0);
-            $out_of_stock = $this->db->count_all_results();
-        } else {
-            // Total items
-            $total = $this->db->count_all('inventori');
-            
-            // Low stock items
-            $this->db->where('stok_tersedia <=', 'stok_minimal', FALSE);
-            $low_stock = $this->db->count_all_results('inventori');
-            
-            // Out of stock items
-            $this->db->where('stok_tersedia', 0);
-            $out_of_stock = $this->db->count_all_results('inventori');
-        }
+    // Get inventory statistics with id_pemilik or id_cabang filter
+    public function get_inventory_stats($id_pemilik = null, $id_cabang = null) {
+        $this->db->select('inventori.*');
+        $this->db->from('inventori');
+        $this->db->join('cabang', 'cabang.id_cabang = inventori.id_cabang', 'left');
         
+        if ($id_pemilik) {
+            $this->db->where('cabang.id_pemilik', $id_pemilik);
+        }
+        if ($id_cabang) {
+            $this->db->where('inventori.id_cabang', $id_cabang);
+        }
+
+        $subquery = $this->db->get_compiled_select();
+        
+        // Total items
+        $this->db->from("($subquery) as filtered_inventori");
+        $total = $this->db->count_all_results();
+        
+        // Low stock items
+        $this->db->from("($subquery) as filtered_inventori");
+        $this->db->where('stok_tersedia <=', 'stok_minimal', FALSE);
+        $low_stock = $this->db->count_all_results();
+        
+        // Out of stock items
+        $this->db->from("($subquery) as filtered_inventori");
+        $this->db->where('stok_tersedia', 0);
+        $out_of_stock = $this->db->count_all_results();
+
         return [
             'total' => $total,
             'low_stock' => $low_stock,
@@ -114,8 +150,8 @@ class Inventori_model extends CI_Model {
         ];
     }
     
-    // Get items by category with id_pemilik filter
-    public function get_items_by_category($id_pemilik = null) {
+    // Get items by category with id_pemilik and id_cabang filter
+    public function get_items_by_category($id_pemilik = null, $id_cabang = null) {
         $this->db->select('inventori.jenis_item, COUNT(*) as total');
         $this->db->from('inventori');
         $this->db->join('cabang', 'cabang.id_cabang = inventori.id_cabang', 'left');
@@ -123,6 +159,10 @@ class Inventori_model extends CI_Model {
         // Filter berdasarkan id_pemilik
         if ($id_pemilik) {
             $this->db->where('cabang.id_pemilik', $id_pemilik);
+        }
+
+        if ($id_cabang) {
+            $this->db->where('inventori.id_cabang', $id_cabang);
         }
         
         $this->db->group_by('inventori.jenis_item');
@@ -228,7 +268,7 @@ class Inventori_model extends CI_Model {
     
     // Get barang yang paling sering digunakan
     // Berdasarkan stok terkecil (yang paling sering habis/dipakai)
-    public function get_most_used_items($id_pemilik, $limit = 5)
+    public function get_most_used_items($id_pemilik, $limit = 5, $id_cabang = null)
     {
         // Jika id_pemilik tidak ada, kembalikan array kosong
         if (empty($id_pemilik)) {
@@ -244,6 +284,11 @@ class Inventori_model extends CI_Model {
         $this->db->from('inventori');
         $this->db->join('cabang', 'cabang.id_cabang = inventori.id_cabang', 'left');
         $this->db->where('cabang.id_pemilik', $id_pemilik);
+
+        if ($id_cabang) {
+            $this->db->where('inventori.id_cabang', $id_cabang);
+        }
+
         $this->db->order_by('inventori.stok_tersedia', 'ASC'); // Stok terkecil dulu = paling sering digunakan
         $this->db->limit($limit);
         

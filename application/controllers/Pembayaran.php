@@ -104,12 +104,8 @@ class Pembayaran extends CI_Controller {
             redirect('landingpage#pricing');
         }
         
-        // ================================================================
-        // CEK LOGIN - DINONAKTIFKAN SEMENTARA UNTUK TESTING MIDTRANS
-        // Uncomment kode di bawah setelah login system siap
-        // ================================================================
+        // Check login
         if (!$this->session->userdata('logged_in')) {
-            // Simpan intended URL untuk redirect setelah login
             $this->session->set_userdata('intended_url', current_url());
             $this->session->set_flashdata('info', 'Silakan login terlebih dahulu untuk melanjutkan pembelian paket.');
             redirect('auth/login');
@@ -129,6 +125,25 @@ class Pembayaran extends CI_Controller {
             redirect('landingpage#pricing');
         }
         
+        // Get current active subscription info (for renewal logic)
+        $id_pemilik = $this->session->userdata('id_pemilik');
+        $current_subscription = $this->Owner_model->getActiveSubscriptionInfo($id_pemilik);
+        
+        // Determine renewal type: new, same, upgrade, downgrade
+        $renewal_type = 'new';
+        if ($current_subscription) {
+            $current_package_price = floatval($current_subscription['harga']);
+            $new_package_price = floatval($paket->harga);
+            
+            if ($current_subscription['id_paket'] == $id_paket) {
+                $renewal_type = 'same';
+            } elseif ($new_package_price > $current_package_price) {
+                $renewal_type = 'upgrade';
+            } else {
+                $renewal_type = 'downgrade';
+            }
+        }
+        
         // Data untuk view
         $data = [
             'title' => 'Checkout - ' . $paket->nama_paket,
@@ -137,7 +152,10 @@ class Pembayaran extends CI_Controller {
             'invoice_date' => date('Y-m-d'),
             'customer' => $this->get_customer_data(),
             'midtrans_client_key' => $this->midtrans_lib->get_client_key(),
-            'midtrans_snap_url' => $this->midtrans_lib->get_snap_url()
+            'midtrans_snap_url' => $this->midtrans_lib->get_snap_url(),
+            // Subscription renewal info
+            'current_subscription' => $current_subscription,
+            'renewal_type' => $renewal_type
         ];
         
         // Load view
@@ -167,6 +185,7 @@ class Pembayaran extends CI_Controller {
             // Ambil data dari form
             $id_paket = $this->input->post('id_paket');
             $durasi_bulan = $this->input->post('durasi_bulan') ?: 1;
+            $renewal_type = $this->input->post('renewal_type') ?: 'new';
             
             // Ambil data paket
             $paket = $this->Paket_langganan_model->get_by_id($id_paket);
@@ -183,10 +202,37 @@ class Pembayaran extends CI_Controller {
             // Generate unique order ID
             $order_id = 'KIX-' . date('YmdHis') . '-' . mt_rand(1000, 9999);
             
+            // Get current subscription for date calculation
+            $id_pemilik = $this->session->userdata('id_pemilik');
+            $current_subscription = $this->Owner_model->getActiveSubscriptionInfo($id_pemilik);
+            
+            // Calculate end date based on renewal type
+            $base_days = intval($durasi_bulan) * 30; // 1 bulan = 30 hari
+            $bonus_days = 0;
+            
+            if ($current_subscription && $current_subscription['remaining_days'] > 0) {
+                switch ($renewal_type) {
+                    case 'same':
+                        // Paket sama: sisa waktu + durasi baru
+                        $bonus_days = $current_subscription['remaining_days'];
+                        break;
+                    case 'downgrade':
+                        // Downgrade: durasi baru + 1/3 sisa waktu
+                        $bonus_days = intval($current_subscription['remaining_days'] / 3);
+                        break;
+                    case 'upgrade':
+                    default:
+                        // Upgrade atau new: mulai dari 0
+                        $bonus_days = 0;
+                        break;
+                }
+            }
+            
+            $total_days = $base_days + $bonus_days;
+            
             // Simpan transaksi pending ke database
-            // Untuk testing, gunakan id_pemilik = 1 jika belum login
             $data_transaksi = [
-                'id_pemilik' => $this->session->userdata('id_pemilik'),
+                'id_pemilik' => $id_pemilik,
                 'id_paket' => $id_paket,
                 'tgl_transaksi' => date('Y-m-d H:i:s'),
                 'jumlah_bayar' => $total,
@@ -194,7 +240,7 @@ class Pembayaran extends CI_Controller {
                 'status_pembayaran' => 'pending',
                 'kode_pembayaran' => $order_id,
                 'tgl_mulai_langganan' => date('Y-m-d'),
-                'tgl_akhir_langganan' => date('Y-m-d', strtotime("+{$durasi_bulan} months")),
+                'tgl_akhir_langganan' => date('Y-m-d', strtotime("+{$total_days} days")),
                 'created_at' => date('Y-m-d H:i:s')
             ];
             
@@ -334,6 +380,36 @@ class Pembayaran extends CI_Controller {
             if ($transaksi) {
                 $paket = $this->Paket_langganan_model->get_by_id($transaksi->id_paket);
                 
+                // Update status transaksi berdasarkan transaction_status dari Midtrans
+                $new_status = 'pending';
+                // Midtrans can return: capture, settlement, success, pending, deny, cancel, expire, failure
+                if (in_array($transaction_status, ['capture', 'settlement', 'success'])) {
+                    $new_status = 'sukses';
+                } elseif ($transaction_status == 'pending') {
+                    $new_status = 'pending';
+                } elseif (in_array($transaction_status, ['deny', 'cancel', 'expire', 'failure'])) {
+                    $new_status = 'gagal';
+                }
+                
+                // Update status di database jika belum sukses
+                if ($transaksi->status_pembayaran !== 'sukses' && $new_status == 'sukses') {
+                    $this->Transaksi_langganan_model->update_status($transaksi->id_transaksi_langganan, $new_status);
+                    
+                    // Aktifkan langganan user
+                    $this->Owner_model->activateSubscription($transaksi->id_pemilik, $transaksi->id_paket);
+                    
+                    // Kirim email invoice
+                    $this->send_invoice_email($transaksi, $paket);
+                    
+                    log_message('info', "Payment SUCCESS - Order {$order_id}, Status updated to {$new_status}");
+                } elseif ($transaksi->status_pembayaran == 'pending' && $new_status != 'sukses') {
+                    // Update status jika masih pending tapi bukan sukses
+                    $this->Transaksi_langganan_model->update_status($transaksi->id_transaksi_langganan, $new_status);
+                }
+                
+                // Reload transaksi untuk mendapat status terbaru
+                $transaksi = $this->Transaksi_langganan_model->get_by_payment_code($order_id);
+                
                 $data = [
                     'title' => 'Pembayaran Berhasil',
                     'transaksi' => $transaksi,
@@ -349,6 +425,147 @@ class Pembayaran extends CI_Controller {
         // Jika tidak menemukan transaksi
         $this->session->set_flashdata('info', 'Pembayaran Anda sedang diproses.');
         redirect('landingpage');
+    }
+    
+    /**
+     * Kirim email invoice ke user
+     * @param object $transaksi
+     * @param object $paket
+     */
+    private function send_invoice_email($transaksi, $paket) {
+        try {
+            $this->load->library('email_library');
+            
+            // Get owner data
+            $owner = $this->Owner_model->getOwnerById($transaksi->id_pemilik);
+            if (!$owner || empty($owner->email)) {
+                log_message('error', 'Cannot send invoice email - owner not found or no email');
+                return false;
+            }
+            
+            $subject = '🧾 Invoice Pembayaran - KixEra';
+            
+            // Format data
+            $formatted_amount = 'Rp ' . number_format($transaksi->jumlah_bayar, 0, ',', '.');
+            $tgl_transaksi = date('d M Y H:i', strtotime($transaksi->tgl_transaksi));
+            $tgl_mulai = date('d M Y', strtotime($transaksi->tgl_mulai_langganan));
+            $tgl_akhir = date('d M Y', strtotime($transaksi->tgl_akhir_langganan));
+            
+            $message = $this->template_invoice([
+                'name' => $owner->nama,
+                'order_id' => $transaksi->kode_pembayaran,
+                'paket' => $paket->nama_paket,
+                'amount' => $formatted_amount,
+                'tgl_transaksi' => $tgl_transaksi,
+                'tgl_mulai' => $tgl_mulai,
+                'tgl_akhir' => $tgl_akhir
+            ]);
+            
+            $result = $this->email_library->send($owner->email, $subject, $message);
+            
+            if ($result['success']) {
+                log_message('info', 'Invoice email sent to: ' . $owner->email);
+            } else {
+                log_message('error', 'Failed to send invoice email: ' . ($result['message'] ?? 'Unknown error'));
+            }
+            
+            return $result['success'];
+        } catch (Exception $e) {
+            log_message('error', 'send_invoice_email error: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Template email invoice
+     * @param array $data
+     * @return string HTML email
+     */
+    private function template_invoice($data) {
+        $name = htmlspecialchars($data['name'] ?? 'User');
+        $order_id = htmlspecialchars($data['order_id'] ?? '-');
+        $paket = htmlspecialchars($data['paket'] ?? '-');
+        $amount = htmlspecialchars($data['amount'] ?? 'Rp 0');
+        $tgl_transaksi = htmlspecialchars($data['tgl_transaksi'] ?? '-');
+        $tgl_mulai = htmlspecialchars($data['tgl_mulai'] ?? '-');
+        $tgl_akhir = htmlspecialchars($data['tgl_akhir'] ?? '-');
+        
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='utf-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        </head>
+        <body style='font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;'>
+            <div style='max-width: 550px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
+                <!-- Header -->
+                <div style='background: linear-gradient(135deg, #10b981, #14b8a6); padding: 30px; text-align: center;'>
+                    <h1 style='color: white; margin: 0; font-size: 24px;'>🧾 Invoice Pembayaran</h1>
+                    <p style='color: rgba(255,255,255,0.9); margin: 10px 0 0 0;'>KixEra Subscription</p>
+                </div>
+                
+                <!-- Body -->
+                <div style='padding: 30px;'>
+                    <p style='color: #333; font-size: 16px; margin: 0 0 20px 0;'>Halo <strong>{$name}</strong>,</p>
+                    <p style='color: #666; font-size: 14px; margin: 0 0 25px 0;'>
+                        Terima kasih! Pembayaran Anda telah berhasil diproses. Berikut detail invoice Anda:
+                    </p>
+                    
+                    <!-- Invoice Details -->
+                    <div style='background: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 25px;'>
+                        <table style='width: 100%; border-collapse: collapse;'>
+                            <tr>
+                                <td style='padding: 8px 0; color: #666; font-size: 14px;'>Order ID</td>
+                                <td style='padding: 8px 0; color: #333; font-size: 14px; text-align: right; font-weight: bold;'>{$order_id}</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px 0; color: #666; font-size: 14px;'>Paket</td>
+                                <td style='padding: 8px 0; color: #333; font-size: 14px; text-align: right; font-weight: bold;'>{$paket}</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px 0; color: #666; font-size: 14px;'>Total Bayar</td>
+                                <td style='padding: 8px 0; color: #10b981; font-size: 16px; text-align: right; font-weight: bold;'>{$amount}</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px 0; color: #666; font-size: 14px;'>Tanggal Transaksi</td>
+                                <td style='padding: 8px 0; color: #333; font-size: 14px; text-align: right;'>{$tgl_transaksi}</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px 0; color: #666; font-size: 14px;'>Periode Langganan</td>
+                                <td style='padding: 8px 0; color: #333; font-size: 14px; text-align: right;'>{$tgl_mulai} - {$tgl_akhir}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Status Badge -->
+                    <div style='text-align: center; margin-bottom: 25px;'>
+                        <span style='display: inline-block; background: #d1fae5; color: #059669; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 14px;'>
+                            ✓ Pembayaran Berhasil
+                        </span>
+                    </div>
+                    
+                    <!-- Button -->
+                    <div style='text-align: center;'>
+                        <a href='" . base_url('pemilik/pemilik_dashboard') . "' style='display: inline-block; background: linear-gradient(135deg, #10b981, #14b8a6); color: white; text-decoration: none; padding: 14px 30px; border-radius: 8px; font-weight: bold; font-size: 14px;'>
+                            Buka Dashboard
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div style='background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;'>
+                    <p style='color: #9ca3af; font-size: 12px; margin: 0;'>
+                        Simpan email ini sebagai bukti pembayaran Anda.
+                    </p>
+                    <p style='color: #9ca3af; font-size: 11px; margin: 10px 0 0 0;'>
+                        © " . date('Y') . " KixEra. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
     }
     
     /**
@@ -432,12 +649,25 @@ class Pembayaran extends CI_Controller {
     private function get_customer_data() {
         // Jika user sudah login, ambil dari session
         if ($this->session->userdata('logged_in')) {
-            return [
-                'nama' => $this->session->userdata('nama_pemilik') ?? 'Guest User',
+            $data = [
+                'nama' => $this->session->userdata('nama') ?? 'Guest User',
                 'email' => $this->session->userdata('email') ?? 'guest@example.com',
-                'telp' => $this->session->userdata('telp') ?? '-',
-                'alamat' => $this->session->userdata('alamat') ?? '-'
+                'telp' => '-',
+                'alamat' => '-'
             ];
+            
+            // Coba ambil data detail dari database jika ada id_pemilik
+            if ($this->session->userdata('id_pemilik')) {
+                $owner = $this->Owner_model->getOwnerById($this->session->userdata('id_pemilik'));
+                if ($owner) {
+                    $data['nama'] = $owner->nama;
+                    $data['email'] = $owner->email; 
+                    $data['telp'] = $owner->no_telp ?? $data['telp'];
+                    $data['alamat'] = $owner->alamat_usaha ?? $data['alamat'];
+                }
+            }
+            
+            return $data;
         }
         
         // Default data jika belum login

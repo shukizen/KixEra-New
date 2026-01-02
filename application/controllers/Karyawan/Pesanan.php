@@ -57,8 +57,8 @@ class Pesanan extends CI_Controller
             'dibatalkan' => 'Dibatalkan',
         ];
 
-        // Get lists for form dropdowns - pelanggan difilter berdasarkan cabang
-        $data['pelanggan_list'] = $this->Pelanggan_model->getAllPelangganForCabang($id_cabang);
+        // Get lists for form dropdowns - pelanggan difilter berdasarkan cabang dan pemilik
+        $data['pelanggan_list'] = $this->Pelanggan_model->getAllPelangganForCabang($id_cabang, $id_pemilik);
         $data['layanan_list'] = $this->Layanan_model->getAllLayananByOwner($id_pemilik);
 
         // Store cabang and karyawan id for use in views/forms
@@ -138,7 +138,7 @@ class Pesanan extends CI_Controller
         $input = $this->input->post();
 
         // Validate required fields
-        $required = ['id_pelanggan', 'id_layanan', 'jumlah_item', 'total_harga'];
+        $required = ['id_pelanggan', 'jumlah_item', 'total_harga'];
         foreach ($required as $field) {
             if (empty($input[$field])) {
                 return $this->output
@@ -147,33 +147,49 @@ class Pesanan extends CI_Controller
             }
         }
 
-        // Prepare data
-        $data = [
-            'id_cabang' => $input['id_cabang'],
-            'id_pelanggan' => $input['id_pelanggan'],
-            'id_layanan' => $input['id_layanan'],
-            'id_karyawan' => $input['id_karyawan'] ?? null,
-            'tgl_masuk' => $input['tgl_masuk'] ?? date('Y-m-d H:i:s'),
-            'tgl_estimasi_selesai' => $input['tgl_estimasi_selesai'] ?? null,
-            'jumlah_item' => $input['jumlah_item'],
-            'total_harga' => $input['total_harga'],
-            'status_pesanan' => 'diterima',
-            'catatan' => $input['catatan'] ?? null,
-            'metode_pembayaran' => $input['metode_pembayaran'] ?? null,
-            'status_pembayaran' => $input['status_pembayaran'] ?? 'belum_bayar',
-        ];
+        // Parse detail items explicitly first to get id_layanan for main table
+        $detail_items = [];
+        if (!empty($input['detail_items'])) {
+            $detail_items = json_decode($input['detail_items'], true) ?: [];
+        }
+        
+        // Get first service ID as primary service for the order (to satisfy DB constraint)
+        $primary_layanan = null;
+        if (!empty($detail_items[0]['id_layanan'])) {
+            $primary_layanan = $detail_items[0]['id_layanan'];
+        }
 
-        $id_pesanan = $this->Pesanan_model->insertPesanan($data);
+        $this->db->trans_start();
+        
+        try {
+            // Prepare data
+            $id_karyawan = !empty($input['id_karyawan']) ? $input['id_karyawan'] : null;
+            
+            $data = [
+                'id_cabang' => $input['id_cabang'],
+                'id_pelanggan' => $input['id_pelanggan'],
+                'id_karyawan' => $id_karyawan,
+                'id_layanan' => $primary_layanan, // Use first item's service
+                'tgl_masuk' => $input['tgl_masuk'] ?? date('Y-m-d H:i:s'),
+                'tgl_estimasi_selesai' => !empty($input['tgl_estimasi_selesai']) ? $input['tgl_estimasi_selesai'] : null,
+                'jumlah_item' => $input['jumlah_item'],
+                'total_harga' => $input['total_harga'],
+                'status_pesanan' => 'diterima',
+                'catatan' => $input['catatan'] ?? null,
+                'metode_pembayaran' => $input['metode_pembayaran'] ?? null,
+                'status_pembayaran' => $input['status_pembayaran'] ?? 'belum_bayar',
+            ];
 
-        if ($id_pesanan) {
+            $id_pesanan = $this->Pesanan_model->insertPesanan($data);
+
+            if (!$id_pesanan) {
+                throw new Exception("Gagal menyimpan data pesanan ke database");
+            }
+
             // Add initial progress
             $this->Pesanan_model->insertProgres($id_pesanan, 'diterima', 'Pesanan diterima', $data['id_karyawan']);
             
-            // Parse detail items from JSON string
-            $detail_items = [];
-            if (!empty($input['detail_items'])) {
-                $detail_items = json_decode($input['detail_items'], true) ?: [];
-            }
+            // Detail items already parsed above
             
             // Insert detail items with foto upload
             $jumlah = (int) $input['jumlah_item'];
@@ -189,7 +205,7 @@ class Pesanan extends CI_Controller
                 
                 $detail_data = [
                     'id_pesanan' => $id_pesanan,
-                    'id_layanan' => $input['id_layanan'],
+                    'id_layanan' => $detail['id_layanan'] ?? null,
                     'jenis_sepatu' => $detail['jenis_sepatu'] ?? null,
                     'warna' => $detail['warna'] ?? null,
                     'kondisi_awal' => $detail['kondisi_awal'] ?? null,
@@ -204,15 +220,26 @@ class Pesanan extends CI_Controller
                 $this->Pesanan_model->confirmPayment($id_pesanan, $data['metode_pembayaran'], $data['id_karyawan']);
             }
             
+            $this->db->trans_complete();
+            
+            if ($this->db->trans_status() === FALSE) {
+                // Get error message if possible
+                 $db_error = $this->db->error();
+                 throw new Exception("Database Transaction Error: " . ($db_error['message'] ?? 'Unknown error'));
+            }
+
             $pesanan = $this->Pesanan_model->getPesananById($id_pesanan);
             return $this->output
                 ->set_content_type('application/json')
                 ->set_output(json_encode(['status' => 'success', 'message' => 'Pesanan berhasil ditambahkan', 'data' => $pesanan]));
-        }
 
-        return $this->output
-            ->set_content_type('application/json')
-            ->set_output(json_encode(['status' => 'error', 'message' => 'Gagal menyimpan pesanan']));
+        } catch (Exception $e) {
+            $this->db->trans_rollback();
+            return $this->output
+                ->set_status_header(500)
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['status' => 'error', 'message' => $e->getMessage()]));
+        }
     }
 
     // Upload foto helper

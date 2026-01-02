@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <?php $this->load->view('template/header'); ?>
@@ -10,13 +10,13 @@
         <?php $this->load->view('template/sidebarkaryawan'); ?>
 
         <!-- Main Content -->
-        <main class="flex-1 lg:ml-64">
+        <main class="flex-1 lg:ml-64 flex flex-col min-h-screen">
             
             <!-- Topbar -->
             <div class="bg-white shadow-sm px-6 py-4 flex items-center justify-between flex-wrap gap-4">
                 <div class="flex items-center gap-4">
                     <h1 class="text-xl font-semibold text-gray-800">Kelola Pesanan</h1>
-                    <span class="bg-teal-100 text-teal-600 text-sm px-3 py-1 rounded-full">
+                    <span class="bg-emerald-100 text-emerald-600 text-sm px-3 py-1 rounded-full">
                         <?php echo isset($pesanan) ? count($pesanan) : 0; ?> Total Pesanan
                     </span>
                 </div>
@@ -28,18 +28,18 @@
                             type="text"
                             id="searchInput"
                             placeholder="Cari nama pelanggan..."
-                            class="pl-10 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
+                            class="pl-10 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
                         >
                     </div>
 
-                    <select id="statusFilter" class="border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500">
+                    <select id="statusFilter" class="border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-emerald-500">
                         <option value="">Semua Status</option>
                         <?php foreach ($status_list as $value => $label): ?>
                             <option value="<?= $value ?>"><?= $label ?></option>
                         <?php endforeach; ?>
                     </select>
 
-                    <button id="btnTambahPesanan" class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <button id="btnTambahPesanan" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl transition flex items-center gap-2">
                         <i class="fas fa-plus"></i> Tambah Pesanan
                     </button>
                 </div>
@@ -48,30 +48,31 @@
             <!-- Content -->
             <div class="p-6">
 
-                <!-- Statistik -->
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
 
-                    <div class="bg-white rounded-xl shadow-sm p-5 flex justify-between items-center">
+                    <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-5 flex justify-between items-center">
                         <div>
                             <p class="text-sm text-gray-500">Pesanan Hari Ini</p>
                             <h3 class="text-2xl font-bold text-gray-800"><?php echo $stats['today'] ?? 0; ?></h3>
                         </div>
-                        <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-bag-shopping text-teal-600"></i>
+                        <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-bag-shopping text-emerald-600"></i>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm p-5 flex justify-between items-center">
+
+                    <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-5 flex justify-between items-center">
                         <div>
                             <p class="text-sm text-gray-500">Pesanan Selesai</p>
                             <h3 class="text-2xl font-bold text-gray-800"><?php echo $stats['selesai'] ?? 0; ?></h3>
                         </div>
-                        <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-check-circle text-teal-600"></i>
+                        <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-emerald-600"></i>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm p-5 flex justify-between items-center">
+
+                    <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-5 flex justify-between items-center">
                         <div>
                             <p class="text-sm text-gray-500">Dalam Proses</p>
                             <h3 class="text-2xl font-bold text-gray-800"><?php echo $stats['proses'] ?? 0; ?></h3>
@@ -81,7 +82,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm p-5 flex justify-between items-center">
+
+                    <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-5 flex justify-between items-center">
                         <div>
                             <p class="text-sm text-gray-500">Diterima</p>
                             <h3 class="text-2xl font-bold text-gray-800"><?php echo $stats['diterima'] ?? 0; ?></h3>
@@ -91,7 +93,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm p-5 flex justify-between items-center">
+
+                    <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-5 flex justify-between items-center">
                         <div>
                             <p class="text-sm text-gray-500">Dibatalkan</p>
                             <h3 class="text-2xl font-bold text-gray-800"><?php echo $stats['dibatalkan'] ?? 0; ?></h3>
@@ -104,7 +107,7 @@
                 </div>
 
                 <!-- Tabel Pesanan -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                     <table class="w-full text-sm" id="pesananTable">
                         <thead class="bg-gray-50">
                             <tr>
@@ -127,13 +130,13 @@
                                         $status_label = ucfirst(str_replace('_', ' ', $status));
                                         
                                         if ($status === 'sudah_diambil') {
-                                            $badge = 'bg-teal-600/10 text-teal-500';
+                                            $badge = 'bg-emerald-600/10 text-emerald-500';
                                             $status_label = 'Sudah Diambil';
                                         } elseif ($status === 'siap_diambil') {
                                             $badge = 'bg-green-500/10 text-green-500';
                                             $status_label = 'Siap Diambil';
                                         } elseif ($status === 'selesai') {
-                                            $badge = 'bg-teal-500/10 text-teal-500';
+                                            $badge = 'bg-emerald-500/10 text-emerald-500';
                                         } elseif ($status === 'dalam_proses') {
                                             $badge = 'bg-yellow-500/10 text-yellow-600';
                                             $status_label = 'Dalam Proses';
@@ -159,9 +162,9 @@
                                             $status_bayar = $p->status_pembayaran ?? 'belum_bayar';
                                             $metode = $p->metode_pembayaran ?? '';
                                             $metode_icon = '';
-                                            if ($metode === 'tunai') $metode_icon = '💵';
-                                            elseif ($metode === 'debit') $metode_icon = '💳';
-                                            elseif ($metode === 'qris') $metode_icon = '📱';
+                                            if ($metode === 'tunai') $metode_icon = '';
+                                            elseif ($metode === 'debit') $metode_icon = '';
+                                            elseif ($metode === 'qris') $metode_icon = '';
                                             ?>
                                             <?php if ($status_bayar === 'sudah_bayar'): ?>
                                                 <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
@@ -199,7 +202,7 @@
                                                         $next_status = 'selesai';
                                                         $next_label = 'Selesai';
                                                         $next_icon = 'fa-check';
-                                                        $next_color = 'bg-teal-500 hover:bg-teal-600';
+                                                        $next_color = 'bg-emerald-500 hover:bg-emerald-600';
                                                         break;
                                                     case 'selesai':
                                                         $next_status = 'siap_diambil';
@@ -211,7 +214,7 @@
                                                         $next_status = 'sudah_diambil';
                                                         $next_label = 'Diambil';
                                                         $next_icon = 'fa-hand-holding';
-                                                        $next_color = 'bg-teal-600 hover:bg-teal-700';
+                                                        $next_color = 'bg-emerald-600 hover:bg-emerald-700';
                                                         break;
                                                 }
                                                 
@@ -235,20 +238,20 @@
                                                 <?php endif; ?>
                                                 
                                                 <a href="<?= site_url('karyawan/pesanan/detail/' . $p->id_pesanan) ?>" 
-                                                    class="bg-teal-500 hover:bg-teal-600 text-white px-2 py-1 rounded-lg text-xs inline-block" 
+                                                    class="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 rounded-lg flex items-center justify-center transition" 
                                                     title="Lihat Detail">
-                                                    <i class="fas fa-eye"></i>
+                                                    <i class="fas fa-eye text-sm"></i>
                                                 </a>
                                                 
-                                                <button class="btn-edit bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-lg text-xs"
+                                                <button class="btn-edit w-8 h-8 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition"
                                                     data-id="<?= $p->id_pesanan ?>" title="Edit">
-                                                    <i class="fas fa-edit"></i>
+                                                    <i class="fas fa-edit text-sm"></i>
                                                 </button>
                                                 
                                                 <?php if (!in_array($status, ['sudah_diambil', 'dibatalkan'])): ?>
-                                                <button class="btn-delete bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg text-xs"
+                                                <button class="btn-delete w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg flex items-center justify-center transition"
                                                     data-id="<?= $p->id_pesanan ?>" data-nomor="<?= htmlspecialchars($p->nomor_pesanan) ?>" title="Hapus">
-                                                    <i class="fas fa-trash"></i>
+                                                    <i class="fas fa-trash text-sm"></i>
                                                 </button>
                                                 <?php endif; ?>
                                             </div>
@@ -290,7 +293,7 @@
                     
                     <!-- Body with scroll -->
                     <div class="p-6 max-h-[calc(90vh-180px)] overflow-y-auto">
-                        <form id="formTambahPesanan">
+                        <form id="formTambahPesanan" enctype="multipart/form-data">
                             <input type="hidden" name="id_cabang" value="<?= $id_cabang ?? '' ?>">
                             <input type="hidden" name="id_karyawan" value="<?= $id_karyawan ?? '' ?>">
                             
@@ -307,10 +310,10 @@
                                     <!-- Pelanggan -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-user text-teal-500 mr-1"></i>Pelanggan <span class="text-red-500">*</span>
+                                            <i class="fas fa-user text-emerald-500 mr-1"></i>Pelanggan <span class="text-red-500">*</span>
                                         </label>
                                         <select name="id_pelanggan" id="add-id_pelanggan" required
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
                                             <option value="">-- Pilih Pelanggan --</option>
                                             <?php foreach ($pelanggan_list as $pel): ?>
                                                 <option value="<?= $pel->id_pelanggan ?>"><?= htmlspecialchars($pel->nama) ?></option>
@@ -318,56 +321,40 @@
                                         </select>
                                     </div>
                                     
-                                    <!-- Layanan -->
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-concierge-bell text-teal-500 mr-1"></i>Layanan <span class="text-red-500">*</span>
-                                        </label>
-                                        <select name="id_layanan" id="add-id_layanan" required
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
-                                            <option value="" data-harga="0">-- Pilih Layanan --</option>
-                                            <?php foreach ($layanan_list as $lay): ?>
-                                                <option value="<?= $lay->id_layanan ?>" data-harga="<?= $lay->harga ?>">
-                                                    <?= htmlspecialchars($lay->nama_layanan) ?> - Rp <?= number_format($lay->harga, 0, ',', '.') ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    
                                     <!-- Jumlah Item -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-shoe-prints text-teal-500 mr-1"></i>Jumlah Item <span class="text-red-500">*</span>
+                                            <i class="fas fa-shoe-prints text-emerald-500 mr-1"></i>Jumlah Item <span class="text-red-500">*</span>
                                         </label>
                                         <input type="number" name="jumlah_item" id="add-jumlah_item" min="1" value="1" required
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all">
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                                     </div>
                                     
                                     <!-- Tanggal Masuk -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-calendar-plus text-teal-500 mr-1"></i>Tanggal Masuk
+                                            <i class="fas fa-calendar-plus text-emerald-500 mr-1"></i>Tanggal Masuk
                                         </label>
                                         <input type="datetime-local" name="tgl_masuk" id="add-tgl_masuk"
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all">
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                                     </div>
                                     
                                     <!-- Estimasi Selesai -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-calendar-check text-teal-500 mr-1"></i>Estimasi Selesai
+                                            <i class="fas fa-calendar-check text-emerald-500 mr-1"></i>Estimasi Selesai
                                         </label>
                                         <input type="datetime-local" name="tgl_estimasi_selesai" id="add-tgl_estimasi_selesai"
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all">
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                                     </div>
                                     
                                     <!-- Catatan -->
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
-                                            <i class="fas fa-sticky-note text-teal-500 mr-1"></i>Catatan Umum
+                                            <i class="fas fa-sticky-note text-emerald-500 mr-1"></i>Catatan Umum
                                         </label>
                                         <textarea name="catatan" id="add-catatan" rows="2" placeholder="Catatan tambahan (opsional)"
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none transition-all"></textarea>
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -390,9 +377,9 @@
                                         <select name="metode_pembayaran" id="add-metode_pembayaran"
                                             class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all">
                                             <option value="">-- Pilih Metode --</option>
-                                            <option value="tunai">💵 Tunai</option>
-                                            <option value="debit">💳 Debit/Transfer</option>
-                                            <option value="qris">📱 QRIS</option>
+                                            <option value="tunai">Tunai</option>
+                                            <option value="debit">Debit/Transfer</option>
+                                            <option value="qris">QRIS</option>
                                         </select>
                                     </div>
                                     
@@ -597,14 +584,14 @@
             <div id="modalViewPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
                 <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden">
                     <!-- Header -->
-                    <div class="bg-teal-700 p-6 flex items-center justify-between">
+                    <div class="bg-emerald-700 p-6 flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                                 <i class="fas fa-eye text-white text-xl"></i>
                             </div>
                             <div>
                                 <h2 class="text-xl font-bold text-white">Detail Pesanan</h2>
-                                <p id="view-nomor-pesanan" class="text-teal-100 text-sm">#-</p>
+                                <p id="view-nomor-pesanan" class="text-emerald-100 text-sm">#-</p>
                             </div>
                         </div>
                         <button id="btnCloseViewModal" class="text-white/80 hover:text-white text-3xl hover:bg-white/10 rounded-lg w-10 h-10 flex items-center justify-center transition-all">
@@ -617,8 +604,8 @@
                         <!-- Info Pesanan Section -->
                         <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-6">
                             <div class="flex items-center gap-2 mb-4">
-                                <div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-info-circle text-teal-600 text-sm"></i>
+                                <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-info-circle text-emerald-600 text-sm"></i>
                                 </div>
                                 <h3 class="font-semibold text-gray-800">Informasi Pesanan</h3>
                             </div>
@@ -657,15 +644,15 @@
                             <!-- Total Harga -->
                             <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
                                 <span class="text-gray-600 font-medium">Total Harga:</span>
-                                <span id="view-total-harga" class="text-2xl font-bold text-teal-600">Rp 0</span>
+                                <span id="view-total-harga" class="text-2xl font-bold text-emerald-600">Rp 0</span>
                             </div>
                         </div>
                         
                         <!-- Detail Items Section -->
-                        <div class="bg-teal-50 rounded-xl p-5 border border-teal-200">
+                        <div class="bg-emerald-50 rounded-xl p-5 border border-teal-200">
                             <div class="flex items-center gap-2 mb-4">
-                                <div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-shoe-prints text-teal-600 text-sm"></i>
+                                <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-shoe-prints text-emerald-600 text-sm"></i>
                                 </div>
                                 <h3 class="font-semibold text-gray-800">Detail Sepatu</h3>
                             </div>
@@ -682,7 +669,7 @@
                     
                     <!-- Fixed Footer -->
                     <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                        <button type="button" id="btnCloseViewFooter" class="px-6 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-medium transition-all flex items-center gap-2">
+                        <button type="button" id="btnCloseViewFooter" class="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-medium transition-all flex items-center gap-2">
                             <i class="fas fa-times"></i>Tutup
                         </button>
                     </div>
@@ -713,19 +700,19 @@
             <div id="modalStatusPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
                 <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4">
                     <div class="flex items-center gap-3 mb-4">
-                        <div id="status-icon" class="w-12 h-12 flex items-center justify-center rounded-full bg-teal-100">
-                            <i class="fas fa-sync-alt text-teal-500 text-2xl"></i>
+                        <div id="status-icon" class="w-12 h-12 flex items-center justify-center rounded-full bg-emerald-100">
+                            <i class="fas fa-sync-alt text-emerald-500 text-2xl"></i>
                         </div>
                         <h3 class="text-xl font-semibold text-gray-800">Ubah Status Pesanan</h3>
                     </div>
                     <p class="text-gray-600 mb-6">
-                        Ubah status pesanan menjadi <span id="status-label" class="font-semibold text-teal-600"></span>?
+                        Ubah status pesanan menjadi <span id="status-label" class="font-semibold text-emerald-600"></span>?
                     </p>
                     <input type="hidden" id="status-id">
                     <input type="hidden" id="status-value">
                     <div class="flex justify-end gap-3">
                         <button id="btnCancelStatus" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
-                        <button id="btnConfirmStatus" class="px-5 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg">
+                        <button id="btnConfirmStatus" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg">
                             <i class="fas fa-check mr-1"></i>Konfirmasi
                         </button>
                     </div>
@@ -735,15 +722,15 @@
             <!-- Modal Success with Print Option -->
             <div id="modalSuccessPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
                 <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4 text-center">
-                    <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-teal-100">
-                        <i class="fas fa-check-circle text-teal-500 text-4xl"></i>
+                    <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-emerald-100">
+                        <i class="fas fa-check-circle text-emerald-500 text-4xl"></i>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-800 mb-2">Pesanan Berhasil Disimpan!</h3>
                     <p class="text-gray-600 mb-2">Nomor Pesanan:</p>
-                    <p id="success-nomor-pesanan" class="text-2xl font-bold text-teal-600 mb-6">#-</p>
+                    <p id="success-nomor-pesanan" class="text-2xl font-bold text-emerald-600 mb-6">#-</p>
                     <input type="hidden" id="success-id-pesanan">
                     <div class="flex flex-col gap-3">
-                        <button id="btnCetakNota" class="w-full px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all">
+                        <button id="btnCetakNota" class="w-full px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all">
                             <i class="fas fa-print"></i>
                             <span>Cetak Nota</span>
                         </button>
@@ -755,7 +742,6 @@
             </div>
             
             <?php $this->load->view('template/footer'); ?>
-        </main>
     </div>
 
     <script>
@@ -764,7 +750,7 @@
         // Notification helper
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-teal-700' : 'bg-red-600';
+            const bgColor = type === 'success' ? 'bg-emerald-700' : 'bg-red-600';
             notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2`;
             notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
             document.body.appendChild(notification);
@@ -783,23 +769,43 @@
             const btnClose = document.getElementById('btnCloseModal');
             const btnBatal = document.getElementById('btnBatalModal');
             const form = document.getElementById('formTambahPesanan');
-            const selectLayanan = document.getElementById('add-id_layanan');
             const inputJumlah = document.getElementById('add-jumlah_item');
             const totalHargaEl = document.getElementById('totalHarga');
             const totalHargaInput = document.getElementById('add-total_harga');
             const inputTglMasuk = document.getElementById('add-tgl_masuk');
 
             function hitungTotal() {
-                const selected = selectLayanan.options[selectLayanan.selectedIndex];
-                const harga = parseInt(selected.dataset.harga) || 0;
                 const jumlah = parseInt(inputJumlah.value) || 1;
-                const total = harga * jumlah;
-                totalHargaEl.textContent = formatRupiah(total);
-                totalHargaInput.value = total;
                 
                 // Generate detail items based on jumlah
                 generateDetailItems(jumlah);
+                
+                // Update total from item selections
+                updateTotalFromItems();
             }
+
+            // Generate layanan options for per-item dropdowns
+            const layananData = <?php echo json_encode($layanan_list); ?>;
+            let layananOptionsHtml = '';
+            layananData.forEach(lay => {
+                layananOptionsHtml += `<option value="${lay.id_layanan}" data-harga="${lay.harga}">${lay.nama_layanan}</option>`;
+            });
+
+            // Update total from all item layanan selections
+            window.updateTotalFromItems = function() {
+                const layananSelects = document.querySelectorAll('.layanan-select');
+                let total = 0;
+                layananSelects.forEach(select => {
+                    const selectedOption = select.options[select.selectedIndex];
+                    if (selectedOption && selectedOption.dataset.harga) {
+                        total += parseInt(selectedOption.dataset.harga) || 0;
+                    }
+                });
+                const totalHargaEl = document.getElementById('totalHarga');
+                const totalHargaInput = document.getElementById('add-total_harga');
+                if (totalHargaEl) totalHargaEl.textContent = formatRupiah(total);
+                if (totalHargaInput) totalHargaInput.value = total;
+            };
 
             // Generate dynamic detail item forms
             function generateDetailItems(count) {
@@ -810,7 +816,7 @@
                     const itemHtml = `
                         <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all" data-item="${i}">
                             <div class="flex items-center gap-3 mb-4">
-                                <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center">
+                                <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
                                     <span class="text-white font-bold text-sm">${i}</span>
                                 </div>
                                 <div>
@@ -819,49 +825,60 @@
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                                        <i class="fas fa-concierge-bell text-emerald-500 mr-1"></i>Layanan
+                                    </label>
+                                    <select name="detail[${i}][id_layanan]" 
+                                        class="layanan-select w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all"
+                                        onchange="updateTotalFromItems()">
+                                        <option value="">-- Pilih Layanan --</option>
+                                        ${layananOptionsHtml}
+                                    </select>
+                                </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1.5">
                                         <i class="fas fa-tag text-gray-400 mr-1"></i>Jenis Sepatu
                                     </label>
                                     <input type="text" name="detail[${i}][jenis_sepatu]" placeholder="Nike Air Max, Adidas, dll"
-                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1.5">
                                         <i class="fas fa-palette text-gray-400 mr-1"></i>Warna
                                     </label>
                                     <input type="text" name="detail[${i}][warna]" placeholder="Putih, Hitam, dll"
-                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1.5">
                                         <i class="fas fa-clipboard-list text-gray-400 mr-1"></i>Kondisi Awal
                                     </label>
                                     <input type="text" name="detail[${i}][kondisi_awal]" placeholder="Kotor, Sol menguning, Noda, dll"
-                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1.5">
                                         <i class="fas fa-sticky-note text-gray-400 mr-1"></i>Catatan Khusus
                                     </label>
                                     <input type="text" name="detail[${i}][catatan_khusus]" placeholder="Hati-hati bagian tertentu, dll"
-                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
                                 </div>
                             </div>
                             
                             <!-- Foto Upload Section -->
                             <div class="pt-4 border-t border-gray-100">
                                 <label class="block text-xs font-medium text-gray-500 mb-2">
-                                    <i class="fas fa-camera text-teal-500 mr-1"></i>Foto Sebelum (Kondisi Awal)
+                                    <i class="fas fa-camera text-emerald-500 mr-1"></i>Foto Sebelum (Kondisi Awal)
                                 </label>
                                 <div class="flex items-center gap-4">
-                                    <label class="w-24 h-24 bg-teal-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-teal-400 cursor-pointer hover:border-teal-500 hover:bg-teal-100 transition-all">
-                                        <i class="fas fa-cloud-upload-alt text-teal-400 text-xl mb-1"></i>
-                                        <span class="text-xs text-teal-600">Upload</span>
+                                    <label class="w-24 h-24 bg-emerald-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-teal-400 cursor-pointer hover:border-emerald-500 hover:bg-emerald-100 transition-all">
+                                        <i class="fas fa-cloud-upload-alt text-emerald-400 text-xl mb-1"></i>
+                                        <span class="text-xs text-emerald-600">Upload</span>
                                         <input type="file" name="foto_sebelum_${i}" accept="image/*" 
                                             onchange="previewImage(this, 'preview_${i}')" class="hidden">
                                     </label>
-                                    <img id="preview_${i}" src="" alt="" class="hidden w-24 h-24 object-cover rounded-xl border-2 border-teal-500">
+                                    <img id="preview_${i}" src="" alt="" class="hidden w-24 h-24 object-cover rounded-xl border-2 border-emerald-500">
                                 </div>
                             </div>
                         </div>
@@ -871,7 +888,8 @@
             }
 
             // Preview uploaded image
-            function previewImage(input, previewId) {
+            // Preview uploaded image - Made global for inline onchange
+            window.previewImage = function(input, previewId) {
                 const preview = document.getElementById(previewId);
                 if (input.files && input.files[0]) {
                     const reader = new FileReader();
@@ -881,7 +899,7 @@
                     };
                     reader.readAsDataURL(input.files[0]);
                 }
-            }
+            };
 
             function openModal() {
                 modal.classList.remove('hidden');
@@ -905,21 +923,22 @@
             btnBatal.addEventListener('click', closeModal);
             modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-            selectLayanan.addEventListener('change', hitungTotal);
             inputJumlah.addEventListener('input', hitungTotal);
 
             // Collect detail items data
             function collectDetailItems() {
                 const details = [];
                 const container = document.getElementById('detailItemsContainer');
-                const items = container.querySelectorAll('.bg-gray-50');
+                const items = container.querySelectorAll('[data-item]');
                 
                 items.forEach((item, index) => {
+                    const i = index + 1; // Or use item.dataset.item
                     const detail = {
-                        jenis_sepatu: item.querySelector(`[name="detail[${index+1}][jenis_sepatu]"]`)?.value || '',
-                        warna: item.querySelector(`[name="detail[${index+1}][warna]"]`)?.value || '',
-                        kondisi_awal: item.querySelector(`[name="detail[${index+1}][kondisi_awal]"]`)?.value || '',
-                        catatan_khusus: item.querySelector(`[name="detail[${index+1}][catatan_khusus]"]`)?.value || ''
+                        id_layanan: item.querySelector(`[name="detail[${i}][id_layanan]"]`)?.value || '',
+                        jenis_sepatu: item.querySelector(`[name="detail[${i}][jenis_sepatu]"]`)?.value || '',
+                        warna: item.querySelector(`[name="detail[${i}][warna]"]`)?.value || '',
+                        kondisi_awal: item.querySelector(`[name="detail[${i}][kondisi_awal]"]`)?.value || '',
+                        catatan_khusus: item.querySelector(`[name="detail[${i}][catatan_khusus]"]`)?.value || ''
                     };
                     details.push(detail);
                 });
@@ -935,12 +954,13 @@
                 formData.append('id_cabang', form.id_cabang.value);
                 formData.append('id_karyawan', form.id_karyawan.value);
                 formData.append('id_pelanggan', form.id_pelanggan.value);
-                formData.append('id_layanan', form.id_layanan.value);
                 formData.append('jumlah_item', form.jumlah_item.value);
                 formData.append('total_harga', form.total_harga.value);
                 formData.append('tgl_masuk', form.tgl_masuk.value);
                 formData.append('tgl_estimasi_selesai', form.tgl_estimasi_selesai.value);
                 formData.append('catatan', form.catatan.value);
+                formData.append('metode_pembayaran', form.metode_pembayaran.value);
+                formData.append('status_pembayaran', form.status_pembayaran.value);
                 
                 // Collect detail items
                 const details = collectDetailItems();
@@ -960,6 +980,13 @@
                         method: 'POST',
                         body: formData
                     });
+                    
+                    if (!res.ok) {
+                        const text = await res.text();
+                        console.error('Server Error:', text);
+                        throw new Error('Server error: ' + res.status);
+                    }
+                    
                     const json = await res.json();
                     
                     if (json.status === 'success') {
@@ -970,6 +997,7 @@
                         showNotification(json.message, 'error');
                     }
                 } catch (err) {
+                    console.error('Submit Error:', err);
                     showNotification('Terjadi kesalahan: ' + err.message, 'error');
                 }
             });
@@ -1054,7 +1082,7 @@
                         <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all" data-detail-id="${d.id_detail}">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
                                         <span class="text-white font-bold text-sm">${i}</span>
                                     </div>
                                     <div>
@@ -1072,21 +1100,21 @@
                                         <i class="fas fa-tag text-gray-400 mr-1"></i>Jenis Sepatu
                                     </label>
                                     <input type="text" name="edit_detail[${i}][jenis_sepatu]" value="${d.jenis_sepatu || ''}"
-                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1.5">
                                         <i class="fas fa-palette text-gray-400 mr-1"></i>Warna
                                     </label>
                                     <input type="text" name="edit_detail[${i}][warna]" value="${d.warna || ''}"
-                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1.5">
                                         <i class="fas fa-clipboard-list text-gray-400 mr-1"></i>Kondisi Awal
                                     </label>
                                     <input type="text" name="edit_detail[${i}][kondisi_awal]" value="${d.kondisi_awal || ''}"
-                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white transition-all">
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1.5">
@@ -1098,48 +1126,50 @@
                             </div>
                             
                             <!-- Foto Section -->
-                            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                                <!-- Foto Sebelum -->
-                                <div class="text-center">
-                                    <label class="block text-xs font-medium text-gray-500 mb-2">
-                                        <i class="fas fa-camera text-orange-400 mr-1"></i>Foto Sebelum
-                                    </label>
-                                    ${d.foto_sebelum 
-                                        ? `<div class="relative inline-block">
-                                            <img src="${BASE_URL}../../${d.foto_sebelum}" class="w-24 h-24 object-cover rounded-xl border-2 border-orange-200 shadow-lg" alt="Sebelum">
-                                            <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">Before</span>
-                                           </div>`
-                                        : `<div class="w-24 h-24 mx-auto bg-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300">
-                                            <i class="fas fa-image text-gray-300 text-2xl"></i>
-                                           </div>`
-                                    }
-                                </div>
-                                
-                                <!-- Foto Sesudah -->
-                                <div class="text-center">
-                                    <label class="block text-xs font-medium text-gray-500 mb-2">
-                                        <i class="fas fa-camera-retro text-green-500 mr-1"></i>Foto Sesudah
-                                    </label>
-                                    ${d.foto_sesudah 
-                                        ? `<div class="relative inline-block">
-                                            <img src="${BASE_URL}../../${d.foto_sesudah}" class="w-24 h-24 object-cover rounded-xl border-2 border-green-200 shadow-lg" alt="Sesudah">
-                                            <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">After</span>
-                                           </div>`
-                                        : showFotoSesudah 
-                                            ? `<div class="space-y-2">
-                                                <label class="w-24 h-24 mx-auto bg-teal-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-teal-400 cursor-pointer hover:border-teal-500 hover:bg-teal-100 transition-all">
-                                                    <i class="fas fa-cloud-upload-alt text-green-400 text-xl mb-1"></i>
-                                                    <span class="text-xs text-green-600">Upload</span>
-                                                    <input type="file" name="foto_sesudah_${i}" accept="image/*" 
-                                                        onchange="previewImage(this, 'edit_preview_sesudah_${i}')" class="hidden">
-                                                </label>
-                                                <img id="edit_preview_sesudah_${i}" src="" class="hidden w-24 h-24 mx-auto object-cover rounded-xl border-2 border-green-500">
+                            <div class="pt-4 border-t border-gray-100">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <!-- Foto Sebelum -->
+                                    <div class="text-center">
+                                        <label class="block text-xs font-medium text-gray-500 mb-2">
+                                            <i class="fas fa-camera text-orange-400 mr-1"></i>Foto Sebelum
+                                        </label>
+                                        ${d.foto_sebelum 
+                                            ? `<div class="relative inline-block">
+                                                <img src="${BASE_URL}../../${d.foto_sebelum}" class="w-24 h-24 object-cover rounded-xl border-2 border-orange-200 shadow-lg" alt="Sebelum">
+                                                <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">Before</span>
                                                </div>`
-                                            : `<div class="w-24 h-24 mx-auto bg-gray-50 rounded-xl flex flex-col items-center justify-center border border-gray-200">
-                                                <i class="fas fa-lock text-gray-300 text-lg mb-1"></i>
-                                                <span class="text-xs text-gray-400">Setelah selesai</span>
+                                            : `<div class="w-24 h-24 mx-auto bg-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300">
+                                                <i class="fas fa-image text-gray-300 text-2xl"></i>
                                                </div>`
-                                    }
+                                        }
+                                    </div>
+                                    
+                                    <!-- Foto Sesudah -->
+                                    <div class="text-center">
+                                        <label class="block text-xs font-medium text-gray-500 mb-2">
+                                            <i class="fas fa-camera-retro text-green-500 mr-1"></i>Foto Sesudah
+                                        </label>
+                                        ${d.foto_sesudah 
+                                            ? `<div class="relative inline-block">
+                                                <img src="${BASE_URL}../../${d.foto_sesudah}" class="w-24 h-24 object-cover rounded-xl border-2 border-green-200 shadow-lg" alt="Sesudah">
+                                                <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">After</span>
+                                               </div>`
+                                            : showFotoSesudah 
+                                                ? `<div class="space-y-2">
+                                                    <label class="w-24 h-24 mx-auto bg-emerald-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-teal-400 cursor-pointer hover:border-emerald-500 hover:bg-emerald-100 transition-all">
+                                                        <i class="fas fa-cloud-upload-alt text-green-400 text-xl mb-1"></i>
+                                                        <span class="text-xs text-green-600">Upload</span>
+                                                        <input type="file" name="foto_sesudah_${i}" accept="image/*" 
+                                                            onchange="previewImage(this, 'edit_preview_sesudah_${i}')" class="hidden">
+                                                    </label>
+                                                    <img id="edit_preview_sesudah_${i}" src="" class="hidden w-24 h-24 mx-auto object-cover rounded-xl border-2 border-green-500">
+                                                   </div>`
+                                                : `<div class="w-24 h-24 mx-auto bg-gray-50 rounded-xl flex flex-col items-center justify-center border border-gray-200">
+                                                    <i class="fas fa-lock text-gray-300 text-lg mb-1"></i>
+                                                    <span class="text-xs text-gray-400">Setelah selesai</span>
+                                                   </div>`
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1189,7 +1219,7 @@
                             <div class="bg-white rounded-xl p-5 border border-gray-200">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center">
+                                        <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
                                             <span class="text-white font-bold text-sm">${i}</span>
                                         </div>
                                         <div>
@@ -1263,7 +1293,7 @@
                     const badges = {
                         'diterima': 'bg-blue-100 text-blue-600',
                         'dalam_proses': 'bg-yellow-100 text-yellow-600',
-                        'selesai': 'bg-teal-100 text-teal-600',
+                        'selesai': 'bg-emerald-100 text-emerald-600',
                         'siap_diambil': 'bg-green-100 text-green-600',
                         'sudah_diambil': 'bg-emerald-100 text-emerald-600',
                         'dibatalkan': 'bg-red-100 text-red-600'
@@ -1498,9 +1528,9 @@
             
             const statusColors = {
                 'dalam_proses': { bg: 'bg-yellow-100', text: 'text-yellow-600' },
-                'selesai': { bg: 'bg-teal-100', text: 'text-teal-600' },
+                'selesai': { bg: 'bg-emerald-100', text: 'text-emerald-600' },
                 'siap_diambil': { bg: 'bg-green-100', text: 'text-green-600' },
-                'sudah_diambil': { bg: 'bg-teal-100', text: 'text-teal-600' }
+                'sudah_diambil': { bg: 'bg-emerald-100', text: 'text-emerald-600' }
             };
 
             function openModal(id, status) {
@@ -1510,7 +1540,7 @@
                 
                 // Update icon color
                 const iconDiv = document.getElementById('status-icon');
-                const colors = statusColors[status] || { bg: 'bg-teal-100', text: 'text-teal-600' };
+                const colors = statusColors[status] || { bg: 'bg-emerald-100', text: 'text-emerald-600' };
                 iconDiv.className = `w-12 h-12 flex items-center justify-center rounded-full ${colors.bg}`;
                 iconDiv.querySelector('i').className = `fas fa-sync-alt ${colors.text} text-2xl`;
                 
@@ -1632,9 +1662,9 @@
                                             <i class="fas fa-wallet text-blue-500 mr-1"></i>Metode Pembayaran
                                         </label>
                                         <select id="confirm-metode-pembayaran" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white">
-                                            <option value="tunai" ${currentMetode === 'tunai' ? 'selected' : ''}>💵 Tunai</option>
-                                            <option value="debit" ${currentMetode === 'debit' ? 'selected' : ''}>💳 Debit/Transfer</option>
-                                            <option value="qris" ${currentMetode === 'qris' ? 'selected' : ''}>📱 QRIS</option>
+                                            <option value="tunai" ${currentMetode === 'tunai' ? 'selected' : ''}>Tunai</option>
+                                            <option value="debit" ${currentMetode === 'debit' ? 'selected' : ''}>Debit/Transfer</option>
+                                            <option value="qris" ${currentMetode === 'qris' ? 'selected' : ''}>QRIS</option>
                                         </select>
                                     </div>
                                 </div>

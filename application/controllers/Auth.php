@@ -39,6 +39,18 @@ class Auth extends CI_Controller {
             redirect($this->get_dashboard_url($role));
         }
         
+        // Capture redirect_url from GET parameter and store in session
+        $redirect_url = $this->input->get('redirect_url');
+        if ($redirect_url) {
+            $decoded_url = urldecode($redirect_url);
+            $this->session->set_userdata('redirect_after_login', $decoded_url);
+            
+            // Check if redirecting from subscription/checkout
+            if (strpos($decoded_url, 'pembayaran/checkout') !== false) {
+                $this->session->set_flashdata('info', 'Silakan login terlebih dahulu untuk melanjutkan berlangganan. Belum punya akun? <a href="' . base_url('auth/register') . '" class="underline font-semibold">Daftar di sini</a>');
+            }
+        }
+        
         // Handle request POST (percobaan login)
         if ($this->input->method() === 'post') {
             $this->process_login();
@@ -149,13 +161,25 @@ class Auth extends CI_Controller {
             // Set session
             $this->set_user_session($user);
             
+            // Clear subscription_expired flag if valid
+            $this->session->unset_userdata('subscription_expired');
+            
             // Log activity
             $this->user_model->log_activity($user['id_user'], 'Login', 'User login ke sistem');
+            
+            // Check for redirect_after_login in session
+            $redirect_after_login = $this->session->userdata('redirect_after_login');
+            if ($redirect_after_login) {
+                $this->session->unset_userdata('redirect_after_login');
+                $redirect_url = $redirect_after_login;
+            } else {
+                $redirect_url = base_url($this->get_dashboard_url($user['role']));
+            }
             
             $response = [
                 'success' => true,
                 'message' => 'Login berhasil!',
-                'redirect' => base_url($this->get_dashboard_url($user['role']))
+                'redirect' => $redirect_url
             ];
             
             if ($this->input->is_ajax_request()) {
@@ -166,7 +190,7 @@ class Auth extends CI_Controller {
             }
             
             $this->session->set_flashdata('success', 'Selamat datang, ' . $user['nama']);
-            redirect($this->get_dashboard_url($user['role']));
+            redirect($redirect_url);
             
         } else {
             $response = [
@@ -208,7 +232,7 @@ class Auth extends CI_Controller {
     }
     
     /**
-     * Proses registrasi
+     * Proses registrasi - Step 1: Validasi dan Kirim OTP
      */
     private function process_registration() {
         // Cek apakah ini AJAX request
@@ -245,6 +269,8 @@ class Auth extends CI_Controller {
             
             if (empty($phone_number)) {
                 $errors[] = 'Nomor telepon harus diisi';
+            } elseif (!preg_match('/^(08|628|\+628)[0-9]{8,12}$/', preg_replace('/[^0-9+]/', '', $phone_number))) {
+                $errors[] = 'Format nomor telepon tidak valid (contoh: 081234567890)';
             }
             
             if (empty($email)) {
@@ -281,50 +307,89 @@ class Auth extends CI_Controller {
                 }
             }
             
-            // Proses registrasi
-            $register_data = [
+            // Load Fonnte library
+            $this->load->library('fonnte_library');
+            
+            // Generate TWO separate 6-digit OTPs
+            $wa_otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $email_otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            
+            // Set timezone to WIB for consistent expiry calculation
+            date_default_timezone_set('Asia/Jakarta');
+            $expire_time = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+            $sent_time = date('Y-m-d H:i:s');
+            
+            // Hash password untuk storage
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            
+            // Normalize phone number
+            $normalized_phone = $this->fonnte_library->normalize_phone($phone_number);
+            
+            // Check if email already in pending (delete old one)
+            $this->db->where('email', $email)->delete('pending_registrations');
+            
+            // Insert to pending_registrations with DUAL OTP
+            $pending_data = [
                 'nama' => $full_name,
                 'email' => $email,
-                'password' => $password,
+                'password_hash' => $password_hash,
                 'nama_usaha' => $business_name,
-                'no_telp' => $phone_number
+                'no_telp' => $normalized_phone,
+                'wa_verification_code' => $wa_otp,
+                'wa_code_expires_at' => $expire_time,
+                'wa_code_sent_at' => $sent_time,
+                'email_verification_code' => $email_otp,
+                'email_code_expires_at' => $expire_time,
+                'email_code_sent_at' => $sent_time,
+                'attempts' => 0,
+                'wa_verified' => 0,
+                'email_verified' => 0,
+                'is_verified' => 0
             ];
             
-            $result = $this->user_model->register_owner($register_data);
-            
-            if ($result['success']) {
-                // Login otomatis setelah registrasi
-                $user = $this->user_model->get_user_by_username($result['data']['username']);
-                
-                if ($user) {
-                    $this->set_user_session($user);
-                    
-                    // Log activity
-                    $this->user_model->log_activity($user['id_user'], 'Register', 'User mendaftar akun baru');
-                    
-                    $msg = 'Registrasi berhasil! Selamat datang di KixEra. Anda mendapat trial 7 hari gratis.';
-                    $redirect_url = base_url($this->get_dashboard_url($user['role']));
-                    
-                    if ($is_ajax) {
-                        echo json_encode(['success' => true, 'message' => $msg, 'redirect' => $redirect_url]);
-                        return;
-                    } else {
-                        $this->session->set_flashdata('success', $msg);
-                        redirect($redirect_url);
-                        return;
-                    }
-                }
+            if (!$this->db->insert('pending_registrations', $pending_data)) {
+                throw new Exception('Gagal menyimpan data registrasi sementara');
             }
             
-            // Jika gagal
-            $fail_msg = $result['message'] ?? 'Gagal membuat akun. Silakan coba lagi.';
+            $pending_id = $this->db->insert_id();
+            
+            // Send OTP via Fonnte (WhatsApp)
+            $send_result = $this->fonnte_library->send_registration_code($normalized_phone, $wa_otp, $full_name);
+            
+            if (!$send_result['success']) {
+                log_message('error', 'Failed to send WhatsApp OTP: ' . json_encode($send_result));
+            }
+            
+            // Send OTP via Email (different code)
+            $this->load->library('email_library');
+            $email_result = $this->email_library->send_registration_verification($email, $full_name, $email_otp);
+            
+            if (!$email_result['success']) {
+                log_message('error', 'Failed to send Email OTP: ' . json_encode($email_result));
+            }
+            
+            // Store pending ID in session for verification
+            $this->session->set_userdata([
+                'pending_registration_id' => $pending_id,
+                'pending_registration_email' => $email,
+                'pending_registration_phone' => $this->fonnte_library->mask_phone($normalized_phone)
+            ]);
+            
+            // Success - redirect to verification page
+            $masked_phone = $this->fonnte_library->mask_phone($normalized_phone);
+            $msg = "Kode verifikasi telah dikirim ke WhatsApp {$masked_phone}";
             
             if ($is_ajax) {
-                echo json_encode(['success' => false, 'message' => $fail_msg]);
+                echo json_encode([
+                    'success' => true, 
+                    'message' => $msg, 
+                    'redirect' => base_url('auth/verify_registration'),
+                    'masked_phone' => $masked_phone
+                ]);
                 return;
             } else {
-                $this->session->set_flashdata('error', $fail_msg);
-                redirect('auth/register');
+                $this->session->set_flashdata('success', $msg);
+                redirect('auth/verify_registration');
                 return;
             }
             
@@ -351,6 +416,352 @@ class Auth extends CI_Controller {
     }
     
     /**
+     * Halaman verifikasi registrasi (input OTP)
+     */
+    public function verify_registration() {
+        // Cek apakah ada pending registration
+        $pending_id = $this->session->userdata('pending_registration_id');
+        
+        if (!$pending_id) {
+            $this->session->set_flashdata('error', 'Silakan isi form registrasi terlebih dahulu.');
+            redirect('auth/register');
+            return;
+        }
+        
+        // Get pending data
+        $pending = $this->db->get_where('pending_registrations', ['id_pending' => $pending_id])->row();
+        
+        if (!$pending || $pending->is_verified) {
+            $this->session->unset_userdata(['pending_registration_id', 'pending_registration_email', 'pending_registration_phone']);
+            $this->session->set_flashdata('error', 'Data registrasi tidak ditemukan atau sudah diverifikasi.');
+            redirect('auth/register');
+            return;
+        }
+        
+        // Calculate resend countdown (use WA sent time as reference)
+        date_default_timezone_set('Asia/Jakarta');
+        $wa_last_sent = strtotime($pending->wa_code_sent_at);
+        $email_last_sent = strtotime($pending->email_code_sent_at);
+        $cooldown = 90; // seconds
+        
+        $wa_elapsed = time() - $wa_last_sent;
+        $wa_countdown = max(0, $cooldown - $wa_elapsed);
+        
+        $email_elapsed = time() - $email_last_sent;
+        $email_countdown = max(0, $cooldown - $email_elapsed);
+        
+        // Calculate expire seconds remaining
+        $wa_expire = max(0, strtotime($pending->wa_code_expires_at) - time());
+        $email_expire = max(0, strtotime($pending->email_code_expires_at) - time());
+        
+        // Load Fonnte for masked phone
+        $this->load->library('fonnte_library');
+        
+        $data = [
+            'page_title' => 'Verifikasi Registrasi - KixEra',
+            'email' => $pending->email,
+            'masked_phone' => $this->fonnte_library->mask_phone($pending->no_telp),
+            'nama' => $pending->nama,
+            'wa_countdown' => $wa_countdown,
+            'email_countdown' => $email_countdown,
+            'wa_expire_seconds' => $wa_expire,
+            'email_expire_seconds' => $email_expire,
+            'wa_verified' => $pending->wa_verified,
+            'email_verified' => $pending->email_verified
+        ];
+        
+        $this->load->view('auth/register_verify', $data);
+    }
+    
+    /**
+     * Proses verifikasi OTP registrasi (DUAL OTP - WhatsApp & Email)
+     */
+    public function process_verify_registration() {
+        $this->output->set_content_type('application/json');
+        
+        $pending_id = $this->session->userdata('pending_registration_id');
+        
+        if (!$pending_id) {
+            echo json_encode(['success' => false, 'message' => 'Sesi registrasi tidak valid.']);
+            return;
+        }
+        
+        $wa_otp = $this->input->post('wa_otp');
+        $email_otp = $this->input->post('email_otp');
+        
+        // Get pending registration
+        $pending = $this->db->get_where('pending_registrations', ['id_pending' => $pending_id])->row();
+        
+        if (!$pending) {
+            echo json_encode(['success' => false, 'message' => 'Data registrasi tidak ditemukan.']);
+            return;
+        }
+        
+        date_default_timezone_set('Asia/Jakarta');
+        $errors = [];
+        $wa_valid = $pending->wa_verified == 1; // Already verified before?
+        $email_valid = $pending->email_verified == 1; // Already verified before?
+        
+        // Verify WhatsApp OTP if not already verified
+        if (!$wa_valid && !empty($wa_otp)) {
+            if (strlen($wa_otp) != 6) {
+                $errors[] = 'Kode WhatsApp harus 6 digit';
+            } elseif (strtotime($pending->wa_code_expires_at) < time()) {
+                $errors[] = 'Kode WhatsApp sudah kadaluarsa';
+            } elseif ($pending->wa_verification_code !== $wa_otp) {
+                $errors[] = 'Kode WhatsApp salah';
+            } else {
+                $wa_valid = true;
+            }
+        }
+        
+        // Verify Email OTP if not already verified
+        if (!$email_valid && !empty($email_otp)) {
+            if (strlen($email_otp) != 6) {
+                $errors[] = 'Kode Email harus 6 digit';
+            } elseif (strtotime($pending->email_code_expires_at) < time()) {
+                $errors[] = 'Kode Email sudah kadaluarsa';
+            } elseif ($pending->email_verification_code !== $email_otp) {
+                $errors[] = 'Kode Email salah';
+            } else {
+                $email_valid = true;
+            }
+        }
+        
+        // Check if both are provided but at least one is wrong
+        if (!empty($errors)) {
+            // Increment attempts
+            $this->db->where('id_pending', $pending_id)->update('pending_registrations', [
+                'attempts' => $pending->attempts + 1
+            ]);
+            echo json_encode(['success' => false, 'message' => implode('. ', $errors)]);
+            return;
+        }
+        
+        // Update verified status
+        $update_data = [];
+        if ($wa_valid && $pending->wa_verified == 0) {
+            $update_data['wa_verified'] = 1;
+        }
+        if ($email_valid && $pending->email_verified == 0) {
+            $update_data['email_verified'] = 1;
+        }
+        if (!empty($update_data)) {
+            $this->db->where('id_pending', $pending_id)->update('pending_registrations', $update_data);
+        }
+        
+        // Check if BOTH are now verified
+        if (!$wa_valid || !$email_valid) {
+            $pending_msg = [];
+            if (!$wa_valid) $pending_msg[] = 'WhatsApp';
+            if (!$email_valid) $pending_msg[] = 'Email';
+            echo json_encode([
+                'success' => false, 
+                'partial' => true,
+                'message' => 'Verifikasi ' . implode(' & ', $pending_msg) . ' belum selesai',
+                'wa_verified' => $wa_valid,
+                'email_verified' => $email_valid
+            ]);
+            return;
+        }
+        
+        // OTP Valid! Create the actual user account
+        try {
+            $register_data = [
+                'nama' => $pending->nama,
+                'email' => $pending->email,
+                'password' => '', // Will use hash directly
+                'nama_usaha' => $pending->nama_usaha,
+                'no_telp' => $pending->no_telp
+            ];
+            
+            // Use direct insert instead of register_owner to use pre-hashed password
+            $this->db->trans_begin();
+            
+            // Create username from email
+            $username = explode('@', $pending->email)[0];
+            $username = preg_replace('/[^a-zA-Z0-9]/', '', $username);
+            $base_username = $username;
+            $counter = 1;
+            while ($this->user_model->check_username_exists($username)) {
+                $username = $base_username . $counter;
+                $counter++;
+            }
+            
+            // Insert user
+            $user_data = [
+                'username' => $username,
+                'password' => $pending->password_hash, // Use pre-hashed password
+                'role' => 'owner',
+                'status' => 'aktif',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            $this->db->insert('users', $user_data);
+            $id_user = $this->db->insert_id();
+            
+            // Insert pemilik
+            $pemilik_data = [
+                'id_user' => $id_user,
+                'nama' => $pending->nama,
+                'email' => $pending->email,
+                'no_telp' => $pending->no_telp,
+                'nama_usaha' => $pending->nama_usaha,
+                'status_langganan' => 'trial',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            $this->db->insert('pemilik', $pemilik_data);
+            $id_pemilik = $this->db->insert_id();
+            
+            // Create default branch
+            $cabang_data = [
+                'id_pemilik' => $id_pemilik,
+                'nama_cabang' => 'Cabang Utama',
+                'status' => 'aktif',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            $this->db->insert('cabang', $cabang_data);
+            
+            // Mark pending as verified
+            $this->db->where('id_pending', $pending_id)->update('pending_registrations', ['is_verified' => 1]);
+            
+            if ($this->db->trans_status() === FALSE) {
+                $this->db->trans_rollback();
+                throw new Exception('Gagal membuat akun');
+            }
+            
+            $this->db->trans_commit();
+            
+            // Build complete user data for session (including pemilik data)
+            $user = [
+                'id_user' => $id_user,
+                'username' => $username,
+                'role' => 'owner',
+                'id_pemilik' => $id_pemilik,
+                'nama' => $pending->nama,
+                'email' => $pending->email,
+                'nama_usaha' => $pending->nama_usaha,
+                'status_langganan' => 'trial',
+                'nama_paket' => 'Trial'
+            ];
+            
+            $this->set_user_session($user);
+            $this->user_model->log_activity($id_user, 'Register', 'User mendaftar akun baru (verified via OTP)');
+            
+            // Clear pending session
+            $this->session->unset_userdata(['pending_registration_id', 'pending_registration_email', 'pending_registration_phone']);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registrasi berhasil! Selamat datang di KixEra.',
+                'redirect' => base_url('auth/complete_profile')
+            ]);
+            
+        } catch (Exception $e) {
+            log_message('error', 'Registration completion error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Gagal membuat akun: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Kirim ulang kode OTP registrasi (supports channel-specific resend)
+     */
+    public function resend_registration_code() {
+        $this->output->set_content_type('application/json');
+        
+        $pending_id = $this->session->userdata('pending_registration_id');
+        $channel = $this->input->post('channel') ?: 'both'; // 'wa', 'email', or 'both'
+        
+        if (!$pending_id) {
+            echo json_encode(['success' => false, 'message' => 'Sesi registrasi tidak valid.']);
+            return;
+        }
+        
+        // Get pending registration
+        $pending = $this->db->get_where('pending_registrations', ['id_pending' => $pending_id])->row();
+        
+        if (!$pending || $pending->is_verified) {
+            echo json_encode(['success' => false, 'message' => 'Data registrasi tidak ditemukan.']);
+            return;
+        }
+        
+        date_default_timezone_set('Asia/Jakarta');
+        $cooldown = 90;
+        $now = time();
+        $update_data = [];
+        $messages = [];
+        
+        // Check WA cooldown and resend if requested
+        if ($channel === 'wa' || $channel === 'both') {
+            if ($pending->wa_verified == 1) {
+                $messages[] = 'WhatsApp sudah terverifikasi';
+            } else {
+                $wa_elapsed = $now - strtotime($pending->wa_code_sent_at);
+                if ($wa_elapsed < $cooldown) {
+                    $remaining = $cooldown - $wa_elapsed;
+                    echo json_encode(['success' => false, 'message' => "Tunggu {$remaining} detik untuk kirim ulang kode WhatsApp."]);
+                    return;
+                }
+                
+                // Generate new WA OTP
+                $new_wa_otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $update_data['wa_verification_code'] = $new_wa_otp;
+                $update_data['wa_code_expires_at'] = date('Y-m-d H:i:s', $now + 300);
+                $update_data['wa_code_sent_at'] = date('Y-m-d H:i:s');
+                
+                // Send
+                $this->load->library('fonnte_library');
+                $result = $this->fonnte_library->send_registration_code($pending->no_telp, $new_wa_otp, $pending->nama);
+                if ($result['success']) {
+                    $messages[] = 'WhatsApp';
+                }
+            }
+        }
+        
+        // Check Email cooldown and resend if requested
+        if ($channel === 'email' || $channel === 'both') {
+            if ($pending->email_verified == 1) {
+                $messages[] = 'Email sudah terverifikasi';
+            } else {
+                $email_elapsed = $now - strtotime($pending->email_code_sent_at);
+                if ($email_elapsed < $cooldown) {
+                    $remaining = $cooldown - $email_elapsed;
+                    echo json_encode(['success' => false, 'message' => "Tunggu {$remaining} detik untuk kirim ulang kode Email."]);
+                    return;
+                }
+                
+                // Generate new Email OTP
+                $new_email_otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $update_data['email_verification_code'] = $new_email_otp;
+                $update_data['email_code_expires_at'] = date('Y-m-d H:i:s', $now + 300);
+                $update_data['email_code_sent_at'] = date('Y-m-d H:i:s');
+                
+                // Send
+                $this->load->library('email_library');
+                $result = $this->email_library->send_registration_verification($pending->email, $pending->nama, $new_email_otp);
+                if ($result['success']) {
+                    $messages[] = 'Email';
+                }
+            }
+        }
+        
+        // Update database
+        if (!empty($update_data)) {
+            $update_data['attempts'] = 0;
+            $this->db->where('id_pending', $pending_id)->update('pending_registrations', $update_data);
+        }
+        
+        if (!empty($messages)) {
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Kode baru dikirim ke: ' . implode(' & ', $messages),
+                'countdown' => $cooldown
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Gagal mengirim kode.']);
+        }
+    }
+    
+    /**
      * Set user session
      */
     private function set_user_session($user) {
@@ -370,6 +781,7 @@ class Auth extends CI_Controller {
             $session_data['nama_usaha'] = $user['nama_usaha'];
             $session_data['status_langganan'] = $user['status_langganan'];
             $session_data['paket'] = $user['nama_paket'] ?? 'Trial';
+            $session_data['id_paket'] = $user['id_paket'] ?? 1; // Default to Basic if null
         } elseif ($user['role'] === 'admin') {
             $session_data['id_admin'] = $user['id_admin'];
             $session_data['nama'] = $user['nama'];
@@ -388,21 +800,67 @@ class Auth extends CI_Controller {
     
     /**
      * Cek subscription untuk owner
+     * 
+     * Logika Unified:
+     * - AKTIF: Cek tgl_akhir_langganan dari transaksi_langganan terakhir yang sukses
+     * - TRIAL: Hitung hari sejak created_at (max 7 hari)
+     * - NONAKTIF: Selalu expired
+     * 
+     * @param array $user Data user dari query login
+     * @return bool true jika subscription valid
      */
     private function check_subscription($user) {
+        $id_pemilik = $user['id_pemilik'];
+        
+        // CASE 1: Status AKTIF - cek dari transaksi_langganan
         if ($user['status_langganan'] === 'aktif') {
-            return true;
+            // Query transaksi langganan terakhir yang sukses
+            $this->db->select('tgl_akhir_langganan');
+            $this->db->from('transaksi_langganan');
+            $this->db->where('id_pemilik', $id_pemilik);
+            $this->db->where('status_pembayaran', 'sukses');
+            $this->db->order_by('tgl_akhir_langganan', 'DESC');
+            $this->db->limit(1);
+            $transaksi = $this->db->get()->row();
+            
+            if ($transaksi && !empty($transaksi->tgl_akhir_langganan)) {
+                $tgl_akhir = strtotime($transaksi->tgl_akhir_langganan);
+                $today = strtotime(date('Y-m-d'));
+                
+                if ($tgl_akhir >= $today) {
+                    return true; // Masih aktif
+                } else {
+                    // Expired! Auto-update status ke nonaktif
+                    $this->db->where('id_pemilik', $id_pemilik);
+                    $this->db->update('pemilik', ['status_langganan' => 'nonaktif']);
+                    log_message('info', "Subscription expired for id_pemilik: $id_pemilik. Auto-updated to nonaktif.");
+                    return false;
+                }
+            } else {
+                // Tidak ada transaksi sukses, tapi status aktif? Kembalikan ke trial atau nonaktif
+                // Ini bisa terjadi jika admin set manual. Anggap masih valid untuk sekarang.
+                return true;
+            }
         }
         
+        // CASE 2: Status TRIAL - hitung 7 hari dari created_at
         if ($user['status_langganan'] === 'trial') {
-            // Cek apakah masih dalam masa trial (7 hari)
             $created_date = strtotime($user['created_at']);
             $current_date = time();
             $days_diff = floor(($current_date - $created_date) / (60 * 60 * 24));
             
-            return $days_diff <= 7;
+            if ($days_diff <= 7) {
+                return true; // Trial masih valid
+            } else {
+                // Trial expired! Auto-update status ke nonaktif
+                $this->db->where('id_pemilik', $id_pemilik);
+                $this->db->update('pemilik', ['status_langganan' => 'nonaktif']);
+                log_message('info', "Trial expired for id_pemilik: $id_pemilik (Day $days_diff). Auto-updated to nonaktif.");
+                return false;
+            }
         }
         
+        // CASE 3: Status NONAKTIF atau lainnya
         return false;
     }
     
@@ -728,34 +1186,57 @@ class Auth extends CI_Controller {
             // Generate reset link
             $reset_link = base_url('auth/reset_password/' . $token_data['token']);
             
+            // Send email with reset link
+            $this->load->library('email_library');
+            $email_result = $this->email_library->send_password_reset(
+                $email, 
+                $token_data['name'], 
+                $reset_link
+            );
+            
             // Log activity
             $this->user_model->log_activity(0, 'Forgot Password', 'Password reset requested for: ' . $email);
             
-            $response = [
-                'success' => true,
-                'message' => 'Reset link berhasil dibuat',
-                'reset_link' => $reset_link,
-                'expires_at' => $token_data['expires_at'],
-                'email' => $email
-            ];
-            
-            if ($this->input->is_ajax_request()) {
-                $this->output
-                    ->set_content_type('application/json')
-                    ->set_output(json_encode($response));
-                return;
+            if ($email_result['success']) {
+                $response = [
+                    'success' => true,
+                    'message' => 'Link reset password telah dikirim ke email Anda. Silakan cek inbox atau folder spam.'
+                ];
+                
+                if ($this->input->is_ajax_request()) {
+                    $this->output
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode($response));
+                    return;
+                }
+                
+                // Store success message in session
+                $this->session->set_flashdata('email_sent', true);
+                $this->session->set_flashdata('success', 'Link reset password telah dikirim ke email Anda');
+                redirect('auth/forgot_password');
+            } else {
+                // Email failed to send
+                $response = [
+                    'success' => false,
+                    'message' => 'Gagal mengirim email. Silakan coba lagi nanti.'
+                ];
+                
+                if ($this->input->is_ajax_request()) {
+                    $this->output
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode($response));
+                    return;
+                }
+                
+                $this->session->set_flashdata('error', $response['message']);
+                redirect('auth/forgot_password');
             }
-            
-            // Store in session for display
-            $this->session->set_flashdata('reset_link', $reset_link);
-            $this->session->set_flashdata('success', 'Reset link berhasil dibuat');
-            redirect('auth/forgot_password');
             
         } else {
             // Don't reveal if email exists or not (security)
             $response = [
                 'success' => true,
-                'message' => 'Jika email terdaftar, link reset password akan ditampilkan'
+                'message' => 'Jika email terdaftar, link reset password akan dikirim ke email tersebut'
             ];
             
             if ($this->input->is_ajax_request()) {
@@ -907,6 +1388,115 @@ class Auth extends CI_Controller {
             $this->session->set_flashdata('error', $response['message']);
             redirect('auth/login');
         }
+    }
+    
+    /**
+     * Test Email - Debug endpoint untuk test SMTP
+     * Akses: /auth/test_email?to=youremail@example.com
+     */
+    public function test_email() {
+        $this->output->set_content_type('application/json');
+        
+        $to = $this->input->get('to');
+        
+        if (empty($to)) {
+            echo json_encode(['success' => false, 'message' => 'Parameter "to" diperlukan. Contoh: /auth/test_email?to=email@example.com']);
+            return;
+        }
+        
+        $this->load->library('email_library');
+        
+        $result = $this->email_library->send_registration_verification($to, 'Test User', '123456');
+        
+        echo json_encode([
+            'success' => $result['success'],
+            'message' => $result['message'],
+            'debug' => $result['debug'] ?? null,
+            'to' => $to
+        ]);
+    }
+    
+    /**
+     * Halaman lengkapi profil (setelah registrasi)
+     */
+    public function complete_profile() {
+        // Pastikan user sudah login sebagai owner
+        if (!$this->is_logged_in() || $this->session->userdata('role') !== 'owner') {
+            redirect('auth/login');
+            return;
+        }
+        
+        $id_pemilik = $this->session->userdata('id_pemilik');
+        
+        // Get pemilik data
+        $this->load->model('owner_model');
+        $pemilik = $this->owner_model->getOwnerById($id_pemilik);
+        
+        $data = [
+            'page_title' => 'Lengkapi Profil - KixEra',
+            'pemilik' => $pemilik
+        ];
+        
+        $this->load->view('auth/complete_profile', $data);
+    }
+    
+    /**
+     * Simpan profil lengkap
+     */
+    public function save_profile() {
+        // Pastikan user sudah login sebagai owner
+        if (!$this->is_logged_in() || $this->session->userdata('role') !== 'owner') {
+            redirect('auth/login');
+            return;
+        }
+        
+        $id_pemilik = $this->session->userdata('id_pemilik');
+        
+        // Prepare data
+        $update_data = [
+            'alamat' => $this->input->post('alamat'),
+            'kota' => $this->input->post('kota'),
+            'kota_code' => $this->input->post('kota_code'),
+            'provinsi' => $this->input->post('provinsi'),
+            'provinsi_code' => $this->input->post('provinsi_code'),
+            'jam_buka' => $this->input->post('jam_buka'),
+            'jam_tutup' => $this->input->post('jam_tutup'),
+            'profile_completed' => 1,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        // Handle logo upload
+        if (!empty($_FILES['logo']['name'])) {
+            $upload_path = './uploads/logos/';
+            
+            // Create directory if not exists
+            if (!is_dir($upload_path)) {
+                mkdir($upload_path, 0755, true);
+            }
+            
+            $config['upload_path'] = $upload_path;
+            $config['allowed_types'] = 'gif|jpg|jpeg|png|webp';
+            $config['max_size'] = 2048; // 2MB
+            $config['file_name'] = 'logo_' . $id_pemilik . '_' . time();
+            
+            $this->load->library('upload', $config);
+            
+            if ($this->upload->do_upload('logo')) {
+                $upload_data = $this->upload->data();
+                $update_data['logo'] = 'uploads/logos/' . $upload_data['file_name'];
+            } else {
+                $this->session->set_flashdata('error', 'Gagal upload logo: ' . $this->upload->display_errors('', ''));
+                redirect('auth/complete_profile');
+                return;
+            }
+        }
+        
+        // Update pemilik
+        $this->db->where('id_pemilik', $id_pemilik)->update('pemilik', $update_data);
+        
+        // Update session nama_usaha jika ada
+        $this->session->set_flashdata('success', 'Profil berhasil disimpan! Selamat menggunakan KixEra.');
+        redirect('pemilik/pemilik_dashboard');
     }
 
 }

@@ -792,7 +792,8 @@ class User_model extends CI_Model {
         return [
             'token' => $token,
             'expires_at' => $expires_at,
-            'email' => $email
+            'email' => $email,
+            'name' => $user['nama'] ?? 'User'
         ];
     }
 

@@ -16,39 +16,87 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <?php
+    // DEBUG LOGIC - Unified Subscription Check
+    $debug_email = $this->session->userdata('email');
+    $debug_id_pemilik = $this->session->userdata('id_pemilik');
+    
+    // Use Auth_library for consistent validation
+    $CI =& get_instance();
+    $CI->load->library('auth_library');
+    
+    if ($debug_id_pemilik) {
+        $sub_status = $CI->auth_library->check_subscription_status($debug_id_pemilik);
+        
+        // Debug info in HTML comment
+        echo "<!-- DEBUG: Email: $debug_email, ID Pemilik: $debug_id_pemilik, Status: {$sub_status['status']}, Active: " . ($sub_status['active'] ? 'YES' : 'NO') . " -->";
+        
+        // If actually valid but on this page (stale session), auto-fix and redirect
+        if ($sub_status['active'] === true) {
+            $CI->session->unset_userdata('subscription_expired');
+            $sisa = $sub_status['sisa_hari'] ?? 'N/A';
+            $paket = $sub_status['paket'] ?? 'Unknown';
+            echo '<div class="bg-blue-600 text-white p-3 text-center text-sm font-medium">';
+            echo '✅ Akun Anda VALID (' . $paket . ', Sisa: ' . $sisa . ' hari). Session sedang diperbaiki, redirect dalam 2 detik...';
+            echo '</div>';
+            echo '<script>setTimeout(function(){ window.location.href = "'.base_url('pemilik').'"; }, 2000);</script>';
+        }
+    }
+    ?>
     
     <!-- Hero Section -->
-    <div class="relative bg-emerald-700 pb-24 pt-12 overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-             <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-             <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+    <div class="relative bg-white pb-24 pt-20 overflow-hidden shadow-sm border-b border-gray-100">
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-emerald-50 rounded-full blur-3xl opacity-50 z-0"></div>
+        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-72 h-72 bg-teal-50 rounded-full blur-3xl opacity-50 z-0"></div>
+
+        <!-- Top Bar (Absolute) -->
+        <div class="absolute top-0 left-0 w-full px-6 py-6 z-20 flex justify-between items-start">
+            <!-- User Info (Top Left) -->
+            <div class="flex items-center gap-4 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200 shadow-sm">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-lg border border-emerald-200">
+                    <?= substr($this->session->userdata('nama') ?? 'U', 0, 1) ?>
+                </div>
+                <div class="flex flex-col pr-2">
+                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Logged in as</span>
+                    <span class="text-sm font-semibold text-gray-800 leading-tight"><?= $this->session->userdata('nama') ?></span>
+                    <span class="text-xs text-emerald-600 font-medium"><?= $this->session->userdata('email') ?></span>
+                </div>
+            </div>
+
+            <!-- Logout (Top Right) -->
+            <a href="<?= base_url('auth/logout') ?>" class="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-md hover:bg-red-50 border border-gray-200 hover:border-red-200 rounded-full text-gray-600 hover:text-red-600 transition-all shadow-sm">
+                <span class="text-sm font-medium">Keluar</span>
+                <i class="fas fa-sign-out-alt group-hover:translate-x-0.5 transition-transform"></i>
+            </a>
         </div>
 
-        <div class="relative z-10 max-w-7xl mx-auto px-6 text-center text-white">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full mb-6 border border-white/20">
-                <i class="fas fa-exclamation-triangle text-3xl text-yellow-300"></i>
-            </div>
-            
-            <h2 class="text-xl font-medium text-emerald-100 mb-2">Halo, <?= $this->session->userdata('nama') ?></h2>
-            <h1 class="text-4xl font-bold mb-4">Masa Langganan <?= $this->session->userdata('paket') ?? 'Anda' ?> Telah Berakhir</h1>
-            
-            <p class="text-xl text-emerald-100 max-w-2xl mx-auto">
-                Jangan biarkan operasional bisnis Anda terhenti. Pilih paket langganan baru untuk mengaktifkan kembali akses penuh ke dashboard KixEra.
-            </p>
-            
-            <div class="absolute top-6 right-6">
-               <a href="<?= base_url('auth/logout') ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-colors text-sm font-medium backdrop-blur-sm">
-                  <i class="fas fa-sign-out-alt"></i> Logout
-               </a>
+        <div class="relative z-10 max-w-7xl mx-auto px-6 mt-8">
+            <div class="text-center max-w-3xl mx-auto">
+                <div class="inline-flex items-center justify-center w-24 h-24 bg-red-50 rounded-full mb-8 animate-pulse">
+                    <i class="fas fa-history text-4xl text-red-500"></i>
+                </div>
+                
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                    Masa Langganan Anda <br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Telah Berakhir</span>
+                </h1>
+                
+                <p class="text-lg md:text-xl text-gray-500 leading-relaxed mb-10 max-w-2xl mx-auto">
+                    Akses ke dashboard terkunci sementara. <span class="font-semibold text-gray-800">Data Anda aman</span>, namun Anda perlu memperbarui paket langganan untuk melanjutkan operasional.
+                </p>
+                
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium border border-yellow-100 shadow-sm">
+                    <div class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                    Status Akun: <span class="uppercase font-bold tracking-wide">Suspended</span>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Pricing Section -->
-    <div class="relative max-w-7xl mx-auto px-6 -mt-20 pb-20 z-20">
-        <div class="text-center mb-12 hidden">
-             <h2 class="text-3xl font-bold text-gray-900">Pilih Paket Langganan</h2>
-             <p class="text-gray-600 mt-2">Aktifkan kembali akun Anda sekarang</p>
+    <div class="relative max-w-7xl mx-auto px-6 mt-12 pb-20 z-20">
+        <div class="text-center mb-12">
+             <h2 class="text-3xl font-bold text-gray-900">Pilih Paket untuk Melanjutkan</h2>
+             <p class="text-gray-500 mt-2">Pilih paket yang sesuai dengan kebutuhan bisnis Anda</p>
         </div>
 
         <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">

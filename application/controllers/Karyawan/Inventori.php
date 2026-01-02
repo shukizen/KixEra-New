@@ -41,6 +41,9 @@ class Inventori extends CI_Controller {
             }
         }
         
+        // Debug: Log session values
+        log_message('debug', 'Inventori Index - id_pemilik: ' . $id_pemilik . ', id_cabang: ' . $id_cabang);
+        
         // Inisialisasi data
         $data = [];
         
@@ -49,17 +52,18 @@ class Inventori extends CI_Controller {
         $data['categories'] = $this->get_categories();
         $data['units'] = $this->get_units();
         
-        // Ambil data inventory terbaru (limit 10)
-        $data['recent_inventory'] = $this->get_recent_inventory($id_pemilik, 10);
+        // Ambil data inventory terbaru (limit 10) - SCOPED BY OWNER, NOT BRANCH
+        // Karyawan dapat melihat semua inventory yang dimiliki pemilik usaha
+        $data['recent_inventory'] = $this->get_recent_inventory($id_pemilik, 10, null);
         
-        // Ambil statistik
-        $data['stats'] = $this->Inventori_model->get_inventory_stats($id_pemilik);
+        // Ambil statistik - SCOPED BY OWNER
+        $data['stats'] = $this->Inventori_model->get_inventory_stats($id_pemilik, null);
         
-        // Data untuk Chart 1: Barang paling sering digunakan (Bar Chart)
-        $data['items_by_category'] = $this->Inventori_model->get_most_used_items($id_pemilik, 5);
+        // Data untuk Chart 1: Barang paling sering digunakan (Bar Chart) - SCOPED BY OWNER
+        $data['items_by_category'] = $this->Inventori_model->get_most_used_items($id_pemilik, 5, null);
         
-        // Data untuk Chart 2: Distribusi Kategori (Doughnut Chart)
-        $data['category_distribution'] = $this->Inventori_model->get_items_by_category($id_pemilik);
+        // Data untuk Chart 2: Distribusi Kategori (Doughnut Chart) - SCOPED BY OWNER
+        $data['category_distribution'] = $this->Inventori_model->get_items_by_category($id_pemilik, null);
         
         // Debug - cek apakah data grafik ada
         log_message('debug', 'Chart Data Usage: ' . print_r($data['items_by_category'], true));
@@ -100,19 +104,51 @@ class Inventori extends CI_Controller {
         }
         
         $nama_item = trim($this->input->post('nama_item'));
+        $id_karyawan = $this->session->userdata('id_karyawan');
         
         // Cek apakah item sudah ada di cabang yang sama
         $existing_item = $this->check_existing_item($nama_item, $id_cabang);
         
         if ($existing_item) {
             // Update stok yang sudah ada
-            $new_stock = $existing_item->stok_tersedia + $this->input->post('stok_masuk');
+            $stok_masuk = $this->input->post('stok_masuk');
+            $new_stock = $existing_item->stok_tersedia + $stok_masuk;
             $data_update = [
                 'stok_tersedia' => $new_stock,
                 'updated_at' => date('Y-m-d H:i:s')
             ];
             
             if ($this->Inventori_model->update_inventory($existing_item->id_inventori, $data_update)) {
+                // Log to transaksi_inventori
+                $transaksi_data = [
+                    'id_inventori' => $existing_item->id_inventori,
+                    'id_cabang' => $id_cabang,
+                    'jenis_transaksi' => 'masuk',
+                    'jumlah' => $stok_masuk,
+                    'tgl_transaksi' => date('Y-m-d H:i:s'),
+                    'id_karyawan' => $id_karyawan,
+                    'keterangan' => 'Penambahan stok: ' . $nama_item,
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+                $this->db->insert('transaksi_inventori', $transaksi_data);
+                
+                // Log to pengeluaran if harga_satuan exists
+                $harga_satuan = $this->input->post('harga_satuan');
+                if (!empty($harga_satuan) && $harga_satuan > 0) {
+                    $total_cost = $harga_satuan * $stok_masuk;
+                    $pengeluaran_data = [
+                        'id_cabang' => $id_cabang,
+                        'nama_transaksi' => 'Pembelian ' . $nama_item,
+                        'kategori' => strtolower($existing_item->jenis_item),
+                        'jumlah' => $total_cost,
+                        'tgl_transaksi' => date('Y-m-d'),
+                        'keterangan' => 'Penambahan stok ' . $stok_masuk . ' ' . $existing_item->satuan . ' @ Rp ' . number_format($harga_satuan, 0, ',', '.'),
+                        'id_karyawan' => $id_karyawan,
+                        'created_at' => date('Y-m-d H:i:s')
+                    ];
+                    $this->db->insert('pengeluaran', $pengeluaran_data);
+                }
+                
                 $this->session->set_flashdata('success', 'Stok barang "'.$nama_item.'" berhasil ditambahkan! Stok sekarang: '.$new_stock);
             } else {
                 $this->session->set_flashdata('error', 'Gagal menambah stok!');
@@ -133,7 +169,7 @@ class Inventori extends CI_Controller {
                 'updated_at' => date('Y-m-d H:i:s')
             ];
             
-            if ($this->Inventori_model->insert_inventory($data)) {
+            if ($this->Inventori_model->insert_inventory($data, $id_karyawan)) {
                 $this->session->set_flashdata('success', 'Data inventory "'.$nama_item.'" berhasil disimpan!');
             } else {
                 $this->session->set_flashdata('error', 'Gagal menyimpan data!');
@@ -156,26 +192,15 @@ class Inventori extends CI_Controller {
         $category = $this->input->get('category');
         $id_cabang = $this->input->get('cabang');
         
-        // Ambil semua inventory dengan filter
-        $all_inventory = $this->Inventori_model->get_all_inventory($search, $category, $id_pemilik);
+        // Ambil semua inventory dengan filter SCOPED BY BRANCH
+        $all_inventory = $this->Inventori_model->get_all_inventory($search, $category, $id_pemilik, $id_cabang);
         
-        // Filter tambahan berdasarkan cabang jika dipilih
-        if ($id_cabang && !empty($id_cabang)) {
-            $filtered = [];
-            foreach($all_inventory as $item) {
-                if ($item->id_cabang == $id_cabang) {
-                    $filtered[] = $item;
-                }
-            }
-            $data['inventory'] = $filtered;
-        } else {
-            $data['inventory'] = $all_inventory;
-        }
+        $data['inventory'] = $all_inventory;
         
         $data['branches'] = $this->Inventori_model->get_all_branches($id_pemilik);
         $data['categories'] = $this->get_categories();
-        $data['stats'] = $this->Inventori_model->get_inventory_stats($id_pemilik);
-        $data['items_by_category'] = $this->Inventori_model->get_items_by_category($id_pemilik);
+        $data['stats'] = $this->Inventori_model->get_inventory_stats($id_pemilik, $id_cabang);
+        $data['items_by_category'] = $this->Inventori_model->get_items_by_category($id_pemilik, $id_cabang);
         
         // Load views
         $this->load->view('template/header');
@@ -281,19 +306,29 @@ class Inventori extends CI_Controller {
     }
     
     // Helper: Get recent inventory
-    private function get_recent_inventory($id_pemilik, $limit = 10)
+    private function get_recent_inventory($id_pemilik, $limit = 10, $id_cabang = null)
     {
         $this->db->select('inventori.*, cabang.nama_cabang');
         $this->db->from('inventori');
         $this->db->join('cabang', 'cabang.id_cabang = inventori.id_cabang', 'left');
         
+        // Check for soft deletes
+        $this->db->where('inventori.deleted_at IS NULL');
+        
         if ($id_pemilik) {
             $this->db->where('cabang.id_pemilik', $id_pemilik);
+        }
+
+        if ($id_cabang) {
+            $this->db->where('inventori.id_cabang', $id_cabang);
         }
         
         $this->db->order_by('inventori.updated_at', 'DESC');
         $this->db->limit($limit);
         $query = $this->db->get();
+        
+        // Debug: log the actual query
+        log_message('debug', 'Recent Inventory Query: ' . $this->db->last_query());
         
         return $query->result();
     }

@@ -4,16 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengaturan - KixEra</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
-        <!-- Sidebar -->
         
         <!-- Main Content -->
-        <main class="flex-1 ml-64">
+        <main class="flex-1 lg:ml-64">
             <!-- Header with Subscription Badge -->
             <div class="p-6 pb-0 flex justify-between items-start">
                 <div>
@@ -116,7 +112,12 @@
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-800 leading-7"><?= lang_text('manage_employees') ?></h2>
+                            <h2 class="text-lg font-semibold text-gray-800 leading-7">
+                                <?= lang_text('manage_employees') ?>
+                                <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs ml-2">
+                                    <?= $usage_stats['karyawan']['current'] ?> / <?= $usage_stats['karyawan']['is_unlimited'] ? '∞' : $usage_stats['karyawan']['max'] ?>
+                                </span>
+                            </h2>
                             <p class="text-sm text-gray-600 leading-5"><?= lang_text('manage_employees_desc') ?></p>
                         </div>
                         <button onclick="openAddEmployeeModal()" class="px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition flex items-center gap-2">
@@ -191,7 +192,12 @@
                 <!-- Kelola Cabang Bisnis -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-lg font-semibold text-gray-800"><?= lang_text('manage_branches') ?></h2>
+                        <h2 class="text-lg font-semibold text-gray-800">
+                            <?= lang_text('manage_branches') ?>
+                             <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs ml-2">
+                                <?= $usage_stats['cabang']['current'] ?> / <?= $usage_stats['cabang']['is_unlimited'] ? '∞' : $usage_stats['cabang']['max'] ?>
+                            </span>
+                        </h2>
                         <button onclick="openAddBranchModal()" class="px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition">
                             <?= lang_text('add_branch') ?>
                         </button>
@@ -309,16 +315,21 @@
             </div>
 
 
-        </main>
+
+
+
+    <!-- Close Main Layout before Modals -->
+    </main>
     </div>
 
     <!-- Modal Change Password -->
-    <div id="changePasswordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <!-- Modal Change Password -->
+    <div id="changePasswordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b border-gray-200">
                 <h2 class="text-2xl font-semibold text-gray-800">Ubah Password</h2>
             </div>
-            <form id="changePasswordForm" class="p-6">
+            <form id="changePasswordForm" class="p-6" data-no-loading="true">
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password Lama</label>
@@ -350,12 +361,13 @@
     </div>
 
     <!-- Modal Add/Edit Employee -->
-    <div id="addEmployeeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <!-- Modal Add/Edit Employee -->
+    <div id="addEmployeeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b border-gray-200">
                 <h2 id="modalEmployeeTitle" class="text-2xl font-semibold text-gray-800">Tambah Karyawan</h2>
             </div>
-            <form id="addEmployeeForm" class="p-6">
+            <form id="addEmployeeForm" class="p-6" data-no-loading="true">
                 <input type="hidden" id="id_karyawan" value="">
                 
                 <div class="space-y-4">
@@ -431,12 +443,12 @@
     </div>
 
     <!-- Modal Add/Edit Branch -->
-    <div id="addBranchModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div id="addBranchModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b border-gray-200">
                 <h2 id="modalBranchTitle" class="text-2xl font-semibold text-gray-800">Tambah Cabang</h2>
             </div>
-            <form id="addBranchForm" class="p-6">
+            <form id="addBranchForm" class="p-6" data-no-loading="true">
                 <input type="hidden" id="id_cabang_edit" value="">
                 <input type="hidden" id="id_pemilik_branch" value="<?= $pemilik->id_pemilik ?>">
                 
@@ -468,7 +480,7 @@
                             class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover-bg-gray-50 transition">
                         Batal
                     </button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
+                    <button type="submit" id="btnSubmitBranch" class="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
                         Simpan Cabang
                     </button>
                 </div>
@@ -477,7 +489,8 @@
     </div>
 
     <!-- Modal Subscription Plans -->
-    <div id="subscriptionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto py-8">
+    <!-- Modal Subscription Plans -->
+    <div id="subscriptionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center overflow-y-auto py-8">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl mx-4 my-auto">
             <div class="p-6 border-b border-gray-200 flex items-center justify-between">
                 <div>
@@ -610,6 +623,9 @@
 
 <script>
     const BASE_URL = '<?= base_url() ?>';
+    
+    // Usage Stats from Controller
+    const USAGE_STATS = <?= json_encode($usage_stats ?? []) ?>;
     
     // ============ NOTIFICATION FUNCTION ============
     function showNotification(message, type = 'info') {
@@ -795,6 +811,14 @@
     
     // ============ EMPLOYEE FUNCTIONS ============
      function openAddEmployeeModal() {
+        // Check Limit
+        if (USAGE_STATS.karyawan && !USAGE_STATS.karyawan.is_unlimited) {
+            if (USAGE_STATS.karyawan.current >= USAGE_STATS.karyawan.max) {
+                 showNotification('Batas jumlah karyawan tercapai. Upgrade paket untuk menambah.', 'error');
+                 return;
+            }
+        }
+        
         $('#addEmployeeModal').removeClass('hidden');
         $('#addEmployeeForm')[0].reset();
         $('#modalEmployeeTitle').text('Tambah Karyawan');
@@ -986,6 +1010,14 @@
     
     // ============ BRANCH FUNCTIONS ============
     function openAddBranchModal() {
+        // Check Limit
+         if (USAGE_STATS.cabang && !USAGE_STATS.cabang.is_unlimited) {
+            if (USAGE_STATS.cabang.current >= USAGE_STATS.cabang.max) {
+                 showNotification('Batas jumlah cabang tercapai. Upgrade paket untuk menambah.', 'error');
+                 return;
+            }
+        }
+
         $('#addBranchModal').removeClass('hidden');
         $('#addBranchForm')[0].reset();
         $('#modalBranchTitle').text('Tambah Cabang');
@@ -1061,6 +1093,9 @@
             };
         }
         
+        // Disable button
+        $('#btnSubmitBranch').prop('disabled', true).text('Processing...');
+        
         $.ajax({
             url: url,
             type: 'POST',
@@ -1068,6 +1103,8 @@
             dataType: 'json',
             success: function(response) {
                 console.log('Response:', response);
+                $('#btnSubmitBranch').prop('disabled', false).text('Simpan Cabang');
+                
                 showNotification(response.message, response.success ? 'success' : 'error');
                 if(response.success) {
                     setTimeout(() => {
@@ -1079,6 +1116,7 @@
             error: function(xhr, status, error) {
                 console.error('Error:', error);
                 console.error('Response:', xhr.responseText);
+                $('#btnSubmitBranch').prop('disabled', false).text('Simpan Cabang');
                 showNotification('Terjadi kesalahan: ' + error, 'error');
             }
         });
@@ -1213,5 +1251,3 @@
         }
     });
 </script>
-</body>
-</html>

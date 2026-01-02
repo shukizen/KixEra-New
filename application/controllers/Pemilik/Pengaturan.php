@@ -8,6 +8,7 @@ class Pengaturan extends CI_Controller {
         $this->load->database();
         $this->load->model('User_model');
         $this->load->helper(['lang', 'currency']);
+        $this->load->library('paket_validator'); // Load validator library
         // Pastikan user sudah login
         if (!$this->session->userdata('id_user')) {
             redirect('auth/login');
@@ -102,11 +103,29 @@ class Pengaturan extends CI_Controller {
             $employees = [];
         }
 
+        // Calculate Usage & Limits
+        $max_cabang = $this->paket_validator->get_max_cabang();
+        $max_karyawan = $this->paket_validator->get_max_karyawan();
+        
+        $usage_stats = [
+            'cabang' => [
+                'current' => count($branches),
+                'max' => $max_cabang,
+                'is_unlimited' => $max_cabang > 90000 // Arbitrary high number for unlimited
+            ],
+            'karyawan' => [
+                'current' => count($employees),
+                'max' => $max_karyawan,
+                'is_unlimited' => $max_karyawan > 90000
+            ]
+        ];
+
         $data = [
             'pemilik' => $pemilik,
             'user' => $user,
             'branches' => $branches,
-            'employees' => $employees
+            'employees' => $employees,
+            'usage_stats' => $usage_stats
         ];
 
         $this->load->view('template/header');
@@ -321,6 +340,21 @@ class Pengaturan extends CI_Controller {
         $id_cabang = (int) $this->input->post('id_cabang');
         $status = $this->input->post('status') ?: 'aktif';
         $password = trim($this->input->post('password_karyawan')); // PASSWORD BARU
+
+
+
+        // Check Package Limits for Karyawan
+        $this->db->select('count(*) as total');
+        $this->db->from('karyawan');
+        $this->db->join('cabang', 'cabang.id_cabang = karyawan.id_cabang');
+        $this->db->where('cabang.id_pemilik', $this->session->userdata('id_pemilik') ?: $this->get_owner_column('pemilik')); // Need safe fallback for id_pemilik
+        $this->db->where('karyawan.deleted_at IS NULL');
+        $total_karyawan = $this->db->get()->row()->total;
+
+        if (!$this->paket_validator->can_add_karyawan($total_karyawan)) {
+            echo json_encode(['success' => false, 'message' => 'Batas jumlah karyawan untuk paket Anda telah tercapai. Silakan upgrade paket untuk menambah karyawan.']);
+            exit;
+        }
 
         log_message('debug', "add_employee - nama: $nama, email: $email, jabatan: $jabatan, telepon: $telepon, id_cabang: $id_cabang, status: $status");
 
@@ -568,6 +602,18 @@ class Pengaturan extends CI_Controller {
         $alamat = trim($this->input->post('alamat'));
         $telepon = trim($this->input->post('telepon'));
         $status = $this->input->post('status') ?: 'aktif';
+
+
+
+        // Check Package Limits for Cabang
+        $total_cabang = $this->db->where('id_pemilik', $id_pemilik)
+                                ->where('deleted_at IS NULL')
+                                ->count_all_results('cabang');
+        
+        if (!$this->paket_validator->can_add_cabang($total_cabang)) {
+            echo json_encode(['success' => false, 'message' => 'Batas jumlah cabang untuk paket Anda telah tercapai. Silakan upgrade paket untuk menambah cabang.']);
+            exit;
+        }
 
         log_message('debug', "add_branch - id_pemilik: $id_pemilik, nama_cabang: $nama_cabang, status: $status");
 

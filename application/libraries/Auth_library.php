@@ -430,11 +430,18 @@ class Auth_library {
     
     /**
      * Check subscription status untuk owner
+     * 
+     * Unified Logic:
+     * - AKTIF: Cek tgl_akhir_langganan dari transaksi_langganan terakhir yang sukses
+     * - TRIAL: Hitung hari sejak created_at (max 7 hari)
+     * - NONAKTIF: Selalu expired
      */
     public function check_subscription_status($id_pemilik) {
+        // First, get pemilik data with created_at for trial calculation
         $this->CI->db->select('
             p.status_langganan,
             p.id_paket,
+            p.created_at as pemilik_created_at,
             pl.nama_paket,
             pl.harga,
             pl.durasi_hari,
@@ -464,42 +471,90 @@ class Auth_library {
         
         $sub = $query->row_array();
         
-        // Jika trial
+        // CASE 1: Status TRIAL - Hitung hari sejak created_at
         if ($sub['status_langganan'] === 'trial') {
+            $created_date = strtotime($sub['pemilik_created_at']);
+            $current_date = time();
+            $days_used = floor(($current_date - $created_date) / (60 * 60 * 24));
+            $sisa_hari_trial = 7 - $days_used;
+            
+            if ($sisa_hari_trial >= 0) {
+                return [
+                    'active' => true,
+                    'status' => 'trial',
+                    'paket' => 'Trial',
+                    'features' => $this->paket_features['Trial'],
+                    'sisa_hari' => $sisa_hari_trial,
+                    'days_used' => $days_used,
+                    'message' => "Anda menggunakan paket trial (Hari ke-" . ($days_used + 1) . " dari 7)"
+                ];
+            } else {
+                // Trial expired! Auto-update status
+                $this->CI->db->where('id_pemilik', $id_pemilik);
+                $this->CI->db->update('pemilik', ['status_langganan' => 'nonaktif']);
+                log_message('info', "Trial expired for id_pemilik: $id_pemilik (Day $days_used). Auto-updated to nonaktif.");
+                
+                return [
+                    'active' => false,
+                    'status' => 'expired',
+                    'paket' => 'Trial',
+                    'message' => 'Masa trial Anda telah berakhir'
+                ];
+            }
+        }
+        
+        // CASE 2: Status AKTIF - Check dari transaksi_langganan
+        if ($sub['status_langganan'] === 'aktif') {
+            // Check expiry dari transaksi
+            if ($sub['sisa_hari'] === null) {
+                // Tidak ada transaksi sukses, tapi status aktif (mungkin set manual)
+                return [
+                    'active' => true,
+                    'status' => 'active',
+                    'paket' => $sub['nama_paket'] ?? 'Free',
+                    'features' => $this->paket_features[$sub['nama_paket'] ?? 'Free'] ?? $this->paket_features['Free'],
+                    'sisa_hari' => 30, // Default assumption
+                    'message' => 'Langganan aktif'
+                ];
+            }
+            
+            if ($sub['sisa_hari'] < 0) {
+                // Expired! Auto-update status
+                $this->CI->db->where('id_pemilik', $id_pemilik);
+                $this->CI->db->update('pemilik', ['status_langganan' => 'nonaktif']);
+                log_message('info', "Subscription expired for id_pemilik: $id_pemilik (Sisa hari: {$sub['sisa_hari']}). Auto-updated to nonaktif.");
+                
+                return [
+                    'active' => false,
+                    'status' => 'expired',
+                    'paket' => $sub['nama_paket'],
+                    'message' => 'Langganan Anda telah berakhir'
+                ];
+            }
+            
+            // Check jika hampir expired (7 hari)
+            $warning = $sub['sisa_hari'] <= 7;
+            
             return [
                 'active' => true,
-                'status' => 'trial',
-                'paket' => 'Trial',
-                'features' => $this->paket_features['Trial'],
-                'sisa_hari' => 7,
-                'message' => 'Anda menggunakan paket trial'
-            ];
-        }
-        
-        // Check expiry
-        if ($sub['sisa_hari'] < 0) {
-            return [
-                'active' => false,
-                'status' => 'expired',
+                'status' => $warning ? 'expiring_soon' : 'active',
                 'paket' => $sub['nama_paket'],
-                'message' => 'Langganan Anda telah berakhir'
+                'features' => $this->paket_features[$sub['nama_paket']] ?? $this->paket_features['Free'],
+                'sisa_hari' => $sub['sisa_hari'],
+                'tgl_akhir' => $sub['tgl_akhir_langganan'],
+                'warning' => $warning,
+                'message' => $warning ? 
+                    "Langganan Anda akan berakhir dalam {$sub['sisa_hari']} hari" : 
+                    'Langganan aktif'
             ];
         }
         
-        // Check jika hampir expired (7 hari)
-        $warning = $sub['sisa_hari'] <= 7;
-        
+        // CASE 3: Status NONAKTIF
         return [
-            'active' => true,
-            'status' => $warning ? 'expiring_soon' : 'active',
-            'paket' => $sub['nama_paket'],
-            'features' => $this->paket_features[$sub['nama_paket']] ?? $this->paket_features['Free'],
-            'sisa_hari' => $sub['sisa_hari'],
-            'tgl_akhir' => $sub['tgl_akhir_langganan'],
-            'warning' => $warning,
-            'message' => $warning ? 
-                "Langganan Anda akan berakhir dalam {$sub['sisa_hari']} hari" : 
-                'Langganan aktif'
+            'active' => false,
+            'status' => 'expired',
+            'paket' => $sub['nama_paket'] ?? 'None',
+            'message' => 'Langganan tidak aktif'
         ];
     }
     

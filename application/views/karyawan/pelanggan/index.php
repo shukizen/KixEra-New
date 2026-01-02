@@ -51,7 +51,7 @@
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <!-- Total Pelanggan -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex items-start justify-between">
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Total Pelanggan</p>
@@ -65,7 +65,7 @@
                     </div>
 
                     <!-- Pelanggan Aktif -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex items-start justify-between">
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Pelanggan Aktif</p>
@@ -89,7 +89,7 @@
                     </div>
 
                     <!-- Cabang Info -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
                         <div class="flex items-start justify-between">
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Cabang Anda</p>
@@ -104,7 +104,7 @@
                 </div>
 
                 <!-- Customer Table -->
-                <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                     <h2 class="text-xl font-semibold text-gray-800 mb-6">Data Pelanggan</h2>
                     
                     <div class="overflow-x-auto">
@@ -178,7 +178,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon <span class="text-red-500">*</span></label>
                         <input type="text" id="no_telp" name="no_telp" required
-                               placeholder="Contoh: 08123456789"
+                               placeholder="Contoh: 628123456789"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     

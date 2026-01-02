@@ -10,6 +10,7 @@ class Rekomendasi extends CI_Controller {
         $this->load->library('auth_library');
         $this->load->library('session');
         $this->load->library('gemini_library');
+        $this->load->library('paket_validator');
         
         $this->load->model('Rekomendasi_model');
         $this->load->model('Pesanan_model');
@@ -19,6 +20,16 @@ class Rekomendasi extends CI_Controller {
         
         // Require owner role
         $this->auth_library->require_role('owner');
+
+        // Check Package Access
+        if (!$this->paket_validator->can_use_ai()) {
+            if ($this->input->is_ajax_request()) {
+                echo json_encode(['success' => false, 'message' => 'Fitur ini tidak tersedia di paket Anda. Silakan upgrade ke Professional atau Bisnis.']);
+                exit;
+            }
+            $this->session->set_flashdata('error', 'Fitur AI Recommendation hanya tersedia untuk paket Professional dan Bisnis.');
+            redirect('pemilik/pemilik_dashboard');
+        }
     }
     
     /**

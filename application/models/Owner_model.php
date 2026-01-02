@@ -72,5 +72,49 @@ class Owner_model extends CI_Model {
         $this->db->where('id_pemilik', $id_owner);
         return $this->db->update($this->table, $data);
     }
+    
+    /**
+     * Get active subscription info for renewal calculation
+     * @param int $id_pemilik
+     * @return array|null
+     */
+    public function getActiveSubscriptionInfo($id_pemilik) {
+        // Get owner's current subscription
+        $owner = $this->getOwnerById($id_pemilik);
+        
+        if (!$owner || $owner->status_langganan !== 'aktif' || !$owner->id_paket) {
+            return null;
+        }
+        
+        // Get active transaction with end date
+        $this->db->select('tl.*, p.nama_paket, p.harga');
+        $this->db->from('transaksi_langganan tl');
+        $this->db->join('paket_langganan p', 'p.id_paket = tl.id_paket', 'left');
+        $this->db->where('tl.id_pemilik', $id_pemilik);
+        $this->db->where('tl.status_pembayaran', 'sukses');
+        $this->db->where('tl.tgl_akhir_langganan >=', date('Y-m-d'));
+        $this->db->where('tl.deleted_at IS NULL');
+        $this->db->order_by('tl.tgl_akhir_langganan', 'DESC');
+        $this->db->limit(1);
+        $transaksi = $this->db->get()->row();
+        
+        if (!$transaksi) {
+            return null;
+        }
+        
+        // Calculate remaining days
+        $today = new DateTime();
+        $end_date = new DateTime($transaksi->tgl_akhir_langganan);
+        $diff = $today->diff($end_date);
+        $remaining_days = $diff->invert ? 0 : $diff->days;
+        
+        return [
+            'id_paket' => $owner->id_paket,
+            'nama_paket' => $transaksi->nama_paket,
+            'harga' => $transaksi->harga,
+            'tgl_akhir' => $transaksi->tgl_akhir_langganan,
+            'remaining_days' => $remaining_days
+        ];
+    }
 }
 ?>

@@ -43,11 +43,14 @@ class Pelanggan extends CI_Controller {
     {
         $id_cabang = $this->get_id_cabang();
         
-        // Get pelanggan data for this branch
-        $data['pelanggan'] = $this->Pelanggan_model->getAllPelangganForCabang($id_cabang);
+        // Get id_pemilik for scoping
+        $cabang = $this->db->where('id_cabang', $id_cabang)->get('cabang')->row();
+        $id_pemilik = $cabang ? $cabang->id_pemilik : null;
+        
+        // Get pelanggan data for this branch/owner
+        $data['pelanggan'] = $this->Pelanggan_model->getAllPelangganForCabang($id_cabang, $id_pemilik);
         
         // Get cabang info
-        $cabang = $this->db->where('id_cabang', $id_cabang)->get('cabang')->row();
         $data['cabang'] = $cabang;
         $data['id_cabang'] = $id_cabang;
 
@@ -132,11 +135,16 @@ class Pelanggan extends CI_Controller {
     public function search()
     {
         $id_cabang = $this->get_id_cabang();
+        
+        // Get id_pemilik for scoping
+        $cabang = $this->db->where('id_cabang', $id_cabang)->get('cabang')->row();
+        $id_pemilik = $cabang ? $cabang->id_pemilik : null;
+        
         $keyword = $this->input->get('keyword', true);
         
         $pelanggan = empty($keyword) ? 
-            $this->Pelanggan_model->getAllPelangganForCabang($id_cabang) : 
-            $this->Pelanggan_model->searchPelangganByCabang($keyword, $id_cabang);
+            $this->Pelanggan_model->getAllPelangganForCabang($id_cabang, $id_pemilik) : 
+            $this->Pelanggan_model->searchPelangganByCabang($keyword, $id_cabang, $id_pemilik);
         
         echo json_encode([
             'success' => true,
@@ -152,6 +160,7 @@ class Pelanggan extends CI_Controller {
             'no_telp' => $this->input->post('no_telp', true),
             'email'   => $this->input->post('email', true),
             'alamat'  => $this->input->post('alamat', true),
+            'id_cabang' => $this->get_id_cabang(),
         ];
 
         // Validate required fields

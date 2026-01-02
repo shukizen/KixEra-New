@@ -248,4 +248,42 @@ class Pesanan extends CI_Controller
 
         return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => 'error', 'message' => 'Update failed']));
     }
+    // Cetak nota pesanan
+    public function cetak_nota($id = null)
+    {
+        $id_pemilik = $this->get_id_pemilik();
+        
+        if (!$id) {
+            redirect('pemilik/pesanan');
+        }
+
+        // Access Control Check
+        if (!$this->Pesanan_model->verify_ownership($id, $id_pemilik)) {
+            show_error('Anda tidak memiliki akses ke pesanan ini', 403);
+            return;
+        }
+
+        // Get pesanan data
+        $pesanan = $this->Pesanan_model->getPesananById($id);
+        
+        if (!$pesanan) {
+            show_404();
+            return;
+        }
+
+        // Get detail items
+        $detail_items = $this->Pesanan_model->getDetailPesanan($id);
+
+        // Get cabang info
+        $cabang = $this->db->where('id_cabang', $pesanan->id_cabang)->get('cabang')->row();
+
+        $data = [
+            'pesanan' => $pesanan,
+            'detail_items' => $detail_items,
+            'cabang' => $cabang
+        ];
+
+        // Use the same view as karyawan
+        $this->load->view('karyawan/pesanan/nota', $data);
+    }
 }

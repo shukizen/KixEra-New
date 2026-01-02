@@ -110,11 +110,6 @@ class Transaksi_langganan_model extends CI_Model {
             'updated_at' => date('Y-m-d H:i:s')
         ];
         
-        // If status is sukses, set tgl_bayar
-        if ($status === 'sukses') {
-            $data['tgl_bayar'] = date('Y-m-d H:i:s');
-        }
-        
         $this->db->where('id_transaksi_langganan', $id);
         $result = $this->db->update($this->table, $data);
         

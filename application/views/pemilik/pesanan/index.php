@@ -269,6 +269,25 @@
                 </div>
                 <!-- Detail Modal REMOVED: User redirects to separate detail page -->
 
+                <!-- Charts Section (Moved to top) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Tren Pesanan -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('order_trend') ?> (7 <?= lang_text('days') ?>)</h2>
+                        <div class="h-64">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Pesanan per Cabang -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('orders_by_branch') ?></h2>
+                        <div class="h-64">
+                            <canvas id="branchChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Main Content Grid -->
                 <!-- Data Pesanan Table (Full Width) -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
@@ -348,52 +367,6 @@
                                 <?php endif; ?>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-
-                <!-- Statistics Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Tren Pesanan -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('order_trend') ?> (7 <?= lang_text('days') ?>)</h2>
-                        <div class="h-64">
-                            <canvas id="trendChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Pesanan per Cabang -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('orders_by_branch') ?></h2>
-                        <div class="h-64">
-                            <canvas id="branchChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Jenis Layanan -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('service_type') ?></h2>
-                        <div class="h-64">
-                            <canvas id="serviceTypeChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Insight Ringkas -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('quick_insights') ?></h2>
-                        <div class="space-y-4">
-                            <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
-                                <i class="fas fa-chart-line text-emerald-500 mt-1"></i>
-                                <p class="text-sm text-gray-700">Cabang Condongcatur memiliki peningkatan 25% minggu ini</p>
-                            </div>
-                            <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
-                                <i class="fas fa-star text-emerald-500 mt-1"></i>
-                                <p class="text-sm text-gray-700">Layanan Whitening paling diminati bulan ini</p>
-                            </div>
-                            <div class="bg-emerald-100/20 rounded-lg p-4 flex items-start gap-3">
-                                <i class="fas fa-clock text-emerald-500 mt-1"></i>
-                                <p class="text-sm text-gray-700">Rata-rata waktu penyelesaian: 2,3 hari</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

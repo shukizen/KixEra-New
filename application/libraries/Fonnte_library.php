@@ -93,12 +93,35 @@ class Fonnte_library {
     }
     
     /**
+     * Kirim kode verifikasi registrasi
+     * 
+     * @param string $phone Nomor telepon
+     * @param string $code Kode verifikasi 6 digit
+     * @param string $nama Nama pendaftar
+     * @return array Response
+     */
+    public function send_registration_code($phone, $code, $nama = '') {
+        $greeting = $nama ? "Halo *{$nama}*! 👋\n\n" : "";
+        
+        $message = "*🎉 Selamat Datang di KixEra!*\n\n";
+        $message .= $greeting;
+        $message .= "Terima kasih telah mendaftar di KixEra - Sistem Manajemen Laundry Sepatu.\n\n";
+        $message .= "📱 *Kode Verifikasi Anda:*\n";
+        $message .= "```{$code}```\n\n";
+        $message .= "⏰ Kode berlaku selama *5 menit*.\n";
+        $message .= "🔒 Jangan berikan kode ini kepada siapapun.\n\n";
+        $message .= "_Jika Anda tidak mendaftar di KixEra, abaikan pesan ini._";
+        
+        return $this->send_message($phone, $message);
+    }
+    
+    /**
      * Normalize nomor telepon ke format 628xxx
      * 
      * @param string $phone Nomor telepon
      * @return string Nomor yang sudah dinormalize
      */
-    protected function normalize_phone($phone) {
+    public function normalize_phone($phone) {
         // Hapus spasi dan karakter non-digit
         $phone = preg_replace('/[^0-9]/', '', $phone);
         
