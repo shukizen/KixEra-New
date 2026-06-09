@@ -15,11 +15,11 @@
         }
         
         .gradient-emerald {
-            background: linear-gradient(to right, #10b981, #34d399);
+            background-color: #10b981;
         }
         
         .gradient-red {
-            background: linear-gradient(to right, rgba(185, 28, 28, 0.7), rgba(185, 28, 28, 0.7));
+            background-color: #b91c1c;
         }
         
         @keyframes pulse-dot {

@@ -47,7 +47,7 @@
     <div class="print-container max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
         
         <!-- Header -->
-        <div class="bg-gradient-to-r from-teal-600 to-teal-500 text-white p-6 text-center">
+        <div class="bg-teal-600 text-white p-6 text-center">
             <div class="flex items-center justify-center gap-3 mb-2">
                 <i class="fas fa-shoe-prints text-3xl"></i>
                 <h1 class="text-2xl font-bold">KixEra</h1>
@@ -202,7 +202,7 @@
             </div>
 
             <!-- Total -->
-            <div class="bg-gradient-to-r from-teal-600 to-teal-500 rounded-xl p-5 text-white">
+            <div class="bg-teal-600 rounded-xl p-5 text-white">
                 <div class="flex justify-between items-center">
                     <span class="text-teal-100 font-medium">TOTAL BAYAR</span>
                     <span class="text-2xl font-bold">Rp <?= number_format($pesanan->total_harga, 0, ',', '.') ?></span>

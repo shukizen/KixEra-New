@@ -22,7 +22,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-emerald-100 via-white to-emerald-300">
+<body class="min-h-screen bg-emerald-50">
     <!-- Language Toggle -->
     <div class="fixed top-4 right-4 z-50">
         <button 
@@ -57,7 +57,7 @@
                     <div class="absolute inset-0 bg-emerald-500/10 rounded-full -z-10 scale-110"></div>
                     <div class="bg-white rounded-2xl shadow-2xl p-4">
                         <img 
-                            src="<?= base_url('assets/img/konten/dashbd.png') ?>" 
+                            src="<?= base_url('assets/img/konten/Dashboard.png') ?>" 
                             alt="Dashboard preview showing business analytics" 
                             class="w-full h-auto object-cover rounded-lg"
                         />

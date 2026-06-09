@@ -508,11 +508,19 @@ class Auth_library {
             // Check expiry dari transaksi
             if ($sub['sisa_hari'] === null) {
                 // Tidak ada transaksi sukses, tapi status aktif (mungkin set manual)
+                $pkg_name = $sub['nama_paket'] ?? 'Free';
+                $mapped_pkg = [
+                    'Basic' => 'Free',
+                    'Professional' => 'Pro',
+                    'Enterprise' => 'Premium',
+                    'Trial' => 'Trial'
+                ][$pkg_name] ?? $pkg_name;
+
                 return [
                     'active' => true,
                     'status' => 'active',
                     'paket' => $sub['nama_paket'] ?? 'Free',
-                    'features' => $this->paket_features[$sub['nama_paket'] ?? 'Free'] ?? $this->paket_features['Free'],
+                    'features' => $this->paket_features[$mapped_pkg] ?? $this->paket_features['Free'],
                     'sisa_hari' => 30, // Default assumption
                     'message' => 'Langganan aktif'
                 ];
@@ -535,11 +543,19 @@ class Auth_library {
             // Check jika hampir expired (7 hari)
             $warning = $sub['sisa_hari'] <= 7;
             
+            $pkg_name = $sub['nama_paket'] ?? 'Free';
+            $mapped_pkg = [
+                'Basic' => 'Free',
+                'Professional' => 'Pro',
+                'Enterprise' => 'Premium',
+                'Trial' => 'Trial'
+            ][$pkg_name] ?? $pkg_name;
+
             return [
                 'active' => true,
                 'status' => $warning ? 'expiring_soon' : 'active',
                 'paket' => $sub['nama_paket'],
-                'features' => $this->paket_features[$sub['nama_paket']] ?? $this->paket_features['Free'],
+                'features' => $this->paket_features[$mapped_pkg] ?? $this->paket_features['Free'],
                 'sisa_hari' => $sub['sisa_hari'],
                 'tgl_akhir' => $sub['tgl_akhir_langganan'],
                 'warning' => $warning,
@@ -576,6 +592,7 @@ class Auth_library {
                 $session_data['id_admin'] = $user_details['id_admin'] ?? null;
                 $session_data['nama'] = $user_details['nama'] ?? 'Admin';
                 $session_data['email'] = $user_details['email'] ?? '';
+                $session_data['foto_profil'] = $user_details['foto_profil'] ?? null;
                 break;
                 
             case 'owner':
@@ -585,6 +602,8 @@ class Auth_library {
                 $session_data['nama_usaha'] = $user_details['nama_usaha'];
                 $session_data['status_langganan'] = $user_details['status_langganan'];
                 $session_data['paket'] = $user_details['nama_paket'] ?? 'Trial';
+                $session_data['id_paket'] = $user_details['id_paket'] ?? null;
+                $session_data['foto_profil'] = $user_details['foto_profil'] ?? null;
                 
                 if (isset($user_details['subscription'])) {
                     $session_data['subscription'] = $user_details['subscription'];
@@ -598,12 +617,41 @@ class Auth_library {
                 $session_data['nama_cabang'] = $user_details['nama_cabang'];
                 $session_data['id_pemilik'] = $user_details['id_pemilik'];
                 $session_data['nama_usaha'] = $user_details['nama_usaha'];
+                $session_data['foto_profil'] = $user_details['foto_profil'] ?? null;
                 break;
         }
         
         
         $this->CI->session->unset_userdata(['verify_id_user', 'verify_phone', 'verify_time', 'verify_remember_me']);
         $this->CI->session->set_userdata($session_data);
+    }
+    
+    /**
+     * Refresh current logged in user session from database
+     */
+    public function refresh_session() {
+        $id_user = $this->CI->session->userdata('id_user');
+        if (!$id_user) {
+            return false;
+        }
+        
+        $user = $this->CI->db->get_where('users', ['id_user' => $id_user])->row_array();
+        if (!$user) {
+            return false;
+        }
+        
+        $user_details = $this->get_user_details($user);
+        if (!$user_details) {
+            return false;
+        }
+        
+        if ($user['role'] === 'owner') {
+            $sub = $this->check_subscription_status($user_details['id_pemilik']);
+            $user_details['subscription'] = $sub;
+        }
+        
+        $this->set_user_session($user_details);
+        return true;
     }
     
     /**

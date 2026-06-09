@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 /*
 |--------------------------------------------------------------------------
@@ -23,7 +23,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/kixera1/';
+$config['base_url'] = 'http://localhost/kixera/';
 
 /*
 |--------------------------------------------------------------------------
@@ -52,7 +52,7 @@ $config['index_page'] = '';
 |
 | WARNING: If you set this to 'PATH_INFO', URIs will always be URL-decoded!
 */
-$config['uri_protocol']	= 'REQUEST_URI';
+$config['uri_protocol']    = 'REQUEST_URI';
 
 /*
 |--------------------------------------------------------------------------
@@ -78,7 +78,7 @@ $config['url_suffix'] = '';
 | than english.
 |
 */
-$config['language']	= 'english';
+$config['language']    = 'english';
 
 /*
 |--------------------------------------------------------------------------
@@ -384,7 +384,7 @@ $config['encryption_key'] = '';
 |
 */
 $config['sess_driver'] = 'files';
-$config['sess_save_path'] = 'ci_sessions'; 
+$config['sess_save_path'] = 'ci_sessions';
 $config['sess_cookie_name'] = 'ci_session';
 $config['sess_samesite'] = 'Lax';
 $config['sess_expiration'] = 7200;
@@ -409,12 +409,12 @@ $config['sess_save_path'] = sys_get_temp_dir();
 |       'cookie_httponly') will also affect sessions.
 |
 */
-$config['cookie_prefix']	= '';
-$config['cookie_domain']	= '';
-$config['cookie_path']		= '/';
-$config['cookie_secure']	= FALSE;
-$config['cookie_httponly'] 	= FALSE;
-$config['cookie_samesite'] 	= 'Lax';
+$config['cookie_prefix']    = '';
+$config['cookie_domain']    = '';
+$config['cookie_path']        = '/';
+$config['cookie_secure']    = FALSE;
+$config['cookie_httponly']     = FALSE;
+$config['cookie_samesite']     = 'Lax';
 
 /*
 |--------------------------------------------------------------------------
@@ -543,7 +543,7 @@ $config['proxy_ips'] = '';
 | Used for admin login verification codes (2FA).
 |
 */
-$config['fonnte_api_token'] = 'dNdMeBx2FvCZBZ82yEx2';
+$config['fonnte_api_token'] = 'us36yLbHCnvyZSZDvHen';
 $config['fonnte_api_url'] = 'https://api.fonnte.com/send';
 $config['verification_code_expire'] = 300; // 5 menit dalam detik
 $config['verification_code_resend_cooldown'] = 90; // 90 detik cooldown

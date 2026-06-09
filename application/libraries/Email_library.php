@@ -1,27 +1,29 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 /**
  * Email Library
  * 
  * Library untuk mengirim email via SMTP Gmail
  */
-class Email_library {
-    
+class Email_library
+{
+
     protected $CI;
     protected $config;
-    
-    public function __construct() {
-        $this->CI =& get_instance();
+
+    public function __construct()
+    {
+        $this->CI = &get_instance();
         $this->CI->load->library('email');
-        
+
         // Load email config manually
         $this->config = [
             'protocol' => 'smtp',
             'smtp_host' => 'smtp.gmail.com', // Remove ssl:// prefix
             'smtp_port' => 465,
-            'smtp_user' => 'rizkipangestu291@gmail.com',
-            'smtp_pass' => 'cavnyevbynbatenq',
+            'smtp_user' => 'hattajunior1@gmail.com',
+            'smtp_pass' => 'tgfqgvfywpldlyvt',
             'smtp_timeout' => 30,
             'smtp_crypto' => 'ssl', // This handles the encryption
             'mailtype' => 'html',
@@ -30,11 +32,11 @@ class Email_library {
             'newline' => "\r\n",
             'crlf' => "\r\n"
         ];
-        
+
         // Initialize email with config
         $this->CI->email->initialize($this->config);
     }
-    
+
     /**
      * Kirim email verifikasi registrasi
      * 
@@ -43,18 +45,19 @@ class Email_library {
      * @param string $code Kode verifikasi
      * @return array Response
      */
-    public function send_registration_verification($to, $name, $code) {
+    public function send_registration_verification($to, $name, $code)
+    {
         $subject = '🔐 Kode Verifikasi Registrasi KixEra';
-        
+
         $message = $this->get_email_template('verification', [
             'name' => $name,
             'code' => $code,
             'purpose' => 'registrasi'
         ]);
-        
+
         return $this->send($to, $subject, $message);
     }
-    
+
     /**
      * Kirim email reset password
      * 
@@ -63,17 +66,18 @@ class Email_library {
      * @param string $reset_link Link reset password
      * @return array Response
      */
-    public function send_password_reset($to, $name, $reset_link) {
+    public function send_password_reset($to, $name, $reset_link)
+    {
         $subject = '🔑 Reset Password - KixEra';
-        
+
         $message = $this->get_email_template('password_reset', [
             'name' => $name,
             'reset_link' => $reset_link
         ]);
-        
+
         return $this->send($to, $subject, $message);
     }
-    
+
     /**
      * Kirim email generic
      * 
@@ -82,19 +86,20 @@ class Email_library {
      * @param string $message Body email (HTML)
      * @return array Response
      */
-    public function send($to, $subject, $message) {
+    public function send($to, $subject, $message)
+    {
         try {
             $this->CI->email->clear();
-            
+
             // Use hardcoded from address
-            $from_email = 'rizkipangestu291@gmail.com';
+            $from_email = 'hattajunior1@gmail.com';
             $from_name = 'KixEra';
-            
+
             $this->CI->email->from($from_email, $from_name);
             $this->CI->email->to($to);
             $this->CI->email->subject($subject);
             $this->CI->email->message($message);
-            
+
             if ($this->CI->email->send()) {
                 log_message('info', "Email sent successfully to: {$to}");
                 return [
@@ -118,7 +123,7 @@ class Email_library {
             ];
         }
     }
-    
+
     /**
      * Get email template
      * 
@@ -126,24 +131,26 @@ class Email_library {
      * @param array $data Data untuk template
      * @return string HTML email
      */
-    private function get_email_template($template, $data = []) {
+    private function get_email_template($template, $data = [])
+    {
         $templates = [
             'verification' => $this->template_verification($data),
             'password_reset' => $this->template_password_reset($data)
         ];
-        
+
         return $templates[$template] ?? '';
     }
-    
+
     /**
      * Template email verifikasi - Design Profesional
      */
-    private function template_verification($data) {
+    private function template_verification($data)
+    {
         $name = htmlspecialchars($data['name'] ?? 'User');
         $code = htmlspecialchars($data['code'] ?? '000000');
         $purpose = htmlspecialchars($data['purpose'] ?? 'verifikasi');
         $year = date('Y');
-        
+
         return "
 <!DOCTYPE html>
 <html>
@@ -216,14 +223,15 @@ class Email_library {
 </html>
         ";
     }
-    
+
     /**
      * Template email reset password
      */
-    private function template_password_reset($data) {
+    private function template_password_reset($data)
+    {
         $name = htmlspecialchars($data['name'] ?? 'User');
         $reset_link = htmlspecialchars($data['reset_link'] ?? '#');
-        
+
         return "
         <!DOCTYPE html>
         <html>

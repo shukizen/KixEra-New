@@ -103,8 +103,26 @@ class Inventori_model extends CI_Model {
     
     // Update inventory
     public function update_inventory($id, $data) {
+        $item = $this->get_inventory_by_id($id);
+        
         $this->db->where('id_inventori', $id);
-        return $this->db->update($this->table, $data);
+        $result = $this->db->update($this->table, $data);
+        
+        if ($result && $item && isset($data['stok_tersedia'])) {
+            $new_stock = $data['stok_tersedia'];
+            if ($new_stock <= $item->stok_minimal) {
+                $this->load->model('Notification_model');
+                $this->Notification_model->create([
+                    'id_pemilik' => $item->id_pemilik,
+                    'title' => 'Stok Menipis: ' . $item->nama_item,
+                    'message' => 'Stok ' . $item->nama_item . ' di cabang ' . $item->nama_cabang . ' tersisa ' . $new_stock . ' ' . $item->satuan . ' (minimal: ' . $item->stok_minimal . ').',
+                    'type' => 'stock',
+                    'related_id' => $id
+                ]);
+            }
+        }
+        
+        return $result;
     }
     
     // Delete inventory

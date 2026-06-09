@@ -281,7 +281,7 @@
                 <button onclick="closeDeleteModal()" class="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition font-medium">
                     Batal
                 </button>
-                <button id="confirmDeleteBtn" onclick="confirmDelete()" class="flex-1 px-4 py-3 rounded-xl text-white font-bold transition" style="background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 30px rgba(239, 68, 68, 0.4);">
+                <button id="confirmDeleteBtn" onclick="confirmDelete()" class="flex-1 px-4 py-3 rounded-xl text-white font-bold transition bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/50">
                     <i class="fas fa-trash mr-2"></i>Hapus
                 </button>
             </div>

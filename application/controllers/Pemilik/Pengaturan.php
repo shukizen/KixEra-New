@@ -1,21 +1,25 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
-class Pengaturan extends CI_Controller {
+class Pengaturan extends CI_Controller
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
         $this->load->database();
         $this->load->model('User_model');
         $this->load->helper(['lang', 'currency']);
         $this->load->library('paket_validator'); // Load validator library
+        $this->load->library('auth_library'); // Load auth library for subscription checks
         // Pastikan user sudah login
         if (!$this->session->userdata('id_user')) {
             redirect('auth/login');
         }
     }
 
-    private function get_owner_column($table) {
+    private function get_owner_column($table)
+    {
         $candidates = ['id_pemilik', 'id_owner', 'id_admin'];
         foreach ($candidates as $c) {
             if ($this->db->field_exists($c, $table)) {
@@ -25,14 +29,18 @@ class Pengaturan extends CI_Controller {
         return null;
     }
 
-    public function index() {
+    public function index()
+    {
         // Ambil id_user dari session (user yang sedang login)
         $id_user = $this->session->userdata('id_user');
         $user_role = $this->session->userdata('role');
 
+        // Refresh user session from DB to ensure settings and plan are in sync
+        $this->auth_library->refresh_session();
+
         // Ambil data user
         $user = $this->User_model->getUserById($id_user);
-        
+
         if (!$user) {
             show_error('User tidak ditemukan');
             return;
@@ -40,14 +48,14 @@ class Pengaturan extends CI_Controller {
 
         // Ambil data pemilik berdasarkan id_user yang login
         $pemilik = $this->db->where('id_user', $id_user)
-                            ->where('deleted_at IS NULL')
-                            ->get('pemilik')
-                            ->row();
+            ->where('deleted_at IS NULL')
+            ->get('pemilik')
+            ->row();
 
         // Jika tidak ada data pemilik dan role adalah owner, buat baru
         if (!$pemilik && $user_role == 'owner') {
             log_message('debug', "Data pemilik tidak ditemukan untuk id_user: $id_user, membuat baru...");
-            
+
             $insert_data = [
                 'id_user' => $id_user,
                 'nama' => $user['username'],
@@ -56,7 +64,7 @@ class Pengaturan extends CI_Controller {
                 'nama_usaha' => 'Kixera Shoes',
                 'created_at' => date('Y-m-d H:i:s')
             ];
-            
+
             if ($this->db->insert('pemilik', $insert_data)) {
                 $pemilik = $this->db->where('id_user', $id_user)->get('pemilik')->row();
                 log_message('debug', "Data pemilik berhasil dibuat dengan id_pemilik: " . $pemilik->id_pemilik);
@@ -65,12 +73,22 @@ class Pengaturan extends CI_Controller {
                 return;
             }
         }
-        
+
         if (!$pemilik) {
             show_error('Data pemilik tidak ditemukan');
             return;
         }
-        
+
+        // Dynamically fetch and set subscription info
+        $sub = $this->auth_library->check_subscription_status($pemilik->id_pemilik);
+        if ($sub['active']) {
+            $pemilik->subscription_plan = $sub['paket'];
+            $pemilik->subscription_end = $sub['tgl_akhir'] ?? null;
+        } else {
+            $pemilik->subscription_plan = 'free';
+            $pemilik->subscription_end = null;
+        }
+
         // Initialize session with user's preferences from database
         if (isset($pemilik->bahasa)) {
             $this->session->set_userdata('bahasa', $pemilik->bahasa);
@@ -78,19 +96,19 @@ class Pengaturan extends CI_Controller {
         if (isset($pemilik->mata_uang)) {
             $this->session->set_userdata('mata_uang', $pemilik->mata_uang);
         }
-        
+
         $pemilik->is_admin = false;
         $id_pemilik = $pemilik->id_pemilik;
 
         // Ambil cabang milik pemilik yang login
         $branches = $this->db->where('id_pemilik', $id_pemilik)
-                             ->where('deleted_at IS NULL')
-                             ->get('cabang')
-                             ->result() ?: [];
+            ->where('deleted_at IS NULL')
+            ->get('cabang')
+            ->result() ?: [];
 
         // Ambil karyawan dari cabang-cabang milik pemilik yang login
         $cabang_ids = array_column($branches, 'id_cabang');
-        
+
         if (!empty($cabang_ids)) {
             $this->db->select('karyawan.*, users.username, users.status, cabang.nama_cabang');
             $this->db->from('karyawan');
@@ -106,7 +124,7 @@ class Pengaturan extends CI_Controller {
         // Calculate Usage & Limits
         $max_cabang = $this->paket_validator->get_max_cabang();
         $max_karyawan = $this->paket_validator->get_max_karyawan();
-        
+
         $usage_stats = [
             'cabang' => [
                 'current' => count($branches),
@@ -135,15 +153,30 @@ class Pengaturan extends CI_Controller {
     }
 
     // Halaman Langganan / Subscription
-    public function langganan() {
+    public function langganan()
+    {
         $id_user = $this->session->userdata('id_user');
-        
+
+        // Refresh user session from DB to ensure settings and plan are in sync
+        $this->auth_library->refresh_session();
+
         // Get pemilik data for current plan info
         $pemilik = $this->db->where('id_user', $id_user)
-                           ->where('deleted_at IS NULL')
-                           ->get('pemilik')
-                           ->row();
-        
+            ->where('deleted_at IS NULL')
+            ->get('pemilik')
+            ->row();
+
+        if ($pemilik) {
+            $sub = $this->auth_library->check_subscription_status($pemilik->id_pemilik);
+            if ($sub['active']) {
+                $pemilik->subscription_plan = $sub['paket'];
+                $pemilik->subscription_end = $sub['tgl_akhir'] ?? null;
+            } else {
+                $pemilik->subscription_plan = 'free';
+                $pemilik->subscription_end = null;
+            }
+        }
+
         $data = [
             'current_plan' => isset($pemilik->subscription_plan) ? $pemilik->subscription_plan : 'free',
             'subscription_end' => isset($pemilik->subscription_end) ? $pemilik->subscription_end : null
@@ -156,11 +189,12 @@ class Pengaturan extends CI_Controller {
     }
 
     // Upload profile photo
-    public function upload_photo() {
+    public function upload_photo()
+    {
         $id_pemilik = $this->input->post('id_pemilik');
-        
+
         log_message('debug', "upload_photo - id_pemilik: $id_pemilik");
-        
+
         if (empty($id_pemilik)) {
             echo json_encode(['success' => false, 'message' => 'ID tidak ditemukan']);
             return;
@@ -168,10 +202,10 @@ class Pengaturan extends CI_Controller {
 
         // Ambil data pemilik
         $pemilik = $this->db->where('id_pemilik', $id_pemilik)
-                            ->where('deleted_at IS NULL')
-                            ->get('pemilik')
-                            ->row();
-        
+            ->where('deleted_at IS NULL')
+            ->get('pemilik')
+            ->row();
+
         if (!$pemilik) {
             echo json_encode(['success' => false, 'message' => 'Data pemilik tidak ditemukan']);
             return;
@@ -214,6 +248,7 @@ class Pengaturan extends CI_Controller {
         log_message('debug', "upload_photo - Photo path: " . $photo_path);
 
         if ($result) {
+            $this->auth_library->refresh_session();
             echo json_encode([
                 'success' => true,
                 'message' => 'Foto berhasil diupload',
@@ -227,7 +262,8 @@ class Pengaturan extends CI_Controller {
         }
     }
 
-    public function update_profile() {
+    public function update_profile()
+    {
         $id_pemilik = $this->input->post('id_pemilik');
         $nama = trim($this->input->post('nama_lengkap'));
         $email = trim($this->input->post('email'));
@@ -243,19 +279,19 @@ class Pengaturan extends CI_Controller {
         // Cek apakah pemilik atau admin
         $is_admin = false;
         $record = $this->db->where('id_pemilik', $id_pemilik)
-                           ->where('deleted_at IS NULL')
-                           ->get('pemilik')
-                           ->row();
-        
+            ->where('deleted_at IS NULL')
+            ->get('pemilik')
+            ->row();
+
         if (!$record) {
             // Coba cek di tabel admin
             $record = $this->db->where('id_admin', $id_pemilik)
-                               ->where('deleted_at IS NULL')
-                               ->get('admin')
-                               ->row();
+                ->where('deleted_at IS NULL')
+                ->get('admin')
+                ->row();
             $is_admin = true;
         }
-        
+
         if (!$record) {
             echo json_encode(['success' => false, 'message' => 'Data tidak ditemukan']);
             return;
@@ -276,15 +312,18 @@ class Pengaturan extends CI_Controller {
             $this->db->where('id_pemilik', $id_pemilik);
             $this->db->update('pemilik', $update_data);
         }
-        
+
         $affected = $this->db->affected_rows();
         log_message('debug', "update_profile - affected_rows: $affected");
         log_message('debug', "update_profile - db_error: " . json_encode($this->db->error()));
 
+        $this->auth_library->refresh_session();
+
         echo json_encode(['success' => true, 'message' => 'Profil berhasil diperbarui', 'affected_rows' => $affected]);
     }
 
-    public function change_password() {
+    public function change_password()
+    {
         // Ambil id_user dari session
         $id_user = $this->session->userdata('id_user');
         $password_lama = $this->input->post('password_lama');
@@ -311,7 +350,7 @@ class Pengaturan extends CI_Controller {
         }
 
         $updated = $this->User_model->change_password($id_user, $password_baru);
-        
+
         log_message('debug', "change_password - updated: " . ($updated ? 'true' : 'false'));
 
         if ($updated) {
@@ -321,18 +360,20 @@ class Pengaturan extends CI_Controller {
         }
     }
 
-    public function get_employee($id) {
+    public function get_employee($id)
+    {
         $emp = $this->db->select('karyawan.*, users.username, users.status, cabang.nama_cabang')
-                        ->from('karyawan')
-                        ->join('users', 'users.id_user = karyawan.id_user', 'left')
-                        ->join('cabang', 'cabang.id_cabang = karyawan.id_cabang', 'left')
-                        ->where('karyawan.id_karyawan', $id)
-                        ->where('karyawan.deleted_at IS NULL')
-                        ->get()->row();
+            ->from('karyawan')
+            ->join('users', 'users.id_user = karyawan.id_user', 'left')
+            ->join('cabang', 'cabang.id_cabang = karyawan.id_cabang', 'left')
+            ->where('karyawan.id_karyawan', $id)
+            ->where('karyawan.deleted_at IS NULL')
+            ->get()->row();
         echo json_encode(['success' => !!$emp, 'data' => $emp]);
     }
 
-    public function add_employee() {
+    public function add_employee()
+    {
         $nama = trim($this->input->post('nama_karyawan'));
         $email = trim($this->input->post('email_karyawan'));
         $jabatan = $this->input->post('jabatan') ?: 'Staff';
@@ -340,8 +381,6 @@ class Pengaturan extends CI_Controller {
         $id_cabang = (int) $this->input->post('id_cabang');
         $status = $this->input->post('status') ?: 'aktif';
         $password = trim($this->input->post('password_karyawan')); // PASSWORD BARU
-
-
 
         // Check Package Limits for Karyawan
         $this->db->select('count(*) as total');
@@ -375,7 +414,7 @@ class Pengaturan extends CI_Controller {
             echo json_encode(['success' => false, 'message' => 'Cabang harus dipilih']);
             return;
         }
-        
+
         // Validasi password
         if (empty($password)) {
             echo json_encode(['success' => false, 'message' => 'Password harus diisi']);
@@ -389,9 +428,9 @@ class Pengaturan extends CI_Controller {
         // Ambil id_user dari session untuk mendapatkan id_pemilik
         $id_user = $this->session->userdata('id_user');
         $pemilik = $this->db->where('id_user', $id_user)
-                            ->where('deleted_at IS NULL')
-                            ->get('pemilik')
-                            ->row();
+            ->where('deleted_at IS NULL')
+            ->get('pemilik')
+            ->row();
 
         if (!$pemilik) {
             echo json_encode(['success' => false, 'message' => 'Data pemilik tidak ditemukan']);
@@ -400,11 +439,11 @@ class Pengaturan extends CI_Controller {
 
         // Cek apakah cabang ada dan milik pemilik yang login
         $cabang = $this->db->where('id_cabang', $id_cabang)
-                           ->where('id_pemilik', $pemilik->id_pemilik)
-                           ->where('deleted_at IS NULL')
-                           ->get('cabang')
-                           ->row();
-        
+            ->where('id_pemilik', $pemilik->id_pemilik)
+            ->where('deleted_at IS NULL')
+            ->get('cabang')
+            ->row();
+
         if (!$cabang) {
             echo json_encode(['success' => false, 'message' => 'Cabang tidak ditemukan atau bukan milik Anda']);
             return;
@@ -415,7 +454,7 @@ class Pengaturan extends CI_Controller {
         $base_username = preg_replace('/[^a-zA-Z0-9]/', '_', $base_username);
         $username = $base_username;
         $counter = 1;
-        
+
         // Cek apakah username sudah ada, jika ada tambahkan counter
         while ($this->User_model->check_username_exists($username)) {
             $username = $base_username . '_' . $counter;
@@ -445,7 +484,7 @@ class Pengaturan extends CI_Controller {
         }
 
         $id_user_new = $this->db->insert_id();
-        log_message('debug', "add_employee - User berhasil dibuat dengan id_user: $id_user_new");
+        log_message('debug', "add_employee - User berhasil dibuat with id_user: $id_user_new");
 
         // Insert ke tabel karyawan
         $karyawan_data = [
@@ -463,14 +502,12 @@ class Pengaturan extends CI_Controller {
 
         if (!$this->db->insert('karyawan', $karyawan_data)) {
             $this->db->trans_rollback();
-            $db_error = $this->db->error();
-            log_message('error', "add_employee - Gagal insert karyawan: " . json_encode($db_error));
-            echo json_encode(['success' => false, 'message' => 'Gagal menambahkan karyawan: ' . $db_error['message']]);
+            echo json_encode(['success' => false, 'message' => 'Gagal menyimpan data']);
             return;
         }
 
         $this->db->trans_complete();
-        
+
         if ($this->db->trans_status() === FALSE) {
             log_message('error', "add_employee - Transaction failed");
             echo json_encode(['success' => false, 'message' => 'Gagal menyimpan data (transaction failed)']);
@@ -480,7 +517,7 @@ class Pengaturan extends CI_Controller {
         log_message('debug', "add_employee - Karyawan berhasil ditambahkan");
 
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => 'Karyawan berhasil ditambahkan',
             'username' => $username,
             'password' => $password, // Tampilkan password yang diinput pemilik
@@ -488,7 +525,8 @@ class Pengaturan extends CI_Controller {
         ]);
     }
 
-    public function update_employee() {
+    public function update_employee()
+    {
         $id_karyawan = (int) $this->input->post('id_karyawan');
         $nama = trim($this->input->post('nama_karyawan'));
         $email = trim($this->input->post('email_karyawan'));
@@ -543,9 +581,10 @@ class Pengaturan extends CI_Controller {
         echo json_encode(['success' => true, 'message' => 'Data karyawan berhasil diperbarui']);
     }
 
-    public function delete_employee() {
+    public function delete_employee()
+    {
         $id_karyawan = (int) $this->input->post('id_karyawan');
-        
+
         log_message('debug', "delete_employee - id_karyawan: $id_karyawan");
 
         if ($id_karyawan === 0) {
@@ -555,7 +594,7 @@ class Pengaturan extends CI_Controller {
 
         // Get employee untuk mendapat id_user
         $emp = $this->db->where('id_karyawan', $id_karyawan)->get('karyawan')->row();
-        
+
         $this->db->trans_start();
 
         // Soft delete karyawan
@@ -579,18 +618,20 @@ class Pengaturan extends CI_Controller {
         echo json_encode(['success' => true, 'message' => 'Karyawan berhasil dihapus']);
     }
 
-    public function get_branch($id) {
+    public function get_branch($id)
+    {
         $branch = $this->db->where('id_cabang', $id)->where('deleted_at IS NULL')->get('cabang')->row();
         echo json_encode(['success' => !!$branch, 'data' => $branch]);
     }
 
-    public function add_branch() {
+    public function add_branch()
+    {
         // Ambil id_pemilik dari session
         $id_user = $this->session->userdata('id_user');
         $pemilik = $this->db->where('id_user', $id_user)
-                            ->where('deleted_at IS NULL')
-                            ->get('pemilik')
-                            ->row();
+            ->where('deleted_at IS NULL')
+            ->get('pemilik')
+            ->row();
 
         if (!$pemilik) {
             echo json_encode(['success' => false, 'message' => 'Data pemilik tidak ditemukan']);
@@ -607,9 +648,9 @@ class Pengaturan extends CI_Controller {
 
         // Check Package Limits for Cabang
         $total_cabang = $this->db->where('id_pemilik', $id_pemilik)
-                                ->where('deleted_at IS NULL')
-                                ->count_all_results('cabang');
-        
+            ->where('deleted_at IS NULL')
+            ->count_all_results('cabang');
+
         if (!$this->paket_validator->can_add_cabang($total_cabang)) {
             echo json_encode(['success' => false, 'message' => 'Batas jumlah cabang untuk paket Anda telah tercapai. Silakan upgrade paket untuk menambah cabang.']);
             exit;
@@ -643,7 +684,8 @@ class Pengaturan extends CI_Controller {
         }
     }
 
-    public function update_branch() {
+    public function update_branch()
+    {
         $id_cabang = (int) $this->input->post('id_cabang');
         $nama_cabang = trim($this->input->post('nama_cabang'));
         $alamat = trim($this->input->post('alamat'));
@@ -673,9 +715,10 @@ class Pengaturan extends CI_Controller {
         echo json_encode(['success' => true, 'message' => 'Cabang berhasil diperbarui']);
     }
 
-    public function delete_branch() {
+    public function delete_branch()
+    {
         $id_cabang = (int) $this->input->post('id_cabang');
-        
+
         log_message('debug', "delete_branch - id_cabang: $id_cabang");
 
         if ($id_cabang === 0) {
@@ -695,7 +738,8 @@ class Pengaturan extends CI_Controller {
     }
 
     // Save preferences (bahasa & mata uang)
-    public function save_preferences() {
+    public function save_preferences()
+    {
         $id_pemilik = $this->input->post('id_pemilik');
         $bahasa = $this->input->post('bahasa');
         $mata_uang = $this->input->post('mata_uang');
@@ -721,10 +765,10 @@ class Pengaturan extends CI_Controller {
 
         // Check if pemilik exists
         $pemilik = $this->db->where('id_pemilik', $id_pemilik)
-                            ->where('deleted_at IS NULL')
-                            ->get('pemilik')
-                            ->row();
-        
+            ->where('deleted_at IS NULL')
+            ->get('pemilik')
+            ->row();
+
         if (!$pemilik) {
             echo json_encode(['success' => false, 'message' => 'Data pemilik tidak ditemukan']);
             return;
@@ -756,7 +800,7 @@ class Pengaturan extends CI_Controller {
             ][$mata_uang] ?? $mata_uang;
 
             echo json_encode([
-                'success' => true, 
+                'success' => true,
                 'message' => "Preferensi berhasil disimpan! Bahasa: $bahasa_text, Mata Uang: $mata_uang_text"
             ]);
         } else {
@@ -765,7 +809,8 @@ class Pengaturan extends CI_Controller {
     }
 
     // Save notification settings
-    public function save_notification_settings() {
+    public function save_notification_settings()
+    {
         $id_pemilik = $this->input->post('id_pemilik');
         $notif_pesanan = $this->input->post('notif_pesanan');
         $notif_stok = $this->input->post('notif_stok');
@@ -791,7 +836,7 @@ class Pengaturan extends CI_Controller {
 
         if ($result) {
             echo json_encode([
-                'success' => true, 
+                'success' => true,
                 'message' => 'Pengaturan notifikasi berhasil disimpan!'
             ]);
         } else {

@@ -1,7 +1,8 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
-class User_model extends CI_Model {
+class User_model extends CI_Model
+{
 
     public function __construct()
     {
@@ -18,52 +19,52 @@ class User_model extends CI_Model {
     public function validate_login($username_or_email, $password)
     {
         $user = null;
-        
+
         // Cek apakah menggunakan email atau username
         if (filter_var($username_or_email, FILTER_VALIDATE_EMAIL)) {
             // Login menggunakan email - cari di semua tabel role
-            
+
             // 1. Cek di tabel admin
             $this->db->select('u.*');
             $this->db->from('users u');
             $this->db->join('admin a', 'u.id_user = a.id_user');
             $this->db->where('a.email', $username_or_email);
-            $this->db->where('u.status', 'aktif');
+            // $this->db->where('u.status', 'aktif');
             $this->db->where('u.deleted_at IS NULL');
             $this->db->where('a.deleted_at IS NULL');
             $query = $this->db->get();
-            
+
             if ($query->num_rows() == 1) {
                 $user = $query->row_array();
             }
-            
+
             // 2. Jika tidak ketemu, cek di tabel pemilik
             if (!$user) {
                 $this->db->select('u.*');
                 $this->db->from('users u');
                 $this->db->join('pemilik p', 'u.id_user = p.id_user');
                 $this->db->where('p.email', $username_or_email);
-                $this->db->where('u.status', 'aktif');
+                // $this->db->where('u.status', 'aktif');
                 $this->db->where('u.deleted_at IS NULL');
                 $this->db->where('p.deleted_at IS NULL');
                 $query = $this->db->get();
-                
+
                 if ($query->num_rows() == 1) {
                     $user = $query->row_array();
                 }
             }
-            
+
             // 3. Jika tidak ketemu, cek di tabel karyawan
             if (!$user) {
                 $this->db->select('u.*');
                 $this->db->from('users u');
                 $this->db->join('karyawan k', 'u.id_user = k.id_user');
                 $this->db->where('k.email', $username_or_email);
-                $this->db->where('u.status', 'aktif');
+                // $this->db->where('u.status', 'aktif');
                 $this->db->where('u.deleted_at IS NULL');
                 $this->db->where('k.deleted_at IS NULL');
                 $query = $this->db->get();
-                
+
                 if ($query->num_rows() == 1) {
                     $user = $query->row_array();
                 }
@@ -73,32 +74,37 @@ class User_model extends CI_Model {
             $this->db->select('u.*');
             $this->db->from('users u');
             $this->db->where('u.username', $username_or_email);
-            $this->db->where('u.status', 'aktif');
+            // $this->db->where('u.status', 'aktif');
             $this->db->where('u.deleted_at IS NULL');
             $query = $this->db->get();
-            
+
             if ($query->num_rows() == 1) {
                 $user = $query->row_array();
             }
         }
-        
+
         // Jika user ditemukan, verifikasi password
         if ($user) {
             // Verifikasi password menggunakan password_verify untuk password hash
             // atau md5 untuk backward compatibility
             if (password_verify($password, $user['password']) || md5($password) === $user['password']) {
-                
+
+                // CEK STATUS DISINI: Jika tidak aktif, return string khusus untuk validasi di controller
+                if ($user['status'] !== 'aktif') {
+                    return 'INACTIVE_ACCOUNT';
+                }
+
                 // Auto-upgrade MD5 to Bcrypt if successful
                 if (md5($password) === $user['password']) {
                     $this->change_password($user['id_user'], $password);
                 }
-                
+
                 // Get additional user info based on role
                 $user_info = $this->get_user_details($user);
                 return $user_info;
             }
         }
-        
+
         return false;
     }
 
@@ -110,8 +116,8 @@ class User_model extends CI_Model {
     public function get_user_details($user)
     {
         $user_details = $user;
-        
-        switch($user['role']) {
+
+        switch ($user['role']) {
             case 'admin':
                 $this->db->select('*');
                 $this->db->where('id_user', $user['id_user']);
@@ -122,7 +128,7 @@ class User_model extends CI_Model {
                     $user_details = array_merge($user_details, $admin_info);
                 }
                 break;
-                
+
             case 'owner':
                 $this->db->select('p.*, pl.nama_paket, pl.harga, pl.durasi_hari');
                 $this->db->from('pemilik p');
@@ -135,7 +141,7 @@ class User_model extends CI_Model {
                     $user_details = array_merge($user_details, $owner_info);
                 }
                 break;
-                
+
             case 'karyawan':
                 $this->db->select('k.*, c.nama_cabang, c.id_pemilik');
                 $this->db->from('karyawan k');
@@ -149,7 +155,7 @@ class User_model extends CI_Model {
                 }
                 break;
         }
-        
+
         return $user_details;
     }
 
@@ -163,9 +169,9 @@ class User_model extends CI_Model {
         // Simpan status db_debug dan nonaktifkan untuk mencegah error HTML
         $db_debug = $this->db->db_debug;
         $this->db->db_debug = FALSE;
-        
+
         $this->db->trans_start();
-        
+
         try {
             // 1. Cek apakah email sudah terdaftar
             $this->db->where('email', $data['email']);
@@ -175,10 +181,10 @@ class User_model extends CI_Model {
                     'message' => 'Email sudah terdaftar'
                 ];
             }
-            
+
             // 2. Generate username unik
             $username = $this->generate_unique_username($data['nama']);
-            
+
             // 3. Insert ke tabel users
             $user_data = [
                 'username' => $username,
@@ -187,14 +193,14 @@ class User_model extends CI_Model {
                 'status' => 'aktif',
                 'created_at' => date('Y-m-d H:i:s')
             ];
-            
+
             if (!$this->db->insert('users', $user_data)) {
-                 $error = $this->db->error();
-                 throw new Exception('Gagal membuat user: ' . $error['message']);
+                $error = $this->db->error();
+                throw new Exception('Gagal membuat user: ' . $error['message']);
             }
-            
+
             $id_user = $this->db->insert_id();
-            
+
             // 4. Insert ke tabel pemilik
             $pemilik_data = [
                 'id_user' => $id_user,
@@ -208,14 +214,14 @@ class User_model extends CI_Model {
                 'id_paket' => null,
                 'created_at' => date('Y-m-d H:i:s')
             ];
-            
+
             if (!$this->db->insert('pemilik', $pemilik_data)) {
                 $error = $this->db->error();
                 throw new Exception('Gagal membuat pemilik: ' . $error['message']);
             }
-            
+
             $id_pemilik = $this->db->insert_id();
-            
+
             // 5. Buat cabang default
             $cabang_data = [
                 'id_pemilik' => $id_pemilik,
@@ -225,23 +231,23 @@ class User_model extends CI_Model {
                 'status' => 'aktif',
                 'created_at' => date('Y-m-d H:i:s')
             ];
-            
+
             if (!$this->db->insert('cabang', $cabang_data)) {
                 $error = $this->db->error();
                 throw new Exception('Gagal membuat cabang: ' . $error['message']);
             }
-            
+
             // Commit transaksi
             $this->db->trans_complete();
-            
+
             if ($this->db->trans_status() === FALSE) {
                 $error = $this->db->error();
                 throw new Exception('Transaksi database gagal: ' . $error['message']);
             }
-            
+
             // Restore db_debug
             $this->db->db_debug = $db_debug;
-            
+
             return [
                 'success' => true,
                 'message' => 'Registrasi berhasil',
@@ -251,12 +257,11 @@ class User_model extends CI_Model {
                     'username' => $username
                 ]
             ];
-            
         } catch (Exception $e) {
             $this->db->trans_rollback();
             // Restore db_debug
             $this->db->db_debug = $db_debug;
-            
+
             log_message('error', 'Register error: ' . $e->getMessage());
             return [
                 'success' => false,
@@ -275,10 +280,10 @@ class User_model extends CI_Model {
         // Bersihkan nama dari karakter khusus
         $base_username = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $nama));
         $base_username = substr($base_username, 0, 20); // Maksimal 20 karakter
-        
+
         // Tambahkan angka acak
         $username = $base_username . rand(100, 999);
-        
+
         // Cek keunikan
         $counter = 1;
         while ($counter <= 10) {
@@ -289,7 +294,7 @@ class User_model extends CI_Model {
             $username = $base_username . rand(1000, 9999);
             $counter++;
         }
-        
+
         // Jika masih belum unik setelah 10 percobaan, gunakan uniqid
         return $base_username . substr(uniqid(), -6);
     }
@@ -321,11 +326,11 @@ class User_model extends CI_Model {
         $this->db->where('username', $username);
         $this->db->where('deleted_at IS NULL');
         $query = $this->db->get('users');
-        
+
         if ($query->num_rows() == 1) {
             return $this->get_user_details($query->row_array());
         }
-        
+
         return false;
     }
 
@@ -342,11 +347,11 @@ class User_model extends CI_Model {
         $this->db->or_where('a.email', $email);
         $this->db->where('u.deleted_at IS NULL');
         $query = $this->db->get();
-        
+
         if ($query->num_rows() == 1) {
             return $this->get_user_details($query->row_array());
         }
-        
+
         return false;
     }
 
@@ -359,7 +364,7 @@ class User_model extends CI_Model {
             'password' => password_hash($new_password, PASSWORD_DEFAULT),
             'updated_at' => date('Y-m-d H:i:s')
         ];
-        
+
         $this->db->where('id_user', $id_user);
         return $this->db->update('users', $data);
     }
@@ -373,7 +378,7 @@ class User_model extends CI_Model {
             'status' => $status,
             'updated_at' => date('Y-m-d H:i:s')
         ];
-        
+
         $this->db->where('id_user', $id_user);
         return $this->db->update('users', $data);
     }
@@ -386,7 +391,7 @@ class User_model extends CI_Model {
         $data = [
             'deleted_at' => date('Y-m-d H:i:s')
         ];
-        
+
         $this->db->where('id_user', $id_user);
         return $this->db->update('users', $data);
     }
@@ -398,11 +403,11 @@ class User_model extends CI_Model {
     {
         $this->db->where('username', $username);
         $this->db->where('deleted_at IS NULL');
-        
+
         if ($exclude_id_user) {
             $this->db->where('id_user !=', $exclude_id_user);
         }
-        
+
         return $this->db->count_all_results('users') > 0;
     }
 
@@ -421,11 +426,11 @@ class User_model extends CI_Model {
     {
         $this->db->where('email', $email);
         $this->db->where('deleted_at IS NULL');
-        
+
         if ($exclude_id) {
             $this->db->where('id_pemilik !=', $exclude_id);
         }
-        
+
         return $this->db->count_all_results('pemilik') > 0;
     }
 
@@ -438,9 +443,9 @@ class User_model extends CI_Model {
         if (isset($data['password']) && strlen($data['password']) < 60) {
             $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         }
-        
+
         $data['created_at'] = date('Y-m-d H:i:s');
-        
+
         return $this->db->insert('users', $data);
     }
 
@@ -453,9 +458,9 @@ class User_model extends CI_Model {
         if (isset($data['password']) && strlen($data['password']) < 60) {
             $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         }
-        
+
         $data['updated_at'] = date('Y-m-d H:i:s');
-        
+
         $this->db->where('id_user', $id_user);
         return $this->db->update('users', $data);
     }
@@ -466,22 +471,22 @@ class User_model extends CI_Model {
     public function update_owner_profile($id_pemilik, $data)
     {
         $update_data = [];
-        
+
         // Field yang boleh diupdate
         $allowed_fields = ['nama', 'email', 'no_telp', 'foto_profil', 'nama_usaha', 'alamat_usaha'];
-        
+
         foreach ($allowed_fields as $field) {
             if (isset($data[$field])) {
                 $update_data[$field] = $data[$field];
             }
         }
-        
+
         if (empty($update_data)) {
             return false;
         }
-        
+
         $update_data['updated_at'] = date('Y-m-d H:i:s');
-        
+
         $this->db->where('id_pemilik', $id_pemilik);
         return $this->db->update('pemilik', $update_data);
     }
@@ -492,22 +497,22 @@ class User_model extends CI_Model {
     public function update_admin_profile($id_admin, $data)
     {
         $update_data = [];
-        
+
         // Field yang boleh diupdate
         $allowed_fields = ['nama', 'email', 'no_telp', 'foto_profil'];
-        
+
         foreach ($allowed_fields as $field) {
             if (isset($data[$field])) {
                 $update_data[$field] = $data[$field];
             }
         }
-        
+
         if (empty($update_data)) {
             return false;
         }
-        
+
         $update_data['updated_at'] = date('Y-m-d H:i:s');
-        
+
         $this->db->where('id_admin', $id_admin);
         return $this->db->update('admin', $update_data);
     }
@@ -518,22 +523,22 @@ class User_model extends CI_Model {
     public function update_karyawan_profile($id_karyawan, $data)
     {
         $update_data = [];
-        
+
         // Field yang boleh diupdate
         $allowed_fields = ['nama', 'email', 'no_telp', 'foto_profil', 'jabatan', 'alamat'];
-        
+
         foreach ($allowed_fields as $field) {
             if (isset($data[$field])) {
                 $update_data[$field] = $data[$field];
             }
         }
-        
+
         if (empty($update_data)) {
             return false;
         }
-        
+
         $update_data['updated_at'] = date('Y-m-d H:i:s');
-        
+
         $this->db->where('id_karyawan', $id_karyawan);
         return $this->db->update('karyawan', $update_data);
     }
@@ -548,7 +553,7 @@ class User_model extends CI_Model {
             log_message('warning', 'Attempted to log activity without valid id_user: ' . $activity);
             return false;
         }
-        
+
         $data = [
             'id_user' => $id_user,
             'activity' => $activity,
@@ -557,7 +562,7 @@ class User_model extends CI_Model {
             'user_agent' => $this->input->user_agent(),
             'created_at' => date('Y-m-d H:i:s')
         ];
-        
+
         return $this->db->insert('activity_log', $data);
     }
 
@@ -582,19 +587,19 @@ class User_model extends CI_Model {
         $this->db->join('pemilik p', 'u.id_user = p.id_user AND u.role = "owner"', 'left');
         $this->db->join('karyawan k', 'u.id_user = k.id_user AND u.role = "karyawan"', 'left');
         $this->db->where('u.deleted_at IS NULL');
-        
+
         if ($role) {
             $this->db->where('u.role', $role);
         }
-        
+
         if ($status) {
             $this->db->where('u.status', $status);
         }
-        
+
         $this->db->order_by('u.created_at', 'DESC');
         $query = $this->db->get();
         return $query->result_array();
-    }  
+    }
 
     /**
      * Dapatkan user berdasarkan Google ID
@@ -607,12 +612,12 @@ class User_model extends CI_Model {
         $this->db->where('google_id', $google_id);
         $this->db->where('deleted_at IS NULL');
         $query = $this->db->get('users');
-        
+
         if ($query->num_rows() == 1) {
             $user = $query->row_array();
             return $this->get_user_details($user);
         }
-        
+
         return false;
     }
 
@@ -626,14 +631,14 @@ class User_model extends CI_Model {
     {
         // Dapatkan user info
         $user = $this->get_user_by_id($id_user);
-        
+
         if (!$user) {
             return [
                 'success' => false,
                 'message' => 'User tidak ditemukan'
             ];
         }
-        
+
         // Cek apakah Google ID sudah digunakan user lain
         $existing = $this->get_user_by_google_id($google_user['google_id']);
         if ($existing && $existing['id_user'] != $id_user) {
@@ -642,7 +647,7 @@ class User_model extends CI_Model {
                 'message' => 'Akun Google ini sudah terhubung dengan akun lain'
             ];
         }
-        
+
         // Update tabel users dengan Google data
         $google_data = [
             'google_id' => $google_user['google_id'],
@@ -651,10 +656,10 @@ class User_model extends CI_Model {
             'google_picture' => isset($google_user['picture']) ? $google_user['picture'] : null,
             'updated_at' => date('Y-m-d H:i:s')
         ];
-        
+
         $this->db->where('id_user', $id_user);
         $result = $this->db->update('users', $google_data);
-        
+
         if ($result) {
             return [
                 'success' => true,
@@ -676,11 +681,11 @@ class User_model extends CI_Model {
     public function create_user_from_google($google_user)
     {
         $this->db->trans_start();
-        
+
         try {
             // 1. Generate username unik dari Google name
             $username = $this->generate_unique_username($google_user['name']);
-            
+
             // 2. Insert ke tabel users dengan Google data
             $user_data = [
                 'username' => $username,
@@ -693,13 +698,13 @@ class User_model extends CI_Model {
                 'google_picture' => isset($google_user['picture']) ? $google_user['picture'] : null,
                 'created_at' => date('Y-m-d H:i:s')
             ];
-            
+
             if (!$this->db->insert('users', $user_data)) {
                 throw new Exception('Gagal membuat user');
             }
-            
+
             $id_user = $this->db->insert_id();
-            
+
             // 3. Insert ke tabel pemilik (tanpa duplikasi Google data)
             $pemilik_data = [
                 'id_user' => $id_user,
@@ -711,13 +716,13 @@ class User_model extends CI_Model {
                 'id_paket' => null,
                 'created_at' => date('Y-m-d H:i:s')
             ];
-            
+
             if (!$this->db->insert('pemilik', $pemilik_data)) {
                 throw new Exception('Gagal membuat pemilik');
             }
-            
+
             $id_pemilik = $this->db->insert_id();
-            
+
             // 4. Buat cabang default
             $cabang_data = [
                 'id_pemilik' => $id_pemilik,
@@ -727,21 +732,21 @@ class User_model extends CI_Model {
                 'status' => 'aktif',
                 'created_at' => date('Y-m-d H:i:s')
             ];
-            
+
             if (!$this->db->insert('cabang', $cabang_data)) {
                 throw new Exception('Gagal membuat cabang');
             }
-            
+
             // Commit transaksi
             $this->db->trans_complete();
-            
+
             if ($this->db->trans_status() === FALSE) {
                 throw new Exception('Transaksi database gagal');
             }
-            
-            // Return user data lengkap
-            return $this->get_user_by_id($id_user);
-            
+
+            // Return user data lengkap dengan detail role
+            $user = $this->get_user_by_id($id_user);
+            return $this->get_user_details($user);
         } catch (Exception $e) {
             $this->db->trans_rollback();
             log_message('error', 'Create user from Google error: ' . $e->getMessage());
@@ -762,15 +767,15 @@ class User_model extends CI_Model {
     {
         // Cari user berdasarkan email
         $user = $this->get_user_by_email($email);
-        
+
         if (!$user) {
             return false;
         }
-        
+
         // Generate token
         $token = bin2hex(random_bytes(32));
         $expires_at = date('Y-m-d H:i:s', strtotime('+1 hour'));
-        
+
         // Simpan token ke database
         $token_data = [
             'id_user' => $user['id_user'],
@@ -779,7 +784,7 @@ class User_model extends CI_Model {
             'used' => 0,
             'created_at' => date('Y-m-d H:i:s')
         ];
-        
+
         // Cek apakah tabel password_reset_tokens ada
         if ($this->db->table_exists('password_reset_tokens')) {
             $this->db->insert('password_reset_tokens', $token_data);
@@ -788,7 +793,7 @@ class User_model extends CI_Model {
             $this->create_password_reset_table();
             $this->db->insert('password_reset_tokens', $token_data);
         }
-        
+
         return [
             'token' => $token,
             'expires_at' => $expires_at,
@@ -808,7 +813,7 @@ class User_model extends CI_Model {
         if (!$this->db->table_exists('password_reset_tokens')) {
             return false;
         }
-        
+
         $this->db->select('t.*, u.username');
         $this->db->from('password_reset_tokens t');
         $this->db->join('users u', 't.id_user = u.id_user');
@@ -816,19 +821,19 @@ class User_model extends CI_Model {
         $this->db->where('t.used', 0);
         $this->db->where('t.expires_at >', date('Y-m-d H:i:s'));
         $query = $this->db->get();
-        
+
         if ($query->num_rows() == 1) {
             $token_data = $query->row_array();
-            
+
             // Get user email based on role
             $user = $this->get_user_by_id($token_data['id_user']);
             if ($user) {
                 $token_data['email'] = isset($user['email']) ? $user['email'] : '';
             }
-            
+
             return $token_data;
         }
-        
+
         return false;
     }
 
@@ -842,39 +847,38 @@ class User_model extends CI_Model {
     {
         // Validasi token
         $token_data = $this->validate_reset_token($token);
-        
+
         if (!$token_data) {
             return false;
         }
-        
+
         $this->db->trans_start();
-        
+
         try {
             // Update password
             $result = $this->change_password($token_data['id_user'], $new_password);
-            
+
             if (!$result) {
                 throw new Exception('Gagal update password');
             }
-            
+
             // Tandai token sebagai sudah digunakan
             $this->db->where('token', $token);
             $this->db->update('password_reset_tokens', [
                 'used' => 1,
                 'used_at' => date('Y-m-d H:i:s')
             ]);
-            
+
             // Log activity
             $this->log_activity($token_data['id_user'], 'Password Reset', 'Password direset menggunakan token');
-            
+
             $this->db->trans_complete();
-            
+
             if ($this->db->trans_status() === FALSE) {
                 throw new Exception('Transaksi gagal');
             }
-            
+
             return true;
-            
         } catch (Exception $e) {
             $this->db->trans_rollback();
             log_message('error', 'Reset password error: ' . $e->getMessage());
@@ -888,7 +892,7 @@ class User_model extends CI_Model {
     private function create_password_reset_table()
     {
         $this->load->dbforge();
-        
+
         $fields = [
             'id' => [
                 'type' => 'INT',
@@ -921,11 +925,10 @@ class User_model extends CI_Model {
                 'type' => 'DATETIME'
             ]
         ];
-        
+
         $this->dbforge->add_field($fields);
         $this->dbforge->add_key('id', TRUE);
         $this->dbforge->add_key('token');
         $this->dbforge->create_table('password_reset_tokens', TRUE);
     }
-
 }

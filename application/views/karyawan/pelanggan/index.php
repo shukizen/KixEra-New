@@ -116,6 +116,7 @@
                                     <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Telepon</th>
                                     <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Email</th>
                                     <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Alamat</th>
+                                    <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Total Pesanan</th>
                                     <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Status</th>
                                     <th class="text-center py-3 px-4 text-base font-medium text-gray-600">Aksi</th>
                                 </tr>
@@ -129,6 +130,9 @@
                                         <td class="py-4 px-4 text-center text-gray-700"><?= htmlspecialchars($p->no_telp ?? '') ?></td>
                                         <td class="py-4 px-4 text-center text-gray-700"><?= htmlspecialchars($p->email ?? '-') ?></td>
                                         <td class="py-4 px-4 text-center text-gray-700"><?= htmlspecialchars($p->alamat ?? '-') ?></td>
+                                        <td class="py-4 px-4 text-center text-gray-700">
+                                            <span class="font-medium text-emerald-600"><?= isset($p->total_pesanan) ? $p->total_pesanan : '0' ?></span>
+                                        </td>
                                         <td class="py-4 px-4 text-center">
                                             <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Aktif</span>
                                         </td>
@@ -146,7 +150,7 @@
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="7" class="text-center py-8 text-gray-500">Tidak ada data pelanggan</td>
+                                        <td colspan="8" class="text-center py-8 text-gray-500">Tidak ada data pelanggan</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -265,6 +269,9 @@
                             <td class="py-4 px-4 text-center text-gray-700">${customer.no_telp || ''}</td>
                             <td class="py-4 px-4 text-center text-gray-700">${customer.email || '-'}</td>
                             <td class="py-4 px-4 text-center text-gray-700">${customer.alamat || '-'}</td>
+                            <td class="py-4 px-4 text-center text-gray-700">
+                                <span class="font-medium text-emerald-600">${customer.total_pesanan || '0'}</span>
+                            </td>
                             <td class="py-4 px-4 text-center">
                                 <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Aktif</span>
                             </td>
@@ -282,7 +289,7 @@
                     `;
                 });
             } else {
-                html = '<tr><td colspan="7" class="text-center py-8 text-gray-500">Tidak ada data pelanggan</td></tr>';
+                html = '<tr><td colspan="8" class="text-center py-8 text-gray-500">Tidak ada data pelanggan</td></tr>';
             }
             $('#customerTableBody').html(html);
         }

@@ -1,5 +1,5 @@
 <!-- Main Content -->
-<main class="flex-1 ml-64">
+<main class="flex-1 lg:ml-64 transition-all duration-300">
     <!-- Header -->
     <header class="bg-white border-b border-gray-100 shadow-sm px-6 py-4">
         <div class="flex items-center justify-between">
@@ -20,7 +20,7 @@
     <div class="p-6">
         <!-- Current Plan Badge -->
         <?php if(isset($current_plan) && $current_plan): ?>
-        <div class="mb-6 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-2xl p-4 text-white flex items-center justify-between">
+        <div class="mb-6 bg-emerald-500 rounded-2xl p-4 text-white flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                     <i class="fas fa-crown text-2xl text-yellow-300"></i>
@@ -146,9 +146,10 @@
                     </li>
                 </ul>
                 
-                <button class="w-full py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-full font-semibold hover:bg-gray-100 transition">
+                <a href="<?= base_url('pembayaran/checkout/3') ?>" 
+                   class="block w-full py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-full font-semibold text-center hover:bg-gray-100 transition">
                     <?= lang_text('get_started') ?>
-                </button>
+                </a>
             </div>
         </div>
 
@@ -180,7 +181,7 @@
         </div>
 
         <!-- Contact CTA -->
-        <div class="max-w-3xl mx-auto mt-12 bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-8 text-center text-white">
+        <div class="max-w-3xl mx-auto mt-12 bg-gray-800 rounded-2xl p-8 text-center text-white">
             <h3 class="text-xl font-bold mb-2"><?= lang_text('need_enterprise') ?></h3>
             <p class="text-gray-300 mb-6"><?= lang_text('contact_sales_desc') ?></p>
             <a href="mailto:sales@kixera.id" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition">

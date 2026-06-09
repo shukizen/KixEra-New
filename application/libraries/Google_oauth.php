@@ -182,7 +182,7 @@ class Google_oauth {
         $normalized = [
             'google_id' => $user_info['id'] ?? null,
             'email' => $user_info['email'] ?? null,
-            'verified_email' => $user_info['verified_email'] ?? false,
+            'verified_email' => $user_info['email_verified'] ?? false,
             'name' => $user_info['name'] ?? null,
             'given_name' => $user_info['given_name'] ?? null,
             'family_name' => $user_info['family_name'] ?? null,

@@ -132,11 +132,35 @@ class Pemilik_Dashboard extends CI_Controller {
             return;
         }
         
+        // Fetch owner preferences to filter notifications
+        $owner_settings = $this->db->select('notif_pesanan, notif_stok, notif_laporan')
+            ->get_where('pemilik', ['id_pemilik' => $id_pemilik])
+            ->row();
+
+        $exclude_types = [];
+        if ($owner_settings) {
+            if ($owner_settings->notif_pesanan === '0') {
+                $exclude_types = array_merge($exclude_types, ['order', 'payment', 'pickup']);
+            }
+            if ($owner_settings->notif_stok === '0') {
+                $exclude_types = array_merge($exclude_types, ['stock', 'stok']);
+            }
+            if ($owner_settings->notif_laporan === '0') {
+                $exclude_types = array_merge($exclude_types, ['report', 'laporan']);
+            }
+        }
+
+        $where_exclude = '';
+        if (!empty($exclude_types)) {
+            $escaped_types = array_map(function($t) { return $this->db->escape($t); }, $exclude_types);
+            $where_exclude = " AND type NOT IN (" . implode(',', $escaped_types) . ")";
+        }
+
         // Simple query without model
-        $query = $this->db->query("SELECT * FROM notifications WHERE id_pemilik = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 10", [$id_pemilik]);
+        $query = $this->db->query("SELECT * FROM notifications WHERE id_pemilik = ? AND deleted_at IS NULL{$where_exclude} ORDER BY created_at DESC LIMIT 10", [$id_pemilik]);
         $notifications = $query->result();
         
-        $count_query = $this->db->query("SELECT COUNT(*) as count FROM notifications WHERE id_pemilik = ? AND is_read = 0 AND deleted_at IS NULL", [$id_pemilik]);
+        $count_query = $this->db->query("SELECT COUNT(*) as count FROM notifications WHERE id_pemilik = ? AND is_read = 0 AND deleted_at IS NULL{$where_exclude}", [$id_pemilik]);
         $unread_count = $count_query->row()->count;
 
         echo json_encode([

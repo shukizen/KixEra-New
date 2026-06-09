@@ -98,7 +98,7 @@
             <!-- Invoice Container -->
             <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-emerald-500 to-teal-400 px-8 py-8">
+                <div class="bg-emerald-500 px-8 py-8">
                     <div class="flex justify-between items-start">
                         <div>
                             <h1 class="text-3xl font-bold text-white mb-2">CHECKOUT</h1>
@@ -238,7 +238,7 @@
                             </svg>
                             Cetak Invoice
                         </button>
-                        <button type="button" id="pay-button" onclick="processPayment()" class="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-600 hover:to-teal-500 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                        <button type="button" id="pay-button" onclick="processPayment()" class="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>

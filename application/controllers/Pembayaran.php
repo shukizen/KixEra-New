@@ -410,6 +410,10 @@ class Pembayaran extends CI_Controller {
                 // Reload transaksi untuk mendapat status terbaru
                 $transaksi = $this->Transaksi_langganan_model->get_by_payment_code($order_id);
                 
+                // Refresh user session to apply new subscription package immediately
+                $this->load->library('auth_library');
+                $this->auth_library->refresh_session();
+                
                 $data = [
                     'title' => 'Pembayaran Berhasil',
                     'transaksi' => $transaksi,

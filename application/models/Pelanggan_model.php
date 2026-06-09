@@ -10,31 +10,75 @@ class Pelanggan_model extends CI_Model {
         $this->load->database(); 
     }
 
-    public function getAllPelanggan($id_pemilik = null)
+    private function pelangganSelect($id_pemilik = null, $id_cabang = null)
+    {
+        if (!$id_pemilik) {
+            return "p.*, (
+                SELECT COUNT(*)
+                FROM pesanan ps
+                WHERE ps.id_pelanggan = p.id_pelanggan
+                AND ps.deleted_at IS NULL
+            ) as total_pesanan";
+        }
+
+        $owner = $this->db->escape($id_pemilik);
+        $branchFilter = $id_cabang ? " AND ps.id_cabang = " . $this->db->escape($id_cabang) : "";
+
+        return "p.*, (
+            SELECT COUNT(*)
+            FROM pesanan ps
+            INNER JOIN cabang c ON c.id_cabang = ps.id_cabang
+            WHERE ps.id_pelanggan = p.id_pelanggan
+            AND c.id_pemilik = {$owner}
+            {$branchFilter}
+            AND ps.deleted_at IS NULL
+        ) as total_pesanan";
+    }
+
+    private function pelangganScopeWhere($id_pemilik, $id_cabang = null)
+    {
+        $owner = $this->db->escape($id_pemilik);
+        $branchOrderFilter = $id_cabang ? " AND ps.id_cabang = " . $this->db->escape($id_cabang) : "";
+        $branchCreatedFilter = $id_cabang ? " AND p.id_cabang = " . $this->db->escape($id_cabang) : "";
+
+        return "(
+            EXISTS (
+                SELECT 1
+                FROM pesanan ps
+                INNER JOIN cabang c ON c.id_cabang = ps.id_cabang
+                WHERE ps.id_pelanggan = p.id_pelanggan
+                AND c.id_pemilik = {$owner}
+                {$branchOrderFilter}
+                AND ps.deleted_at IS NULL
+            )
+            OR EXISTS (
+                SELECT 1
+                FROM cabang c2
+                WHERE c2.id_cabang = p.id_cabang
+                AND c2.id_pemilik = {$owner}
+                {$branchCreatedFilter}
+                AND c2.deleted_at IS NULL
+            )
+        )";
+    }
+
+    public function getAllPelanggan($id_pemilik = null, $id_cabang = null)
     {
         if ($id_pemilik) {
-            // Show customers who ordered at owner's branches + new customers with no orders
-            $sql = "
-                SELECT DISTINCT p.* FROM pelanggan p
-                INNER JOIN pesanan ps ON ps.id_pelanggan = p.id_pelanggan
-                INNER JOIN cabang c ON c.id_cabang = ps.id_cabang
-                WHERE c.id_pemilik = ? AND p.deleted_at IS NULL
-                
-                UNION
-                
-                SELECT DISTINCT p.* FROM pelanggan p
-                INNER JOIN cabang c2 ON c2.id_cabang = p.id_cabang
-                WHERE c2.id_pemilik = ? AND p.deleted_at IS NULL
-                
-                ORDER BY nama ASC
-            ";
-            return $this->db->query($sql, [$id_pemilik, $id_pemilik])->result();
+            $this->db->select($this->pelangganSelect($id_pemilik, $id_cabang), false);
+            $this->db->from('pelanggan p');
+            $this->db->where('p.deleted_at IS NULL');
+            $this->db->where($this->pelangganScopeWhere($id_pemilik, $id_cabang), null, false);
+            $this->db->order_by('p.nama', 'ASC');
+            return $this->db->get()->result();
         }
         
         // No owner filter - return all customers
+        $this->db->select($this->pelangganSelect(), false);
+        $this->db->from('pelanggan p');
         $this->db->where('deleted_at IS NULL');
         $this->db->order_by('nama', 'ASC');
-        return $this->db->get($this->table)->result();
+        return $this->db->get()->result();
     }
 
     public function getPelangganById($id)
@@ -69,31 +113,20 @@ class Pelanggan_model extends CI_Model {
             ]);
     }
 
-    public function searchPelanggan($keyword, $id_pemilik = null)
+    public function searchPelanggan($keyword, $id_pemilik = null, $id_cabang = null)
     {
         if ($id_pemilik) {
-            $keyword = $this->db->escape_like_str($keyword);
-            $like = "%{$keyword}%";
-            
-            $sql = "
-                SELECT DISTINCT p.* FROM pelanggan p
-                INNER JOIN pesanan ps ON ps.id_pelanggan = p.id_pelanggan
-                INNER JOIN cabang c ON c.id_cabang = ps.id_cabang
-                WHERE c.id_pemilik = ? 
-                AND p.deleted_at IS NULL
-                AND (p.nama LIKE ? OR p.no_telp LIKE ? OR p.email LIKE ?)
-                
-                UNION
-                
-                SELECT DISTINCT p.* FROM pelanggan p
-                INNER JOIN cabang c2 ON c2.id_cabang = p.id_cabang
-                WHERE c2.id_pemilik = ?
-                AND p.deleted_at IS NULL
-                AND (p.nama LIKE ? OR p.no_telp LIKE ? OR p.email LIKE ?)
-                
-                ORDER BY nama ASC
-            ";
-            return $this->db->query($sql, [$id_pemilik, $like, $like, $like, $id_pemilik, $like, $like, $like])->result();
+            $this->db->select($this->pelangganSelect($id_pemilik, $id_cabang), false);
+            $this->db->from('pelanggan p');
+            $this->db->where('p.deleted_at IS NULL');
+            $this->db->where($this->pelangganScopeWhere($id_pemilik, $id_cabang), null, false);
+            $this->db->group_start();
+            $this->db->like('p.nama', $keyword);
+            $this->db->or_like('p.no_telp', $keyword);
+            $this->db->or_like('p.email', $keyword);
+            $this->db->group_end();
+            $this->db->order_by('p.nama', 'ASC');
+            return $this->db->get()->result();
         }
         
         // No owner filter
@@ -128,91 +161,7 @@ class Pelanggan_model extends CI_Model {
             }
         }
 
-        // Use raw query with UNION for better flexibility
-        // Part 1: Customers who ordered at THIS SPECIFIC BRANCH
-        // Part 2: Customers who have NO orders but belong to THIS OWNER (via created_by or scoped context)
-        // Since we don't have created_by, we assume isolated systems or we need to filter global customers?
-        // IF customers are shared globally in system (SaaS), then showing all "new" to everyone is bad.
-        // We really need a link.
-        // Assuming current schema flaws, we will restrict Part 2 to:
-        // "Customers who have NO orders AND were created by this store context?" -> Hard without column.
-        
-        // TEMPORARY FIX: Only show customers who have ordered at this branch OR 
-        // Customers who have ordered at ANY branch of this OWNER?
-        // Better: Show customers active in THIS OWNER's ecosystem.
-        
-        $sql = "
-            SELECT DISTINCT p.* FROM pelanggan p
-            INNER JOIN pesanan ps ON ps.id_pelanggan = p.id_pelanggan
-            INNER JOIN cabang c ON c.id_cabang = ps.id_cabang
-            WHERE c.id_pemilik = ? AND p.deleted_at IS NULL
-            
-            UNION
-            
-            SELECT p.* FROM pelanggan p
-            WHERE p.deleted_at IS NULL
-            AND NOT EXISTS (SELECT 1 FROM pesanan ps WHERE ps.id_pelanggan = p.id_pelanggan)
-            -- If we want to hide 'global new' from everyone, we would need a 'created_by_owner' column.
-            -- As a fallback for SaaS safety: DO NOT SHOW 'New Customers' to Karyawan unless they are linked?
-            -- Or show ALL new customers (risk of seeing other owner's customers).
-            -- Safest for now: ONLY show customers who have interacted with THIS OWNER.
-            -- If Karyawan adds a new customer, they should appear. 
-            -- Meaning, we might lose 'Brand New Global' visibility, but that is safer.
-        ";
-        
-        // REVISION: The User "Pelanggan belum ambil dari cabang perpemilik juga malah ambil data semua pemilik"
-        // This confirms 'Global New' is the leak.
-        // Solution: REMOVE the second part of Union for Karyawan. 
-        // Karyawan only sees customers who have transaction history with THIS OWNER.
-        // What if they just added a customer?
-        // If they add, they usually create an order immediately?
-        // Or if they added via 'Pelanggan' menu? The customer is inserted but has no order.
-        // WE NEED TO SEE CUSTOMERS ADDED BY THIS OWNER.
-        // But we lack `id_pemilik` in `pelanggan` table.
-        // CRITICAL MISSING SCHEMA: `pelanggan` should have `id_pemilik` or `created_by_branch`.
-        
-        // WORKAROUND:
-        // We will assume for now that we ONLY show customers with history.
-        // If a new customer is added, they won't appear until they have an order?
-        // That is broken UX.
-        
-        // Let's look at `insertPelanggan`. It just inserts.
-        // We should really add `created_by_cabang` to `pelanggan`.
-        // BUT, I cannot change schema right now easily without migration?
-        // I CAN check if `pelanggan` table has `id_cabang` or similar? No.
-        
-        // COMPROMISE:
-        // Filter by: Customers who have orders with this Owner OR Customers created within last 24 hours (likely just added)?
-        // No, that's hacky.
-        
-        // Strategy:
-        // 1. Show customers who have orders with this OWNER.
-        // 2. AND... we can't safely show "empty" customers without knowing who owns them.
-        // UNLESS we check if the user just added them? No.
-        
-        // Wait, `searchPelanggan` allows searching by phone.
-        // If they search a new customer by phone and find nothing, they add.
-        // If they search existing, they find it.
-        // So `getAll` is just a list.
-        // Maybe restricting the list to "Active with Owner" is acceptable?
-        // Let's try that.
-        
-        $sql = "
-            SELECT DISTINCT p.* FROM pelanggan p
-            INNER JOIN pesanan ps ON ps.id_pelanggan = p.id_pelanggan
-            INNER JOIN cabang c ON c.id_cabang = ps.id_cabang
-            WHERE c.id_pemilik = ? AND p.deleted_at IS NULL
-            
-            UNION
-            
-            SELECT DISTINCT p.* FROM pelanggan p
-            INNER JOIN cabang c2 ON c2.id_cabang = p.id_cabang
-            WHERE c2.id_pemilik = ? AND p.deleted_at IS NULL
-            
-            ORDER BY nama ASC
-        ";
-        
-        return $this->db->query($sql, [$id_pemilik, $id_pemilik])->result();
+        return $this->getAllPelanggan($id_pemilik, $id_cabang);
     }
 
 
@@ -285,6 +234,7 @@ class Pelanggan_model extends CI_Model {
            $this->db->join('pesanan', 'pesanan.id_pelanggan = pelanggan.id_pelanggan');
            $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
            $this->db->where('cabang.id_pemilik', $id_pemilik);
+           $this->db->where('pesanan.deleted_at IS NULL');
            // We need distinct here because join multiplies rows
            // But SQL `COUNT(*)` with GROUP BY clause on simple join will overcount.
            // We need unique customers.
@@ -322,8 +272,14 @@ class Pelanggan_model extends CI_Model {
                                ->count_all_results('pesanan') > 0;
         
         if (!$has_orders) {
-            // New customer with no orders - all pemilik can access
-            return true;
+            $this->db->select('1');
+            $this->db->from('pelanggan');
+            $this->db->join('cabang', 'cabang.id_cabang = pelanggan.id_cabang');
+            $this->db->where('pelanggan.id_pelanggan', $id_pelanggan);
+            $this->db->where('cabang.id_pemilik', $id_pemilik);
+            $this->db->where('pelanggan.deleted_at IS NULL');
+            $query = $this->db->get();
+            return $query->num_rows() > 0;
         }
         
         // Check if customer has orders at owner's branches
@@ -369,29 +325,7 @@ class Pelanggan_model extends CI_Model {
             }
         }
 
-        $keyword = $this->db->escape_like_str($keyword);
-        $like = "%{$keyword}%";
-        
-        $sql = "
-            SELECT DISTINCT p.* FROM pelanggan p
-            INNER JOIN pesanan ps ON ps.id_pelanggan = p.id_pelanggan
-            INNER JOIN cabang c ON c.id_cabang = ps.id_cabang
-            WHERE c.id_pemilik = ? 
-            AND p.deleted_at IS NULL
-            AND (p.nama LIKE ? OR p.no_telp LIKE ? OR p.email LIKE ?)
-            
-            UNION
-            
-            SELECT DISTINCT p.* FROM pelanggan p
-            INNER JOIN cabang c2 ON c2.id_cabang = p.id_cabang
-            WHERE c2.id_pemilik = ?
-            AND p.deleted_at IS NULL
-            AND (p.nama LIKE ? OR p.no_telp LIKE ? OR p.email LIKE ?)
-            
-            ORDER BY p.nama ASC
-        ";
-        
-        return $this->db->query($sql, [$id_pemilik, $like, $like, $like, $id_pemilik, $like, $like, $like])->result();
+        return $this->searchPelanggan($keyword, $id_pemilik, $id_cabang);
     }
 
     // Check if karyawan (via cabang) has access to customer
@@ -403,8 +337,13 @@ class Pelanggan_model extends CI_Model {
                                ->count_all_results('pesanan') > 0;
         
         if (!$has_orders) {
-            // New customer with no orders - all karyawan can access
-            return true;
+            $this->db->select('1');
+            $this->db->from('pelanggan');
+            $this->db->where('id_pelanggan', $id_pelanggan);
+            $this->db->where('id_cabang', $id_cabang);
+            $this->db->where('deleted_at IS NULL');
+            $query = $this->db->get();
+            return $query->num_rows() > 0;
         }
         
         // Check if customer has orders at this specific branch

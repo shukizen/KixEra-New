@@ -69,11 +69,8 @@ class Inventori extends CI_Controller {
         log_message('debug', 'Chart Data Usage: ' . print_r($data['items_by_category'], true));
         log_message('debug', 'Chart Data Category: ' . print_r($data['category_distribution'], true));
         
-        // Load views
-        $this->load->view('template/header');
-        $this->load->view('template/sidebarkaryawan');
+        // Load view
         $this->load->view('karyawan/inventori/index', $data);
-        $this->load->view('template/footer');
     }
     
     // Fungsi untuk menyimpan data inventory
@@ -202,11 +199,8 @@ class Inventori extends CI_Controller {
         $data['stats'] = $this->Inventori_model->get_inventory_stats($id_pemilik, $id_cabang);
         $data['items_by_category'] = $this->Inventori_model->get_items_by_category($id_pemilik, $id_cabang);
         
-        // Load views
-        $this->load->view('template/header');
-        $this->load->view('template/sidebarkaryawan');
+        // Load view
         $this->load->view('karyawan/inventori/lihat_stok', $data);
-        $this->load->view('template/footer');
     }
     
     // Update inventory item

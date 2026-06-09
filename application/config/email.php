@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 /**
  * Email Configuration
@@ -11,8 +11,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $config['protocol'] = 'smtp';
 $config['smtp_host'] = 'ssl://smtp.gmail.com';
 $config['smtp_port'] = 465;
-$config['smtp_user'] = 'rizkipangestu291@gmail.com';
-$config['smtp_pass'] = 'cavnyevbynbatenq'; // App Password (tanpa spasi)
+$config['smtp_user'] = 'hattajunior1@gmail.com';
+$config['smtp_pass'] = 'tgfqgvfywpldlyvt'; // App Password (tanpa spasi)
 $config['smtp_timeout'] = 30;
 $config['smtp_crypto'] = 'ssl';
 
@@ -24,5 +24,5 @@ $config['newline'] = "\r\n";
 $config['crlf'] = "\r\n";
 
 // From Address (default sender)
-$config['from_email'] = 'rizkipangestu291@gmail.com';
+$config['from_email'] = 'hattajunior1@gmail.com';
 $config['from_name'] = 'KixEra';

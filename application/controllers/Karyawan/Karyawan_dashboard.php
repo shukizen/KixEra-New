@@ -24,6 +24,7 @@ class Karyawan_dashboard extends CI_Controller {
         $data['pesanan_hari_ini'] = $this->get_pesanan_hari_ini($id_cabang);
         $data['pesanan_pending'] = $this->get_pesanan_pending($id_cabang);
         $data['pesanan_proses'] = $this->get_pesanan_proses($id_cabang);
+        $data['pesanan_selesai'] = $this->get_pesanan_selesai($id_cabang);
         
         // Get recent orders for this branch
         $data['recent_orders'] = $this->get_recent_orders($id_cabang);
@@ -50,26 +51,38 @@ class Karyawan_dashboard extends CI_Controller {
     private function get_pesanan_hari_ini($id_cabang) {
         $this->db->where('id_cabang', $id_cabang);
         $this->db->where('DATE(tgl_masuk)', date('Y-m-d'));
+        $this->db->where('deleted_at IS NULL');
         return $this->db->count_all_results('pesanan');
     }
     
     private function get_pesanan_pending($id_cabang) {
         $this->db->where('id_cabang', $id_cabang);
-        $this->db->where('status_pesanan', 'pending');
+        $this->db->where('status_pesanan', 'diterima');
+        $this->db->where('deleted_at IS NULL');
         return $this->db->count_all_results('pesanan');
     }
     
     private function get_pesanan_proses($id_cabang) {
         $this->db->where('id_cabang', $id_cabang);
-        $this->db->where('status_pesanan', 'proses');
+        $this->db->where('status_pesanan', 'dalam_proses');
+        $this->db->where('deleted_at IS NULL');
+        return $this->db->count_all_results('pesanan');
+    }
+
+    private function get_pesanan_selesai($id_cabang) {
+        $this->db->where('id_cabang', $id_cabang);
+        $this->db->where_in('status_pesanan', ['selesai', 'siap_diambil', 'sudah_diambil']);
+        $this->db->where('deleted_at IS NULL');
         return $this->db->count_all_results('pesanan');
     }
     
     private function get_recent_orders($id_cabang, $limit = 10) {
-        $this->db->select('p.*, pl.nama as nama_pelanggan');
+        $this->db->select('p.*, pl.nama as nama_pelanggan, l.nama_layanan');
         $this->db->from('pesanan p');
         $this->db->join('pelanggan pl', 'p.id_pelanggan = pl.id_pelanggan', 'left');
+        $this->db->join('layanan l', 'p.id_layanan = l.id_layanan', 'left');
         $this->db->where('p.id_cabang', $id_cabang);
+        $this->db->where('p.deleted_at IS NULL');
         $this->db->order_by('p.tgl_masuk', 'DESC');
         $this->db->limit($limit);
         $query = $this->db->get();
@@ -92,6 +105,7 @@ class Karyawan_dashboard extends CI_Controller {
             
             $count = $this->db->where('id_cabang', $id_cabang)
                             ->where('DATE(tgl_masuk)', $date)
+                            ->where('deleted_at IS NULL')
                             ->count_all_results('pesanan');
             
             $data[] = [
@@ -113,6 +127,7 @@ class Karyawan_dashboard extends CI_Controller {
         $this->db->join('pelanggan pl', 'p.id_pelanggan = pl.id_pelanggan', 'left');
         $this->db->join('karyawan k', 'p.id_karyawan = k.id_karyawan', 'left'); // Who handled it?
         $this->db->where('p.id_cabang', $id_cabang);
+        $this->db->where('p.deleted_at IS NULL');
         $this->db->order_by('p.updated_at', 'DESC');
         $this->db->limit(5);
         $orders = $this->db->get()->result();

@@ -8,7 +8,7 @@
     <div class="flex min-h-screen">
         <!-- Sidebar -->
         <!-- Main Content -->
-        <main class="flex-1 ml-64">
+        <main class="flex-1 lg:ml-64">
             <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-6 py-6">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -159,7 +159,7 @@
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
                     <!-- Total Pesanan Hari Ini -->
-                    <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm font-medium text-gray-500"><?= lang_text('total_orders_today') ?></p>
@@ -180,7 +180,7 @@
                     </div>
 
                     <!-- Pesanan Selesai -->
-                    <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm font-medium text-gray-500"><?= lang_text('orders_completed') ?></p>
@@ -189,7 +189,7 @@
                                                                                                     if (!empty($pesanan)) {
                                                                                                         foreach ($pesanan as $p) {
                                                                                                             $s = strtolower($p->status_pesanan ?? '');
-                                                                                                            if ($s === 'selesai' || $s === 'diambil') $done++;
+                                                                                                            if (in_array($s, ['selesai', 'siap_diambil', 'sudah_diambil'])) $done++;
                                                                                                         }
                                                                                                     }
                                                                                                     echo $done;
@@ -202,7 +202,7 @@
                     </div>
 
                     <!-- Dalam Proses -->
-                    <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm font-medium text-gray-500"><?= lang_text('in_process') ?></p>
@@ -211,7 +211,7 @@
                                                                                                     if (!empty($pesanan)) {
                                                                                                         foreach ($pesanan as $p) {
                                                                                                             $s = strtolower($p->status_pesanan ?? '');
-                                                                                                            if ($s === 'diterima' || $s === 'dalam_proses') $processing++;
+                                                                                                            if ($s === 'dalam_proses') $processing++;
                                                                                                         }
                                                                                                     }
                                                                                                     echo $processing;
@@ -224,7 +224,7 @@
                     </div>
 
                     <!-- Diterima -->
-                    <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm font-medium text-gray-500"><?= lang_text('received') ?></p>
@@ -246,7 +246,7 @@
                     </div>
 
                     <!-- Dibatalkan -->
-                    <div class="bg-white rounded-xl shadow-lg border border-emerald-100 p-6">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm font-medium text-gray-500"><?= lang_text('cancelled') ?></p>
@@ -272,7 +272,7 @@
                 <!-- Charts Section (Moved to top) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <!-- Tren Pesanan -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('order_trend') ?> (7 <?= lang_text('days') ?>)</h2>
                         <div class="h-64">
                             <canvas id="trendChart"></canvas>
@@ -280,7 +280,7 @@
                     </div>
 
                     <!-- Pesanan per Cabang -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('orders_by_branch') ?></h2>
                         <div class="h-64">
                             <canvas id="branchChart"></canvas>
@@ -290,7 +290,7 @@
 
                 <!-- Main Content Grid -->
                 <!-- Data Pesanan Table (Full Width) -->
-                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mb-6">
                     <h2 class="text-xl font-semibold text-gray-800 mb-6"><?= lang_text('order_data') ?></h2>
 
                     <div class="overflow-x-auto">
@@ -322,7 +322,7 @@
                                                 $status = strtolower($p->status_pesanan ?? '');
                                                 $badge = 'bg-gray-100 text-gray-700';
                                                 $status_label = ucfirst(str_replace('_', ' ', $status));
-                                                
+
                                                 if ($status === 'sudah_diambil') {
                                                     $badge = 'bg-emerald-500/10 text-emerald-500';
                                                     $status_label = 'Sudah Diambil';
@@ -375,6 +375,14 @@
     </div>
 
     <script>
+        // Helper to format Date to YYYY-MM-DD in local time
+        const formatLocalDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
         // Provide lists for JS (populated from controller)
         const pelangganList = <?php echo json_encode($pelanggan_list ?? []); ?>;
         const layananList = <?php echo json_encode($layanan_list ?? []); ?>;
@@ -392,7 +400,7 @@
 
             const branchLabels = Object.keys(branchMap);
             const branchData = Object.values(branchMap);
-            
+
             // Generate different colors for each branch
             const branchColors = [
                 '#10b981', // emerald-500
@@ -413,9 +421,8 @@
                     datasets: [{
                         label: 'Jumlah Pesanan',
                         data: branchData.length > 0 ? branchData : [0],
-                        backgroundColor: branchData.length > 0 ? 
-                            branchData.map((_, index) => branchColors[index % branchColors.length]) : 
-                            ['#cccccc'],
+                        backgroundColor: branchData.length > 0 ?
+                            branchData.map((_, index) => branchColors[index % branchColors.length]) : ['#cccccc'],
                         borderRadius: 8
                     }]
                 },
@@ -448,7 +455,7 @@
 
             const layananLabels = Object.keys(layananMap);
             const layananData = Object.values(layananMap);
-            
+
             // Harmonious gradient colors - emerald to teal theme
             const serviceColors = [
                 '#10b981', // emerald-500
@@ -459,65 +466,67 @@
                 '#5eead4', // teal-300
             ];
 
-            const serviceTypeCtx = document.getElementById('serviceTypeChart').getContext('2d');
-            new Chart(serviceTypeCtx, {
-                type: 'pie',
-                data: {
-                    labels: layananLabels.length > 0 ? layananLabels : ['Tidak ada data'],
-                    datasets: [{
-                        data: layananData.length > 0 ? layananData : [0],
-                        backgroundColor: layananData.length > 0 ? 
-                            layananData.map((_, index) => serviceColors[index % serviceColors.length]) : 
-                            ['#cccccc'],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: {
-                                    size: 11
-                                },
-                                padding: 10,
-                                generateLabels: function(chart) {
-                                    const data = chart.data;
-                                    if (data.labels.length && data.datasets.length) {
-                                        const dataset = data.datasets[0];
-                                        const total = dataset.data.reduce((a, b) => a + b, 0);
-                                        return data.labels.map((label, i) => {
-                                            const value = dataset.data[i];
-                                            const percentage = ((value / total) * 100).toFixed(1);
-                                            return {
-                                                text: `${label} (${percentage}%)`,
-                                                fillStyle: dataset.backgroundColor[i],
-                                                hidden: false,
-                                                index: i
-                                            };
-                                        });
+            const serviceTypeChartEl = document.getElementById('serviceTypeChart');
+            if (serviceTypeChartEl) {
+                const serviceTypeCtx = serviceTypeChartEl.getContext('2d');
+                new Chart(serviceTypeCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: layananLabels.length > 0 ? layananLabels : ['Tidak ada data'],
+                        datasets: [{
+                            data: layananData.length > 0 ? layananData : [0],
+                            backgroundColor: layananData.length > 0 ?
+                                layananData.map((_, index) => serviceColors[index % serviceColors.length]) : ['#cccccc'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 11
+                                    },
+                                    padding: 10,
+                                    generateLabels: function(chart) {
+                                        const data = chart.data;
+                                        if (data.labels.length && data.datasets.length) {
+                                            const dataset = data.datasets[0];
+                                            const total = dataset.data.reduce((a, b) => a + b, 0);
+                                            return data.labels.map((label, i) => {
+                                                const value = dataset.data[i];
+                                                const percentage = ((value / total) * 100).toFixed(1);
+                                                return {
+                                                    text: `${label} (${percentage}%)`,
+                                                    fillStyle: dataset.backgroundColor[i],
+                                                    hidden: false,
+                                                    index: i
+                                                };
+                                            });
+                                        }
+                                        return [];
                                     }
-                                    return [];
                                 }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.parsed;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${label}: ${value} pesanan (${percentage}%)`;
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${value} pesanan (${percentage}%)`;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
 
             // 3. Tren Pesanan 7 Hari - Line Chart
             const today = new Date();
@@ -525,7 +534,7 @@
             for (let i = 6; i >= 0; i--) {
                 const d = new Date(today);
                 d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
+                const dateStr = formatLocalDate(d);
                 const dayName = d.toLocaleDateString('id-ID', {
                     month: 'short',
                     day: 'numeric'
@@ -606,7 +615,7 @@
                 proses = 0,
                 tunggu = 0,
                 batal = 0;
-            const todayDate = new Date().toISOString().split('T')[0];
+            const todayDate = formatLocalDate(new Date());
 
             pesananData.forEach(function(p) {
                 const status = (p.status_pesanan || '').toLowerCase();
@@ -979,23 +988,33 @@
 
             // Update statistics based on visible rows
             function updateStats() {
-                let today = 0, selesai = 0, proses = 0, tunggu = 0, batal = 0;
-                const todayDate = new Date().toISOString().split('T')[0];
+                let today = 0,
+                    selesai = 0,
+                    proses = 0,
+                    tunggu = 0,
+                    batal = 0;
+                const todayDate = formatLocalDate(new Date());
+                const searchTerm = (searchInput?.value || '').toLowerCase();
+                const cabangValue = cabangFilter?.value || '';
 
                 rows.forEach(row => {
-                    if (row.style.display === 'none') return; // Skip hidden rows
-                    
                     const status = row.dataset.status || '';
+                    const text = row.textContent.toLowerCase();
+                    const rowCabang = row.dataset.cabang || '';
                     const tglMasukCell = row.querySelector('td:nth-child(2)');
-                    
-                    // Parse date from table (format: dd/mm/yyyy)
-                    if (tglMasukCell) {
+                    const matchSearch = !searchTerm || text.includes(searchTerm);
+                    const matchCabang = !cabangValue || rowCabang === cabangValue;
+
+                    // Pesanan hari ini tidak ikut berubah saat filter status dipilih.
+                    if (matchSearch && matchCabang && tglMasukCell) {
                         const parts = tglMasukCell.textContent.trim().split('/');
                         if (parts.length === 3) {
                             const rowDate = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
                             if (rowDate === todayDate) today++;
                         }
                     }
+
+                    if (row.style.display === 'none') return; // Skip hidden rows for status cards
 
                     if (status === 'selesai' || status === 'siap_diambil' || status === 'sudah_diambil') {
                         selesai++;

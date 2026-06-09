@@ -31,11 +31,105 @@ class Pelanggan extends CI_Controller {
     {
         $id_pemilik = $this->get_id_pemilik();
         $data['pelanggan'] = $this->Pelanggan_model->getAllPelanggan($id_pemilik);
+        $data['cabang_list'] = $this->db
+            ->where('id_pemilik', $id_pemilik)
+            ->where('deleted_at IS NULL')
+            ->order_by('nama_cabang', 'ASC')
+            ->get('cabang')
+            ->result();
 
         $this->load->view('template/header');
         $this->load->view('template/sidebar');
         $this->load->view('pemilik/pelanggan/index', $data);
         $this->load->view('template/footer');
+    }
+
+    private function verify_branch_ownership($id_cabang, $id_pemilik)
+    {
+        if (!$id_cabang || !$id_pemilik) return false;
+
+        return $this->db
+            ->where('id_cabang', $id_cabang)
+            ->where('id_pemilik', $id_pemilik)
+            ->where('deleted_at IS NULL')
+            ->count_all_results('cabang') > 0;
+    }
+
+    private function get_default_cabang($id_pemilik)
+    {
+        return $this->db
+            ->where('id_pemilik', $id_pemilik)
+            ->where('deleted_at IS NULL')
+            ->order_by('id_cabang', 'ASC')
+            ->get('cabang')
+            ->row();
+    }
+
+    public function store()
+    {
+        $id_pemilik = $this->get_id_pemilik();
+        $is_ajax = $this->input->is_ajax_request();
+
+        $id_cabang = $this->input->post('id_cabang', true);
+        if (!$id_cabang) {
+            $default_cabang = $this->get_default_cabang($id_pemilik);
+            $id_cabang = $default_cabang ? $default_cabang->id_cabang : null;
+        }
+
+        if (!$this->verify_branch_ownership($id_cabang, $id_pemilik)) {
+            $response = ['success' => false, 'message' => 'Cabang tidak valid'];
+            if ($is_ajax) {
+                echo json_encode($response);
+                return;
+            }
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('pemilik/pelanggan');
+            return;
+        }
+
+        $data = [
+            'nama'      => $this->input->post('nama', true),
+            'no_telp'   => $this->input->post('no_telp', true),
+            'email'     => $this->input->post('email', true),
+            'alamat'    => $this->input->post('alamat', true),
+            'id_cabang' => $id_cabang,
+        ];
+
+        if (empty($data['nama']) || empty($data['no_telp'])) {
+            $response = ['success' => false, 'message' => 'Nama dan No. Telepon harus diisi'];
+            if ($is_ajax) {
+                echo json_encode($response);
+                return;
+            }
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('pemilik/pelanggan');
+            return;
+        }
+
+        if ($this->Pelanggan_model->checkByPhone($data['no_telp'])) {
+            $response = ['success' => false, 'message' => 'Nomor telepon sudah terdaftar'];
+            if ($is_ajax) {
+                echo json_encode($response);
+                return;
+            }
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('pemilik/pelanggan');
+            return;
+        }
+
+        $result = $this->Pelanggan_model->insertPelanggan($data);
+        $response = [
+            'success' => (bool) $result,
+            'message' => $result ? 'Pelanggan baru berhasil ditambahkan' : 'Gagal menambahkan pelanggan'
+        ];
+
+        if ($is_ajax) {
+            echo json_encode($response);
+            return;
+        }
+
+        $this->session->set_flashdata($result ? 'success' : 'error', $response['message']);
+        redirect('pemilik/pelanggan');
     }
 
     public function edit($id)
@@ -207,9 +301,14 @@ class Pelanggan extends CI_Controller {
     {
         $id_pemilik = $this->get_id_pemilik();
         $keyword = $this->input->get('keyword', true);
+        $id_cabang = $this->input->get('branch', true);
+        if ($id_cabang && !$this->verify_branch_ownership($id_cabang, $id_pemilik)) {
+            $id_cabang = null;
+        }
+
         $pelanggan = empty($keyword) ? 
-            $this->Pelanggan_model->getAllPelanggan($id_pemilik) : 
-            $this->Pelanggan_model->searchPelanggan($keyword, $id_pemilik);
+            $this->Pelanggan_model->getAllPelanggan($id_pemilik, $id_cabang) : 
+            $this->Pelanggan_model->searchPelanggan($keyword, $id_pemilik, $id_cabang);
         
         // Return JSON response
         echo json_encode([

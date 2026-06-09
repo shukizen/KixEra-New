@@ -19,9 +19,16 @@
                         <!-- User Profile with Dropdown -->
                         <div class="relative">
                             <button id="profileBtn" class="flex items-center gap-3 hover:bg-gray-50 rounded-xl px-3 py-2 transition">
-                                <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-user text-white"></i>
-                                </div>
+                                <?php 
+                                $foto_profil = $this->session->userdata('foto_profil');
+                                if (!empty($foto_profil) && file_exists(FCPATH . $foto_profil)): 
+                                ?>
+                                    <img src="<?= base_url($foto_profil) ?>" class="w-10 h-10 object-cover rounded-full" alt="Profile">
+                                <?php else: ?>
+                                    <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="text-left">
                                     <div class="text-sm font-medium text-gray-800">
                                         <?php echo $this->session->userdata('nama') ? $this->session->userdata('nama') : 'Karyawan'; ?>

@@ -90,11 +90,11 @@
                     <p class="text-xl text-gray-900 leading-relaxed" data-translate="hero-subtitle">Digitize and streamline your shoe cleaning business with our integrated management platform.</p>
                     <div class="flex gap-3">
                         <?php if (isset($logged_in) && $logged_in): ?>
-                            <a href="<?= base_url($dashboard_url ?? 'pemilik/pemilik_dashboard') ?>" class="px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-600 hover:to-emerald-500 text-white rounded-xl font-semibold text-lg shadow-lg transition-all" data-translate="hero-dashboard">Dashboard</a>
+                            <a href="<?= base_url($dashboard_url ?? 'pemilik/pemilik_dashboard') ?>" class="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-lg shadow-lg transition-all" data-translate="hero-dashboard">Dashboard</a>
                         <?php else: ?>
-                            <a href="<?= base_url('auth/login') ?>" class="px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-600 hover:to-emerald-500 text-white rounded-xl font-semibold text-lg shadow-lg transition-all" data-translate="btn-get-started">Get Started</a>
+                            <a href="<?= base_url('auth/login') ?>" class="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-lg shadow-lg transition-all" data-translate="btn-get-started">Get Started</a>
                         <?php endif; ?>
-                        <button class="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-300 hover:from-emerald-600 hover:to-teal-400 text-white rounded-xl font-semibold text-lg shadow-lg transition-all" data-translate="btn-watch-demo">Watch Demo</button>
+                        <button class="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-lg shadow-lg transition-all" data-translate="btn-watch-demo">Watch Demo</button>
                     </div>
                 </div>
                 
@@ -102,7 +102,7 @@
                     <div class="bg-emerald-300 rounded-3xl p-12 shadow-2xl transform rotate-1">
                         <div class="bg-white rounded-2xl overflow-hidden shadow-xl">
                             <div class="aspect-video bg-gray-200 flex items-center justify-center">
-                                <img src="<?= site_url ('assets/img/konten/dashbd.png') ?>" alt="dashboard">
+                                <img src="<?= site_url ('assets/img/konten/Dashboard.png') ?>" alt="dashboard">
                             </div>
                         </div>
                     </div>
@@ -177,7 +177,7 @@
         
         <?php if (isset($logged_in) && $logged_in && isset($user['role']) && $user['role'] === 'owner'): ?>
         <!-- Subscription Status Banner for Logged-in Users -->
-        <div class="mb-12 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 max-w-3xl mx-auto border border-emerald-200">
+        <div class="mb-12 bg-emerald-50 rounded-2xl p-6 max-w-3xl mx-auto border border-emerald-200">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
                     <div class="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center">
@@ -202,7 +202,7 @@
                 </div>
                 <div class="flex gap-3">
                     <?php if (($user['status_langganan'] ?? '') === 'trial' || ($user['status_langganan'] ?? '') === 'nonaktif'): ?>
-                        <a href="#pricing" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-600 hover:to-emerald-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all">
+                        <a href="#pricing" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all">
                             Upgrade Sekarang
                         </a>
                     <?php elseif (($user['status_langganan'] ?? '') === 'aktif'): ?>
@@ -599,7 +599,7 @@
         
         <div class="grid md:grid-cols-2 gap-8">
             <!-- Case Study 1 -->
-            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-8 shadow-lg">
+            <div class="bg-emerald-50 rounded-2xl p-8 shadow-lg">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-xl">MC</div>
                     <div>
@@ -664,7 +664,7 @@
             </div>
 
             <!-- Case Study 2 -->
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 shadow-lg">
+            <div class="bg-blue-50 rounded-2xl p-8 shadow-lg">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl">SS</div>
                     <div>
@@ -741,7 +741,7 @@
         
         <!-- Sistem Otomatis vs Metode Manual -->
 <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-12 max-w-6xl mx-auto">
-        <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-8 py-6">
+        <div class="bg-emerald-500 px-8 py-6">
             <h3 class="text-2xl font-bold text-white">Automated System vs Manual Method</h3>
         </div>
         <div class="overflow-x-auto">
@@ -1004,7 +1004,7 @@
                 'feature-phone-support': '24/7 phone support',
                 
                 // Footer
-                'footer-copyright': '© KixEra 2025. Hak cipta dilindungi.',
+                'footer-copyright': '© KixEra 2026. Hak cipta dilindungi.',
                 
                 // Why Choose Section
                 'why-title': 'Mengapa Memilih KixEra?',
@@ -1066,7 +1066,7 @@
                 'feature-phone-support': '24/7 phone support',
                 
                 // Footer
-                'footer-copyright': '© KixEra 2025. All rights reserved.',
+                'footer-copyright': '© KixEra 2026. All rights reserved.',
                 
                 // Why Choose Section
                 'why-title': 'Why Choose KixEra?',

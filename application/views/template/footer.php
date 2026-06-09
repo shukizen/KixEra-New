@@ -2,11 +2,13 @@
     <footer class="bg-white border-t border-gray-200 p-6 mt-auto">
         <div class="flex flex-col md:flex-row justify-between items-center">
             <div class="text-sm text-gray-600 mb-2 md:mb-0">
-                © 2025 Kixera. All rights reserved.
+                © 2026 Kixera. All rights reserved.
             </div>
             <div class="text-sm text-gray-500">
-                Version 1.0.0 | Last Login: 
-                <?php if($this->session->userdata('user_id')): ?>
+                Version 2.0.26 | Last Login: 
+                <?php if($this->session->userdata('id_user') && $this->session->userdata('login_time')): ?>
+                    <?= date('d M Y H:i', $this->session->userdata('login_time')) ?>
+                <?php else: ?>
                     <?= date('d M Y H:i') ?>
                 <?php endif; ?>
             </div>

@@ -13,7 +13,7 @@
         select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-white to-emerald-50 min-h-screen py-8 px-4">
+<body class="bg-slate-50 min-h-screen py-8 px-4">
     <div class="max-w-xl mx-auto">
         <!-- Progress -->
         <div class="mb-8">
@@ -38,7 +38,7 @@
         <!-- Card -->
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             <!-- Header -->
-            <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-slate-800 to-slate-900">
+            <div class="px-6 py-5 border-b border-gray-100 bg-slate-800">
                 <h1 class="text-xl font-bold text-white">Selamat Datang di KixEra! 🎉</h1>
                 <p class="text-slate-300 text-sm mt-1">Lengkapi informasi usaha Anda untuk memulai</p>
             </div>
@@ -51,13 +51,13 @@
             <?php endif; ?>
             
             <!-- Form -->
-            <form action="<?= base_url('auth/save_profile') ?>" method="POST" enctype="multipart/form-data" class="p-6">
+            <form id="profileForm" action="<?= base_url('auth/save_profile') ?>" method="POST" enctype="multipart/form-data" class="p-6">
                 
                 <!-- Logo Upload -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Logo Usaha <span class="text-gray-400 font-normal">(opsional)</span></label>
                     <div class="flex items-center gap-4">
-                        <div id="logoPreview" class="w-20 h-20 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-2xl font-bold shadow-md flex-shrink-0">
+                        <div id="logoPreview" class="w-20 h-20 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-2xl font-bold shadow-md flex-shrink-0">
                             <?= strtoupper(substr($pemilik->nama_usaha ?? 'K', 0, 1)) ?>
                         </div>
                         <div class="flex-1">
@@ -121,6 +121,28 @@
                     </div>
                 </div>
                 
+                <!-- Password Akun (Opsional untuk Login Tradisional) -->
+                <div class="mb-6 border-t border-gray-100 pt-6">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-1">Keamanan & Password</h3>
+                    <p class="text-xs text-gray-500 mb-4">Buat password jika Anda ingin login menggunakan email & password kelak (opsional jika menggunakan Google).</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Password Baru</label>
+                            <input type="password" name="password" id="password" minlength="6"
+                                   placeholder="Minimal 6 karakter"
+                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 transition-all text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Konfirmasi Password</label>
+                            <input type="password" name="konfirmasi_password" id="konfirmasi_password" minlength="6"
+                                   placeholder="Ulangi password baru"
+                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 transition-all text-sm">
+                            <p id="passwordError" class="text-xs text-red-500 mt-1 hidden">Password tidak cocok</p>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Info Box -->
                 <div class="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
                     <div class="flex gap-3">
@@ -139,7 +161,7 @@
                         Lewati
                     </a>
                     <button type="submit" 
-                            class="flex-[2] py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all focus:ring-4 focus:ring-emerald-200 text-sm">
+                            class="flex-[2] py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-all focus:ring-4 focus:ring-emerald-200 text-sm">
                         Simpan & Mulai →
                     </button>
                 </div>
@@ -274,6 +296,36 @@
                 };
                 reader.readAsDataURL(file);
             }
+        });
+        
+        // Form submit validation for password matching
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('konfirmasi_password').value;
+            const errorElement = document.getElementById('passwordError');
+            
+            if (password) {
+                if (password.length < 6) {
+                    e.preventDefault();
+                    alert('Password harus minimal 6 karakter');
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    e.preventDefault();
+                    errorElement.classList.remove('hidden');
+                    document.getElementById('konfirmasi_password').focus();
+                    return;
+                }
+            }
+            errorElement.classList.add('hidden');
+        });
+
+        // Hide error message on type
+        document.getElementById('konfirmasi_password').addEventListener('input', function() {
+            document.getElementById('passwordError').classList.add('hidden');
+        });
+        document.getElementById('password').addEventListener('input', function() {
+            document.getElementById('passwordError').classList.add('hidden');
         });
         
         // Initialize

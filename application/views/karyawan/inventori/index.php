@@ -10,10 +10,10 @@
         <?php $this->load->view('template/sidebarkaryawan'); ?>
 
         <!-- Main Content -->
-        <main class="flex-1 lg:ml-64">
+        <main class="flex-1 lg:ml-64 transition-all duration-300">
             
             <!-- Topbar -->
-            <div class="bg-white shadow-sm px-6 py-4 flex items-center justify-between flex-wrap gap-4">
+            <header class="bg-white shadow-sm px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
                     <h1 class="text-xl font-semibold text-gray-800">Kelola Inventory</h1>
                     <span class="bg-emerald-100 text-emerald-600 text-sm px-3 py-1 rounded-full">
@@ -45,7 +45,7 @@
                         <i class="fas fa-plus"></i> Tambah Inventory
                     </button>
                 </div>
-            </div>
+            </header>
 
             <!-- Content -->
             <div class="p-6">
@@ -530,8 +530,6 @@
                 </div>
             </div>
 
-        </main>
-    </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
@@ -790,5 +788,5 @@ function showChartPlaceholder(canvas, message) {
     `;
 }
 </script>
-</body>
-</html>
+
+<?php $this->load->view('template/footer'); ?>

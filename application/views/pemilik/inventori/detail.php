@@ -10,7 +10,7 @@
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
         <!-- Main Content -->
-        <main class="flex-1 ml-64">
+        <main class="flex-1 lg:ml-64 transition-all duration-300">
             <!-- Header -->
             <header class="bg-white border-b border-gray-100 shadow-sm px-6 py-4">
                 <div class="flex items-center justify-between">
@@ -38,7 +38,7 @@
                     <!-- Item Card -->
                     <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
                         <!-- Card Header -->
-                        <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-8 py-6">
+                        <div class="bg-emerald-500 px-8 py-6">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-emerald-100 text-sm font-medium mb-1">Item ID</p>
@@ -74,7 +74,7 @@
                             <!-- Stats Grid -->
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                                 <!-- Stock Available -->
-                                <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-100">
+                                <div class="bg-emerald-50 rounded-xl p-6 border border-emerald-100">
                                     <div class="flex items-center gap-4">
                                         <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
                                             <i class="fas fa-boxes text-white text-xl"></i>
@@ -87,7 +87,7 @@
                                 </div>
 
                                 <!-- Minimum Stock -->
-                                <div class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-100">
+                                <div class="bg-yellow-50 rounded-xl p-6 border border-yellow-100">
                                     <div class="flex items-center gap-4">
                                         <div class="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center">
                                             <i class="fas fa-exclamation-triangle text-white text-xl"></i>
@@ -100,7 +100,7 @@
                                 </div>
 
                                 <!-- Price -->
-                                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                                <div class="bg-blue-50 rounded-xl p-6 border border-blue-100">
                                     <div class="flex items-center gap-4">
                                         <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
                                             <i class="fas fa-money-bill-wave text-white text-xl"></i>

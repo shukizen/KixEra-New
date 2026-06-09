@@ -1,34 +1,36 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengaturan - KixEra</title>
 </head>
+
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
-        
+
         <!-- Main Content -->
         <main class="flex-1 lg:ml-64">
             <!-- Header with Subscription Badge -->
-            <div class="p-6 pb-0 flex justify-between items-start">
+            <header class="p-6 pb-0 flex flex-col md:flex-row justify-between items-start gap-4">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800"><?= lang_text('settings') ?></h1>
                     <p class="text-gray-600 text-sm"><?= lang_text('manage_profile_preferences') ?></p>
                 </div>
-                
+
                 <!-- Langganan Widget (Pojok Kanan) -->
-                <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-2xl shadow-lg p-4 text-white min-w-[320px]">
+                <div class="bg-emerald-600 rounded-2xl shadow-lg p-4 text-white min-w-[320px]">
                     <div class="flex items-center gap-3 mb-2">
                         <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                             <i class="fas fa-crown text-yellow-300 text-lg"></i>
                         </div>
                         <div>
                             <h3 class="font-bold text-sm"><?= lang_text('upgrade_subscription') ?></h3>
-                            <?php if(isset($pemilik->subscription_plan) && $pemilik->subscription_plan): ?>
-                            <p class="text-xs text-emerald-100"><?= lang_text('current_plan') ?>: <strong><?= ucfirst($pemilik->subscription_plan) ?></strong></p>
+                            <?php if (isset($pemilik->subscription_plan) && $pemilik->subscription_plan): ?>
+                                <p class="text-xs text-emerald-100"><?= lang_text('current_plan') ?>: <strong><?= ucfirst($pemilik->subscription_plan) ?></strong></p>
                             <?php else: ?>
-                            <p class="text-xs text-emerald-100"><?= lang_text('upgrade_desc') ?></p>
+                                <p class="text-xs text-emerald-100"><?= lang_text('upgrade_desc') ?></p>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -36,70 +38,70 @@
                         <i class="fas fa-rocket mr-1"></i> <?= lang_text('view_packages') ?>
                     </a>
                 </div>
-            </div>
-            
+            </header>
+
             <!-- Dashboard Content -->
             <div class="p-6">
                 <!-- Pengaturan Profile -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-6"><?= lang_text('profile_settings') ?></h2>
-                    
-            <!-- Photo Section -->
+
+                    <!-- Photo Section -->
                     <div class="flex items-center gap-6 mb-8">
                         <div class="relative">
-                            <img id="profilePhotoDisplay" 
-                                 src="<?= isset($pemilik->foto_profil) && !empty($pemilik->foto_profil) ? base_url($pemilik->foto_profil) : 'https://via.placeholder.com/64' ?>" 
-                                 alt="Profile" class="w-16 h-16 bg-emerald-500 rounded-full object-cover flex items-center justify-center">
-                            <i class="fas fa-user text-white text-2xl absolute inset-0 flex items-center justify-center" id="defaultIcon"></i>
+                            <img id="profilePhotoDisplay"
+                                src="<?= isset($pemilik->foto_profil) && !empty($pemilik->foto_profil) ? base_url($pemilik->foto_profil) : 'https://via.placeholder.com/64' ?>"
+                                alt="Profile" class="w-16 h-16 bg-emerald-500 rounded-full object-cover flex items-center justify-center">
+                            <i class="fas fa-user text-white text-2xl absolute inset-0 flex items-center justify-center" id="defaultIcon" <?= isset($pemilik->foto_profil) && !empty($pemilik->foto_profil) ? 'style="display: none;"' : '' ?>></i>
                         </div>
-                        <button type="button" onclick="document.getElementById('photoInput').click()" 
-                                class="px-6 py-2 border border-emerald-600 text-emerald-600 rounded-xl hover:bg-emerald-50 transition">
+                        <button type="button" onclick="document.getElementById('photoInput').click()"
+                            class="px-6 py-2 border border-emerald-600 text-emerald-600 rounded-xl hover:bg-emerald-50 transition">
                             <?= lang_text('change_photo') ?>
                         </button>
                         <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhotoChange()">
                     </div>
-                    
+
                     <!-- Form Fields -->
                     <form id="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <input type="hidden" id="id_owner" value="<?= $pemilik->id_pemilik ?>">
-                        
+
                         <!-- Nama Lengkap -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('full_name') ?></label>
-                            <input type="text" id="nama_lengkap" name="nama_lengkap" 
-                                   value="<?= htmlspecialchars($pemilik->nama) ?>"
-                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
+                            <input type="text" id="nama_lengkap" name="nama_lengkap"
+                                value="<?= htmlspecialchars($pemilik->nama) ?>"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
                         </div>
-                        
+
                         <!-- Email -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('email') ?></label>
-                            <input type="email" id="email" name="email" 
-                                   value="<?= htmlspecialchars($pemilik->email) ?>"
-                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
+                            <input type="email" id="email" name="email"
+                                value="<?= htmlspecialchars($pemilik->email) ?>"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
                         </div>
-                        
+
                         <!-- Telepon -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('phone') ?></label>
-                            <input type="tel" id="telepon" name="telepon" 
-                                   value="<?= htmlspecialchars($pemilik->no_telp ?? '') ?>"
-                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
+                            <input type="tel" id="telepon" name="telepon"
+                                value="<?= htmlspecialchars($pemilik->no_telp ?? '') ?>"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500">
                         </div>
-                        
+
                         <!-- Password -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('password') ?></label>
-                            <button type="button" onclick="openChangePasswordModal()" 
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-50 text-center transition">
+                            <button type="button" onclick="openChangePasswordModal()"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-50 text-center transition">
                                 <?= lang_text('change_password') ?>
                             </button>
                         </div>
                     </form>
-                    
+
                     <!-- Action Buttons -->
                     <div class="flex gap-4">
-                        <button onclick="updateProfile()" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition font-medium">
+                        <button onclick="updateProfile()" class="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:opacity-90 transition font-medium">
                             <?= lang_text('save_changes') ?>
                         </button>
                         <button type="button" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition font-medium" onclick="location.reload()">
@@ -107,7 +109,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Kelola Akun Karyawan -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
@@ -120,12 +122,12 @@
                             </h2>
                             <p class="text-sm text-gray-600 leading-5"><?= lang_text('manage_employees_desc') ?></p>
                         </div>
-                        <button onclick="openAddEmployeeModal()" class="px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition flex items-center gap-2">
+                        <button onclick="openAddEmployeeModal()" class="px-6 py-2 bg-emerald-500 text-white rounded-xl hover:opacity-90 transition flex items-center gap-2">
                             <i class="fas fa-user-plus"></i>
                             <span><?= lang_text('add_employee') ?></span>
                         </button>
                     </div>
-                    
+
                     <!-- Employee Table -->
                     <div class="overflow-x-auto">
                         <table class="w-full" id="employeeTable">
@@ -148,16 +150,16 @@
                                             <td class="text-center py-3 px-2 text-gray-800"><?= htmlspecialchars($emp->nama ?? '') ?></td>
                                             <td class="text-center py-3 px-2 text-gray-600"><?= htmlspecialchars($emp->email ?? '') ?></td>
                                             <td class="text-center py-3 px-2">
-                                                <span class="<?php 
-                                                    $jabatan_colors = [
-                                                        'Manager' => 'bg-blue-100 text-blue-800',
-                                                        'Kepala' => 'bg-yellow-100 text-yellow-800',
-                                                        'Staff' => 'bg-purple-100 text-purple-800',
-                                                        'Kasir' => 'bg-green-100 text-green-800',
-                                            
-                                                    ];
-                                                    echo $jabatan_colors[$emp->jabatan ?? ''] ?? 'bg-gray-100 text-gray-800';
-                                                ?> px-3 py-1 rounded-lg text-sm font-medium">
+                                                <span class="<?php
+                                                                $jabatan_colors = [
+                                                                    'Manager' => 'bg-blue-100 text-blue-800',
+                                                                    'Kepala' => 'bg-yellow-100 text-yellow-800',
+                                                                    'Staff' => 'bg-purple-100 text-purple-800',
+                                                                    'Kasir' => 'bg-green-100 text-green-800',
+
+                                                                ];
+                                                                echo $jabatan_colors[$emp->jabatan ?? ''] ?? 'bg-gray-100 text-gray-800';
+                                                                ?> px-3 py-1 rounded-lg text-sm font-medium">
                                                     <?= htmlspecialchars($emp->jabatan ?? '-') ?>
                                                 </span>
                                             </td>
@@ -188,21 +190,21 @@
                         </table>
                     </div>
                 </div>
-                
+
                 <!-- Kelola Cabang Bisnis -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-lg font-semibold text-gray-800">
                             <?= lang_text('manage_branches') ?>
-                             <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs ml-2">
+                            <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs ml-2">
                                 <?= $usage_stats['cabang']['current'] ?> / <?= $usage_stats['cabang']['is_unlimited'] ? '∞' : $usage_stats['cabang']['max'] ?>
                             </span>
                         </h2>
-                        <button onclick="openAddBranchModal()" class="px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition">
+                        <button onclick="openAddBranchModal()" class="px-6 py-2 bg-emerald-500 text-white rounded-xl hover:opacity-90 transition">
                             <?= lang_text('add_branch') ?>
                         </button>
                     </div>
-                    
+
                     <!-- Branch Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="branchContainer">
                         <?php if (isset($branches) && count($branches) > 0): ?>
@@ -227,17 +229,17 @@
                         <?php endif; ?>
                     </div>
                 </div>
-                
+
                 <!-- Pengaturan Notifikasi -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-lg font-semibold text-gray-800"><?= lang_text('notification_settings') ?></h2>
-                        <button onclick="saveNotificationSettings()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition font-medium text-sm flex items-center gap-2">
+                        <button onclick="saveNotificationSettings()" class="px-4 py-2 bg-emerald-500 text-white rounded-xl hover:opacity-90 transition font-medium text-sm flex items-center gap-2">
                             <i class="fas fa-save"></i>
                             <?= lang_text('save') ?>
                         </button>
                     </div>
-                    
+
                     <div class="space-y-6">
                         <!-- Notification 1 -->
                         <div class="flex items-center justify-between">
@@ -250,7 +252,7 @@
                                 <div class="w-11 h-6 bg-gray-300 peer-checked:bg-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                             </label>
                         </div>
-                        
+
                         <!-- Notification 2 -->
                         <div class="flex items-center justify-between">
                             <div>
@@ -276,11 +278,11 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Preferensi Sistem -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-6"><?= lang_text('system_preferences') ?></h2>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <!-- Bahasa -->
                         <div>
@@ -290,7 +292,7 @@
                                 <option value="en" <?= isset($pemilik->bahasa) && $pemilik->bahasa == 'en' ? 'selected' : '' ?>>English</option>
                             </select>
                         </div>
-                        
+
                         <!-- Mata Uang -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2"><?= lang_text('currency') ?></label>
@@ -303,10 +305,10 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <!-- Save Button -->
                     <div class="flex justify-end">
-                        <button onclick="savePreferences()" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition font-medium flex items-center gap-2">
+                        <button onclick="savePreferences()" class="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:opacity-90 transition font-medium flex items-center gap-2">
                             <i class="fas fa-save"></i>
                             <?= lang_text('save_preferences') ?>
                         </button>
@@ -318,8 +320,8 @@
 
 
 
-    <!-- Close Main Layout before Modals -->
-    </main>
+            <!-- Close Main Layout before Modals -->
+        </main>
     </div>
 
     <!-- Modal Change Password -->
@@ -334,22 +336,22 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password Lama</label>
                         <input type="password" id="password_lama" name="password_lama" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
                         <input type="password" id="password_baru" name="password_baru" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password</label>
                         <input type="password" id="password_konfirmasi" name="password_konfirmasi" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
                     </div>
                 </div>
                 <div class="flex gap-3 mt-6">
-                    <button type="button" onclick="closeChangePasswordModal()" 
-                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                    <button type="button" onclick="closeChangePasswordModal()"
+                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
                         Batal
                     </button>
                     <button type="submit" class="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
@@ -369,17 +371,17 @@
             </div>
             <form id="addEmployeeForm" class="p-6" data-no-loading="true">
                 <input type="hidden" id="id_karyawan" value="">
-                
+
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nama Karyawan <span class="text-red-500">*</span></label>
                         <input type="text" id="nama_karyawan" name="nama_karyawan" required placeholder="Masukkan nama karyawan"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email <span class="text-red-500">*</span></label>
                         <input type="email" id="email_karyawan" name="email_karyawan" required placeholder="contoh@email.com"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Jabatan <span class="text-red-500">*</span></label>
@@ -393,24 +395,24 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Telepon <span class="text-red-500">*</span></label>
                         <input type="tel" id="telepon_karyawan" name="telepon_karyawan" required placeholder="08xxxxxxxxxx"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
-                         <div id="password_field">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Password <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <input type="password" id="password_karyawan" name="password_karyawan" placeholder="Minimal 6 karakter"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 pr-10">
-                            <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                                <i id="toggleIcon" class="fas fa-eye"></i>
-                            </button>
+                        <div id="password_field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="password" id="password_karyawan" name="password_karyawan" placeholder="Minimal 6 karakter"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 pr-10">
+                                <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                    <i id="toggleIcon" class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Password ini akan digunakan karyawan untuk login</p>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">Password ini akan digunakan karyawan untuk login</p>
-                    </div>
-                        
+
                         <label class="block text-sm font-medium text-gray-700 mb-2">Cabang <span class="text-red-500">*</span></label>
                         <select id="id_cabang" name="id_cabang" required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
                             <option value="">-- Pilih Cabang --</option>
                             <?php if (isset($branches) && count($branches) > 0): ?>
                                 <?php foreach ($branches as $branch): ?>
@@ -430,8 +432,8 @@
                     </div>
                 </div>
                 <div class="flex gap-3 mt-6">
-                    <button type="button" onclick="closeAddEmployeeModal()" 
-                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                    <button type="button" onclick="closeAddEmployeeModal()"
+                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
                         Batal
                     </button>
                     <button type="submit" id="btnSubmitEmployee" class="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
@@ -451,22 +453,22 @@
             <form id="addBranchForm" class="p-6" data-no-loading="true">
                 <input type="hidden" id="id_cabang_edit" value="">
                 <input type="hidden" id="id_pemilik_branch" value="<?= $pemilik->id_pemilik ?>">
-                
+
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nama Cabang</label>
                         <input type="text" id="nama_cabang_edit" name="nama_cabang" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
                         <textarea id="alamat_edit" name="alamat" required rows="3"
-                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500"></textarea>
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500"></textarea>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Telepon</label>
                         <input type="tel" id="telepon_edit" name="telepon" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -474,10 +476,11 @@
                             <option value="aktif">Aktif</option>
                             <option value="nonaktif">Nonaktif</option>
                         </select>
+                    </div>
                 </div>
                 <div class="flex gap-3 mt-6">
-                    <button type="button" onclick="closeAddBranchModal()" 
-                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover-bg-gray-50 transition">
+                    <button type="button" onclick="closeAddBranchModal()"
+                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
                         Batal
                     </button>
                     <button type="submit" id="btnSubmitBranch" class="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
@@ -501,7 +504,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
+
             <div class="p-6">
                 <div class="grid md:grid-cols-3 gap-6">
                     <!-- Free Plan -->
@@ -511,7 +514,7 @@
                             <span class="text-3xl font-bold text-gray-900">Rp 0</span>
                         </div>
                         <p class="text-center text-gray-500 text-sm mb-6">Gratis Selamanya</p>
-                        
+
                         <ul class="space-y-3 mb-6 text-sm">
                             <li class="flex items-start gap-2">
                                 <i class="fas fa-check text-green-500 mt-0.5"></i>
@@ -534,16 +537,16 @@
                                 <span class="text-gray-400">Rekomendasi AI</span>
                             </li>
                         </ul>
-                        
+
                         <button onclick="selectPlan('free')" class="block w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-semibold transition-colors text-center">
                             Paket Saat Ini
                         </button>
                     </div>
 
                     <!-- Pro Plan (Popular) -->
-                    <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border-2 border-emerald-400 shadow-lg relative transform hover:scale-105 transition-all">
+                    <div class="bg-emerald-50 rounded-2xl p-6 border-2 border-emerald-400 shadow-lg relative transform hover:scale-105 transition-all">
                         <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <span class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-1 rounded-full text-xs font-semibold shadow">Paling Populer</span>
+                            <span class="bg-emerald-500 text-white px-4 py-1 rounded-full text-xs font-semibold shadow">Paling Populer</span>
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 text-center mb-2 mt-2">Pro</h3>
                         <div class="text-center mb-2">
@@ -551,7 +554,7 @@
                             <span class="text-gray-600 text-sm">/ bulan</span>
                         </div>
                         <p class="text-center text-gray-500 text-sm mb-6">Ideal untuk bisnis berkembang</p>
-                        
+
                         <ul class="space-y-3 mb-6 text-sm">
                             <li class="flex items-start gap-2">
                                 <i class="fas fa-check text-green-500 mt-0.5"></i>
@@ -574,8 +577,8 @@
                                 <span class="text-gray-700">Laporan otomatis</span>
                             </li>
                         </ul>
-                        
-                        <a href="<?= base_url('pembayaran/checkout/2') ?>" class="block w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition-colors text-center shadow-lg">
+
+                        <a href="<?= base_url('pembayaran/checkout/2') ?>" class="block w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-colors text-center shadow-lg">
                             Upgrade Sekarang
                         </a>
                     </div>
@@ -588,7 +591,7 @@
                             <span class="text-gray-600 text-sm">/ bulan</span>
                         </div>
                         <p class="text-center text-gray-500 text-sm mb-6">Untuk bisnis enterprise</p>
-                        
+
                         <ul class="space-y-3 mb-6 text-sm">
                             <li class="flex items-start gap-2">
                                 <i class="fas fa-check text-green-500 mt-0.5"></i>
@@ -611,7 +614,7 @@
                                 <span class="text-gray-700">Account manager khusus</span>
                             </li>
                         </ul>
-                        
+
                         <a href="<?= base_url('pembayaran/checkout/3') ?>" class="block w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition-colors text-center">
                             Hubungi Sales
                         </a>
@@ -621,633 +624,645 @@
         </div>
     </div>
 
-<script>
-    const BASE_URL = '<?= base_url() ?>';
-    
-    // Usage Stats from Controller
-    const USAGE_STATS = <?= json_encode($usage_stats ?? []) ?>;
-    
-    // ============ NOTIFICATION FUNCTION ============
-    function showNotification(message, type = 'info') {
-        const existing = document.getElementById('temp-notification');
-        if (existing) {
-            existing.remove();
-        }
-        
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300 ${
+    <script>
+        const BASE_URL = '<?= base_url() ?>';
+
+        // Usage Stats from Controller
+        const USAGE_STATS = <?= json_encode($usage_stats ?? []) ?>;
+
+        // ============ NOTIFICATION FUNCTION ============
+        function showNotification(message, type = 'info') {
+            const existing = document.getElementById('temp-notification');
+            if (existing) {
+                existing.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300 ${
             type === 'success' ? 'bg-green-500 text-white' :
             type === 'error' ? 'bg-red-500 text-white' :
             'bg-blue-500 text-white'
         }`;
-        notification.textContent = message;
-        notification.id = 'temp-notification';
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            setTimeout(() => {
-                notification.remove();
-            }, 300);
-        }, 3000);
-    }
-    
-    // ============ UPDATE PROFILE FUNCTION ============
-    function updateProfile() {
-        const id_pemilik = $('#id_owner').val();
-        const nama = $('#nama_lengkap').val();
-        const email = $('#email').val();
-        const telepon = $('#telepon').val();
-        
-        if (!nama || !email || !telepon) {
-            showNotification('Semua field harus diisi', 'error');
-            return;
-        }
-        
-        $.ajax({
-            url: BASE_URL + 'pemilik/pengaturan/update_profile',
-            type: 'POST',
-            data: {
-                id_pemilik: id_pemilik,
-                nama_lengkap: nama,
-                email: email,
-                telepon: telepon
-            },
-            dataType: 'json',
-            success: function(response) {
-                console.log('Response:', response);
-                showNotification(response.message, response.success ? 'success' : 'error');
-                if(response.success) {
-                    setTimeout(() => location.reload(), 1500);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                console.error('Response:', xhr.responseText);
-                showNotification('Terjadi kesalahan: ' + error, 'error');
-            }
-        });
-    }
-    
-    // ============ PHOTO UPLOAD FUNCTION ============
-    function handlePhotoChange() {
-        const fileInput = document.getElementById('photoInput');
-        const file = fileInput.files[0];
-        
-        if (!file) return;
-        
-        // Validate file type
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!validTypes.includes(file.type)) {
-            showNotification('Hanya file gambar (JPG, PNG, GIF) yang diperbolehkan', 'error');
-            return;
-        }
-        
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            showNotification('Ukuran file maksimal 5MB', 'error');
-            return;
-        }
-        
-        // Show preview immediately
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('profilePhotoDisplay').src = e.target.result;
-            document.getElementById('defaultIcon').style.display = 'none';
-        };
-        reader.readAsDataURL(file);
-        
-        // Upload file
-        const formData = new FormData();
-        formData.append('profile_photo', file);
-        formData.append('id_pemilik', $('#id_owner').val());
-        
-        console.log('Uploading photo with id_pemilik:', $('#id_owner').val());
-        
-        $.ajax({
-            url: BASE_URL + 'pemilik/pengaturan/upload_photo',
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            success: function(response) {
-                console.log('Upload response:', response);
-                try {
-                    response = typeof response === 'string' ? JSON.parse(response) : response;
-                } catch(e) {
-                    console.error('Parse error:', e);
-                }
-                
-                if(response.success) {
-                    showNotification('Foto berhasil diupload', 'success');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showNotification(response.message || 'Gagal mengupload foto', 'error');
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                console.error('Response:', xhr.responseText);
-                showNotification('Terjadi kesalahan saat upload: ' + error, 'error');
-            }
-        });
-    }
+            notification.textContent = message;
+            notification.id = 'temp-notification';
 
-    // ============ PASSWORD FUNCTIONS ============
-    function openChangePasswordModal() {
-        $('#changePasswordModal').removeClass('hidden');
-    }
-    
-    function closeChangePasswordModal() {
-        $('#changePasswordModal').addClass('hidden');
-        $('#changePasswordForm')[0].reset();
-    }
-    
-    $('#changePasswordForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        const pwd_lama = $('#password_lama').val();
-        const pwd_baru = $('#password_baru').val();
-        const pwd_konfirmasi = $('#password_konfirmasi').val();
-        
-        if (!pwd_lama || !pwd_baru || !pwd_konfirmasi) {
-            showNotification('Semua field password harus diisi', 'error');
-            return;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
         }
-        
-        if (pwd_baru !== pwd_konfirmasi) {
-            showNotification('Password baru tidak cocok dengan konfirmasi', 'error');
-            return;
-        }
-        
-        if (pwd_baru.length < 6) {
-            showNotification('Password minimal 6 karakter', 'error');
-            return;
-        }
-        
-        $.ajax({
-            url: BASE_URL + 'pemilik/pengaturan/change_password',
-            type: 'POST',
-            data: {
-                password_lama: pwd_lama,
-                password_baru: pwd_baru
-            },
-            dataType: 'json',
-            success: function(response) {
-                console.log('Response:', response);
-                showNotification(response.message, response.success ? 'success' : 'error');
-                if(response.success) {
-                    setTimeout(() => closeChangePasswordModal(), 1500);
+
+        // ============ UPDATE PROFILE FUNCTION ============
+        function updateProfile() {
+            const id_pemilik = $('#id_owner').val();
+            const nama = $('#nama_lengkap').val();
+            const email = $('#email').val();
+            const telepon = $('#telepon').val();
+
+            if (!nama || !email || !telepon) {
+                showNotification('Semua field harus diisi', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: BASE_URL + 'pemilik/pengaturan/update_profile',
+                type: 'POST',
+                data: {
+                    id_pemilik: id_pemilik,
+                    nama_lengkap: nama,
+                    email: email,
+                    telepon: telepon
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Response:', response);
+                    showNotification(response.message, response.success ? 'success' : 'error');
+                    if (response.success) {
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.error('Response:', xhr.responseText);
+                    showNotification('Terjadi kesalahan: ' + error, 'error');
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                console.error('Response:', xhr.responseText);
-                showNotification('Terjadi kesalahan: ' + error, 'error');
-            }
-        });
-    });
-    
-    // ============ EMPLOYEE FUNCTIONS ============
-     function openAddEmployeeModal() {
-        // Check Limit
-        if (USAGE_STATS.karyawan && !USAGE_STATS.karyawan.is_unlimited) {
-            if (USAGE_STATS.karyawan.current >= USAGE_STATS.karyawan.max) {
-                 showNotification('Batas jumlah karyawan tercapai. Upgrade paket untuk menambah.', 'error');
-                 return;
-            }
+            });
         }
-        
-        $('#addEmployeeModal').removeClass('hidden');
-        $('#addEmployeeForm')[0].reset();
-        $('#modalEmployeeTitle').text('Tambah Karyawan');
-        $('#id_karyawan').val('');
-        $('#jabatan').val('Staff');
-        $('#status_karyawan').val('aktif');
-        $('#id_cabang').val('');
-        $('#password_field').show(); // Show password field for new employee
-        $('#password_karyawan').prop('required', true);
-        $('#btnSubmitEmployee').prop('disabled', false).text('Simpan Karyawan');
-    }
-    
-    function closeAddEmployeeModal() {
-        $('#addEmployeeModal').addClass('hidden');
-        $('#addEmployeeForm')[0].reset();
-    }
-    
-    function editEmployee(id) {
-        $.ajax({
-            url: BASE_URL + 'pemilik/pengaturan/get_employee/' + id,
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                if(response.success) {
-                    const emp = response.data;
-                    $('#modalEmployeeTitle').text('Edit Karyawan');
-                    $('#id_karyawan').val(emp.id_karyawan);
-                    $('#nama_karyawan').val(emp.nama);
-                    $('#email_karyawan').val(emp.email);
-                    $('#jabatan').val(emp.jabatan);
-                    $('#telepon_karyawan').val(emp.no_telp);
-                    $('#id_cabang').val(emp.id_cabang);
-                    $('#status_karyawan').val(emp.status);
-                    $('#password_field').hide(); // Hide password field when editing
-                    $('#password_karyawan').prop('required', false);
-                    $('#addEmployeeModal').removeClass('hidden');
-                } else {
+
+        // ============ PHOTO UPLOAD FUNCTION ============
+        function handlePhotoChange() {
+            const fileInput = document.getElementById('photoInput');
+            const file = fileInput.files[0];
+
+            if (!file) return;
+
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                showNotification('Hanya file gambar (JPG, PNG, GIF) yang diperbolehkan', 'error');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('Ukuran file maksimal 5MB', 'error');
+                return;
+            }
+
+            // Show preview immediately
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profilePhotoDisplay').src = e.target.result;
+                document.getElementById('defaultIcon').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+
+            // Upload file
+            const formData = new FormData();
+            formData.append('profile_photo', file);
+            formData.append('id_pemilik', $('#id_owner').val());
+
+            console.log('Uploading photo with id_pemilik:', $('#id_owner').val());
+
+            $.ajax({
+                url: BASE_URL + 'pemilik/pengaturan/upload_photo',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    console.log('Upload response:', response);
+                    try {
+                        response = typeof response === 'string' ? JSON.parse(response) : response;
+                    } catch (e) {
+                        console.error('Parse error:', e);
+                    }
+
+                    if (response.success) {
+                        showNotification('Foto berhasil diupload', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showNotification(response.message || 'Gagal mengupload foto', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.error('Response:', xhr.responseText);
+                    showNotification('Terjadi kesalahan saat upload: ' + error, 'error');
+                }
+            });
+        }
+
+        // ============ PASSWORD FUNCTIONS ============
+        function openChangePasswordModal() {
+            $('#changePasswordModal').removeClass('hidden');
+        }
+
+        function closeChangePasswordModal() {
+            $('#changePasswordModal').addClass('hidden');
+            $('#changePasswordForm')[0].reset();
+        }
+
+        $('#changePasswordForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const pwd_lama = $('#password_lama').val();
+            const pwd_baru = $('#password_baru').val();
+            const pwd_konfirmasi = $('#password_konfirmasi').val();
+
+            if (!pwd_lama || !pwd_baru || !pwd_konfirmasi) {
+                showNotification('Semua field password harus diisi', 'error');
+                return;
+            }
+
+            if (pwd_baru !== pwd_konfirmasi) {
+                showNotification('Password baru tidak cocok dengan konfirmasi', 'error');
+                return;
+            }
+
+            if (pwd_baru.length < 6) {
+                showNotification('Password minimal 6 karakter', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: BASE_URL + 'pemilik/pengaturan/change_password',
+                type: 'POST',
+                data: {
+                    password_lama: pwd_lama,
+                    password_baru: pwd_baru
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Response:', response);
+                    showNotification(response.message, response.success ? 'success' : 'error');
+                    if (response.success) {
+                        setTimeout(() => closeChangePasswordModal(), 1500);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.error('Response:', xhr.responseText);
+                    showNotification('Terjadi kesalahan: ' + error, 'error');
+                }
+            });
+        });
+
+        // ============ EMPLOYEE FUNCTIONS ============
+        function openAddEmployeeModal() {
+            // Check Limit
+            if (USAGE_STATS.karyawan && !USAGE_STATS.karyawan.is_unlimited) {
+                if (USAGE_STATS.karyawan.current >= USAGE_STATS.karyawan.max) {
+                    showNotification('Batas jumlah karyawan tercapai. Upgrade paket untuk menambah.', 'error');
+                    return;
+                }
+            }
+
+            $('#addEmployeeModal').removeClass('hidden');
+            $('#addEmployeeForm')[0].reset();
+            $('#modalEmployeeTitle').text('Tambah Karyawan');
+            $('#id_karyawan').val('');
+            $('#jabatan').val('Staff');
+            $('#status_karyawan').val('aktif');
+            $('#id_cabang').val('');
+            $('#password_field').show(); // Show password field for new employee
+            $('#password_karyawan').prop('required', true);
+            $('#btnSubmitEmployee').prop('disabled', false).text('Simpan Karyawan');
+        }
+
+        function closeAddEmployeeModal() {
+            $('#addEmployeeModal').addClass('hidden');
+            $('#addEmployeeForm')[0].reset();
+        }
+
+        function editEmployee(id) {
+            $.ajax({
+                url: BASE_URL + 'pemilik/pengaturan/get_employee/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const emp = response.data;
+                        $('#modalEmployeeTitle').text('Edit Karyawan');
+                        $('#id_karyawan').val(emp.id_karyawan);
+                        $('#nama_karyawan').val(emp.nama);
+                        $('#email_karyawan').val(emp.email);
+                        $('#jabatan').val(emp.jabatan);
+                        $('#telepon_karyawan').val(emp.no_telp);
+                        $('#id_cabang').val(emp.id_cabang);
+                        $('#status_karyawan').val(emp.status);
+                        $('#password_field').hide(); // Hide password field when editing
+                        $('#password_karyawan').prop('required', false);
+                        $('#addEmployeeModal').removeClass('hidden');
+                    } else {
+                        showNotification('Gagal mengambil data karyawan', 'error');
+                    }
+                },
+                error: function() {
                     showNotification('Gagal mengambil data karyawan', 'error');
                 }
-            },
-            error: function() {
-                showNotification('Gagal mengambil data karyawan', 'error');
-            }
-        });
-    }
-    
-    $('#addEmployeeForm').on('submit', function(e){
-        e.preventDefault();
-        
-        const id_karyawan = $('#id_karyawan').val();
-        const nama = $('#nama_karyawan').val().trim();
-        const email = $('#email_karyawan').val().trim();
-        const jabatan = $('#jabatan').val();
-        const telepon = $('#telepon_karyawan').val().trim();
-        const id_cabang = $('#id_cabang').val();
-        const status = $('#status_karyawan').val();
-        const password = $('#password_karyawan').val().trim();
-        
-        console.log('Form data:', {nama, email, jabatan, telepon, id_cabang, status, password});
-        
-        // Validasi
-        if (!nama) {
-            showNotification('Nama karyawan harus diisi', 'error');
-            $('#nama_karyawan').focus();
-            return;
+            });
         }
-        if (!email) {
-            showNotification('Email harus diisi', 'error');
-            $('#email_karyawan').focus();
-            return;
-        }
-        if (!telepon) {
-            showNotification('Telepon harus diisi', 'error');
-            $('#telepon_karyawan').focus();
-            return;
-        }
-        if (!id_cabang) {
-            showNotification('Cabang harus dipilih', 'error');
-            $('#id_cabang').focus();
-            return;
-        }
-        
-        // Validasi password hanya untuk tambah baru
-        if (!id_karyawan) {
-            if (!password) {
-                showNotification('Password harus diisi', 'error');
-                $('#password_karyawan').focus();
+
+        $('#addEmployeeForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const id_karyawan = $('#id_karyawan').val();
+            const nama = $('#nama_karyawan').val().trim();
+            const email = $('#email_karyawan').val().trim();
+            const jabatan = $('#jabatan').val();
+            const telepon = $('#telepon_karyawan').val().trim();
+            const id_cabang = $('#id_cabang').val();
+            const status = $('#status_karyawan').val();
+            const password = $('#password_karyawan').val().trim();
+
+            console.log('Form data:', {
+                nama,
+                email,
+                jabatan,
+                telepon,
+                id_cabang,
+                status,
+                password
+            });
+
+            // Validasi
+            if (!nama) {
+                showNotification('Nama karyawan harus diisi', 'error');
+                $('#nama_karyawan').focus();
                 return;
             }
-            if (password.length < 6) {
-                showNotification('Password minimal 6 karakter', 'error');
-                $('#password_karyawan').focus();
+            if (!email) {
+                showNotification('Email harus diisi', 'error');
+                $('#email_karyawan').focus();
                 return;
             }
-        }
-        
-        // Disable button untuk mencegah double submit
-        $('#btnSubmitEmployee').prop('disabled', true).text('Menyimpan...');
-        
-        let url, data;
-        
-        if (id_karyawan) {
-            // Update
-            url = BASE_URL + 'pemilik/pengaturan/update_employee';
-            data = {
-                id_karyawan: id_karyawan,
-                nama_karyawan: nama,
-                email_karyawan: email,
-                jabatan: jabatan,
-                telepon_karyawan: telepon,
-                status: status
-            };
-        } else {
-            // Add
-            url = BASE_URL + 'pemilik/pengaturan/add_employee';
-            data = {
-                nama_karyawan: nama,
-                email_karyawan: email,
-                jabatan: jabatan,
-                telepon_karyawan: telepon,
-                id_cabang: id_cabang,
-                status: status,
-                password_karyawan: password
-            };
-        }
-        
-        console.log('Sending to:', url, 'Data:', data);
-        
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: data,
-            dataType: 'json',
-            success: function(response) {
-                console.log('Response:', response);
-                $('#btnSubmitEmployee').prop('disabled', false).text('Simpan Karyawan');
-                
-                if (response.success) {
-                    if (response.username && response.password) {
-                        showNotification('Karyawan berhasil ditambahkan!', 'success');
-                        setTimeout(() => {
-                            alert('Username: ' + response.username + '\nPassword: ' + response.password + '\n\nSimpan informasi ini dan berikan ke karyawan!');
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        showNotification(response.message, 'success');
-                        setTimeout(() => location.reload(), 1500);
-                    }
-                } else {
-                    showNotification('Error: ' + response.message, 'error');
+            if (!telepon) {
+                showNotification('Telepon harus diisi', 'error');
+                $('#telepon_karyawan').focus();
+                return;
+            }
+            if (!id_cabang) {
+                showNotification('Cabang harus dipilih', 'error');
+                $('#id_cabang').focus();
+                return;
+            }
+
+            // Validasi password hanya untuk tambah baru
+            if (!id_karyawan) {
+                if (!password) {
+                    showNotification('Password harus diisi', 'error');
+                    $('#password_karyawan').focus();
+                    return;
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                console.error('Response:', xhr.responseText);
-                $('#btnSubmitEmployee').prop('disabled', false).text('Simpan Karyawan');
-                
-                // Coba parse response jika berupa JSON
-                try {
-                    const resp = JSON.parse(xhr.responseText);
-                    showNotification('Gagal: ' + (resp.message || error), 'error');
-                } catch(e) {
-                    showNotification('Terjadi kesalahan: ' + error, 'error');
+                if (password.length < 6) {
+                    showNotification('Password minimal 6 karakter', 'error');
+                    $('#password_karyawan').focus();
+                    return;
                 }
             }
-        });
-    });
-    
-    function deleteEmployee(id, nama) {
-        if(confirm('Apakah Anda yakin ingin menghapus karyawan ' + nama + '?')) {
+
+            // Disable button untuk mencegah double submit
+            $('#btnSubmitEmployee').prop('disabled', true).text('Menyimpan...');
+
+            let url, data;
+
+            if (id_karyawan) {
+                // Update
+                url = BASE_URL + 'pemilik/pengaturan/update_employee';
+                data = {
+                    id_karyawan: id_karyawan,
+                    nama_karyawan: nama,
+                    email_karyawan: email,
+                    jabatan: jabatan,
+                    telepon_karyawan: telepon,
+                    status: status
+                };
+            } else {
+                // Add
+                url = BASE_URL + 'pemilik/pengaturan/add_employee';
+                data = {
+                    nama_karyawan: nama,
+                    email_karyawan: email,
+                    jabatan: jabatan,
+                    telepon_karyawan: telepon,
+                    id_cabang: id_cabang,
+                    status: status,
+                    password_karyawan: password
+                };
+            }
+
+            console.log('Sending to:', url, 'Data:', data);
+
             $.ajax({
-                url: BASE_URL + 'pemilik/pengaturan/delete_employee',
+                url: url,
                 type: 'POST',
-                data: { id_karyawan: id },
+                data: data,
                 dataType: 'json',
                 success: function(response) {
-                    showNotification(response.message, response.success ? 'success' : 'error');
-                    if(response.success) {
-                        setTimeout(() => location.reload(), 1500);
+                    console.log('Response:', response);
+                    $('#btnSubmitEmployee').prop('disabled', false).text('Simpan Karyawan');
+
+                    if (response.success) {
+                        if (response.username && response.password) {
+                            showNotification('Karyawan berhasil ditambahkan!', 'success');
+                            setTimeout(() => {
+                                alert('Username: ' + response.username + '\nPassword: ' + response.password + '\n\nSimpan informasi ini dan berikan ke karyawan!');
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showNotification(response.message, 'success');
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    } else {
+                        showNotification('Error: ' + response.message, 'error');
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
-                    showNotification('Terjadi kesalahan: ' + error, 'error');
+                    console.error('Response:', xhr.responseText);
+                    $('#btnSubmitEmployee').prop('disabled', false).text('Simpan Karyawan');
+
+                    // Coba parse response jika berupa JSON
+                    try {
+                        const resp = JSON.parse(xhr.responseText);
+                        showNotification('Gagal: ' + (resp.message || error), 'error');
+                    } catch (e) {
+                        showNotification('Terjadi kesalahan: ' + error, 'error');
+                    }
                 }
             });
-        }
-    }
-    
-    // ============ BRANCH FUNCTIONS ============
-    function openAddBranchModal() {
-        // Check Limit
-         if (USAGE_STATS.cabang && !USAGE_STATS.cabang.is_unlimited) {
-            if (USAGE_STATS.cabang.current >= USAGE_STATS.cabang.max) {
-                 showNotification('Batas jumlah cabang tercapai. Upgrade paket untuk menambah.', 'error');
-                 return;
+        });
+
+        function deleteEmployee(id, nama) {
+            if (confirm('Apakah Anda yakin ingin menghapus karyawan ' + nama + '?')) {
+                $.ajax({
+                    url: BASE_URL + 'pemilik/pengaturan/delete_employee',
+                    type: 'POST',
+                    data: {
+                        id_karyawan: id
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        showNotification(response.message, response.success ? 'success' : 'error');
+                        if (response.success) {
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        showNotification('Terjadi kesalahan: ' + error, 'error');
+                    }
+                });
             }
         }
 
-        $('#addBranchModal').removeClass('hidden');
-        $('#addBranchForm')[0].reset();
-        $('#modalBranchTitle').text('Tambah Cabang');
-        $('#id_cabang_edit').val('');
-        $('#status_cabang').val('aktif');
-    }
-    
-    function closeAddBranchModal() {
-        $('#addBranchModal').addClass('hidden');
-    }
-    
-    function editBranch(id) {
-        $.ajax({
-            url: BASE_URL + 'pemilik/pengaturan/get_branch/' + id,
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                if(response.success) {
-                    const branch = response.data;
-                    $('#modalBranchTitle').text('Edit Cabang');
-                    $('#id_cabang_edit').val(branch.id_cabang);
-                    $('#nama_cabang_edit').val(branch.nama_cabang);
-                    $('#alamat_edit').val(branch.alamat_cabang || branch.alamat);
-                    $('#telepon_edit').val(branch.no_telp || branch.telepon);
-                    $('#status_cabang').val(branch.status);
-                    $('#addBranchModal').removeClass('hidden');
-                } else {
+        // ============ BRANCH FUNCTIONS ============
+        function openAddBranchModal() {
+            // Check Limit
+            if (USAGE_STATS.cabang && !USAGE_STATS.cabang.is_unlimited) {
+                if (USAGE_STATS.cabang.current >= USAGE_STATS.cabang.max) {
+                    showNotification('Batas jumlah cabang tercapai. Upgrade paket untuk menambah.', 'error');
+                    return;
+                }
+            }
+
+            $('#addBranchModal').removeClass('hidden');
+            $('#addBranchForm')[0].reset();
+            $('#modalBranchTitle').text('Tambah Cabang');
+            $('#id_cabang_edit').val('');
+            $('#status_cabang').val('aktif');
+        }
+
+        function closeAddBranchModal() {
+            $('#addBranchModal').addClass('hidden');
+        }
+
+        function editBranch(id) {
+            $.ajax({
+                url: BASE_URL + 'pemilik/pengaturan/get_branch/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        const branch = response.data;
+                        $('#modalBranchTitle').text('Edit Cabang');
+                        $('#id_cabang_edit').val(branch.id_cabang);
+                        $('#nama_cabang_edit').val(branch.nama_cabang);
+                        $('#alamat_edit').val(branch.alamat_cabang || branch.alamat);
+                        $('#telepon_edit').val(branch.no_telp || branch.telepon);
+                        $('#status_cabang').val(branch.status);
+                        $('#addBranchModal').removeClass('hidden');
+                    } else {
+                        showNotification('Gagal mengambil data cabang', 'error');
+                    }
+                },
+                error: function() {
                     showNotification('Gagal mengambil data cabang', 'error');
                 }
-            },
-            error: function() {
-                showNotification('Gagal mengambil data cabang', 'error');
-            }
-        });
-    }
-    
-    $('#addBranchForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        const id_cabang = $('#id_cabang_edit').val();
-        const nama = $('#nama_cabang_edit').val();
-        const alamat = $('#alamat_edit').val();
-        const telepon = $('#telepon_edit').val();
-        const status = $('#status_cabang').val();
-        const id_pemilik = $('#id_pemilik_branch').val();
-        
-        if (!nama || !alamat || !telepon) {
-            showNotification('Semua field harus diisi', 'error');
-            return;
+            });
         }
-        
-        let url, data;
-        
-        if (id_cabang) {
-            // Update
-            url = BASE_URL + 'pemilik/pengaturan/update_branch';
-            data = {
-                id_cabang: id_cabang,
-                nama_cabang: nama,
-                alamat: alamat,
-                telepon: telepon,
-                status: status
-            };
-        } else {
-            // Add
-            url = BASE_URL + 'pemilik/pengaturan/add_branch';
-            data = {
-                id_pemilik: id_pemilik,
-                nama_cabang: nama,
-                alamat: alamat,
-                telepon: telepon,
-                status: status
-            };
-        }
-        
-        // Disable button
-        $('#btnSubmitBranch').prop('disabled', true).text('Processing...');
-        
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: data,
-            dataType: 'json',
-            success: function(response) {
-                console.log('Response:', response);
-                $('#btnSubmitBranch').prop('disabled', false).text('Simpan Cabang');
-                
-                showNotification(response.message, response.success ? 'success' : 'error');
-                if(response.success) {
-                    setTimeout(() => {
-                        closeAddBranchModal();
-                        location.reload();
-                    }, 1500);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                console.error('Response:', xhr.responseText);
-                $('#btnSubmitBranch').prop('disabled', false).text('Simpan Cabang');
-                showNotification('Terjadi kesalahan: ' + error, 'error');
+
+        $('#addBranchForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const id_cabang = $('#id_cabang_edit').val();
+            const nama = $('#nama_cabang_edit').val();
+            const alamat = $('#alamat_edit').val();
+            const telepon = $('#telepon_edit').val();
+            const status = $('#status_cabang').val();
+            const id_pemilik = $('#id_pemilik_branch').val();
+
+            if (!nama || !alamat || !telepon) {
+                showNotification('Semua field harus diisi', 'error');
+                return;
             }
-        });
-    });
-    
-    function deleteBranch(id) {
-        if(confirm('Apakah Anda yakin ingin menghapus cabang ini?')) {
+
+            let url, data;
+
+            if (id_cabang) {
+                // Update
+                url = BASE_URL + 'pemilik/pengaturan/update_branch';
+                data = {
+                    id_cabang: id_cabang,
+                    nama_cabang: nama,
+                    alamat: alamat,
+                    telepon: telepon,
+                    status: status
+                };
+            } else {
+                // Add
+                url = BASE_URL + 'pemilik/pengaturan/add_branch';
+                data = {
+                    id_pemilik: id_pemilik,
+                    nama_cabang: nama,
+                    alamat: alamat,
+                    telepon: telepon,
+                    status: status
+                };
+            }
+
+            // Disable button
+            $('#btnSubmitBranch').prop('disabled', true).text('Processing...');
+
             $.ajax({
-                url: BASE_URL + 'pemilik/pengaturan/delete_branch',
+                url: url,
                 type: 'POST',
-                data: { id_cabang: id },
+                data: data,
                 dataType: 'json',
                 success: function(response) {
+                    console.log('Response:', response);
+                    $('#btnSubmitBranch').prop('disabled', false).text('Simpan Cabang');
+
                     showNotification(response.message, response.success ? 'success' : 'error');
-                    if(response.success) {
-                        setTimeout(() => location.reload(), 1500);
+                    if (response.success) {
+                        setTimeout(() => {
+                            closeAddBranchModal();
+                            location.reload();
+                        }, 1500);
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
+                    console.error('Response:', xhr.responseText);
+                    $('#btnSubmitBranch').prop('disabled', false).text('Simpan Cabang');
+                    showNotification('Terjadi kesalahan: ' + error, 'error');
+                }
+            });
+        });
+
+        function deleteBranch(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus cabang ini?')) {
+                $.ajax({
+                    url: BASE_URL + 'pemilik/pengaturan/delete_branch',
+                    type: 'POST',
+                    data: {
+                        id_cabang: id
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        showNotification(response.message, response.success ? 'success' : 'error');
+                        if (response.success) {
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        showNotification('Terjadi kesalahan: ' + error, 'error');
+                    }
+                });
+            }
+        }
+
+        // ============ TOGGLE PASSWORD VISIBILITY ============
+        function togglePassword() {
+            const passwordInput = document.getElementById('password_karyawan');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // ============ SAVE PREFERENCES (BAHASA & MATA UANG) ============
+        function savePreferences() {
+            const bahasa = $('#bahasa').val();
+            const mata_uang = $('#mata_uang').val();
+            const id_pemilik = $('#id_owner').val();
+
+            $.ajax({
+                url: BASE_URL + 'pemilik/pengaturan/save_preferences',
+                type: 'POST',
+                data: {
+                    id_pemilik: id_pemilik,
+                    bahasa: bahasa,
+                    mata_uang: mata_uang
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Response:', response);
+                    showNotification(response.message, response.success ? 'success' : 'error');
+                    if (response.success) {
+                        // Store in session/localStorage for immediate use
+                        localStorage.setItem('bahasa', bahasa);
+                        localStorage.setItem('mata_uang', mata_uang);
+
+                        // Reload page after 1.5 seconds to apply language changes
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.error('Response:', xhr.responseText);
                     showNotification('Terjadi kesalahan: ' + error, 'error');
                 }
             });
         }
-    }
-    
-    // ============ TOGGLE PASSWORD VISIBILITY ============
-    function togglePassword() {
-        const passwordInput = document.getElementById('password_karyawan');
-        const toggleIcon = document.getElementById('toggleIcon');
-        
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            toggleIcon.classList.remove('fa-eye');
-            toggleIcon.classList.add('fa-eye-slash');
-        } else {
-            passwordInput.type = 'password';
-            toggleIcon.classList.remove('fa-eye-slash');
-            toggleIcon.classList.add('fa-eye');
-        }
-    }
 
-    // ============ SAVE PREFERENCES (BAHASA & MATA UANG) ============
-    function savePreferences() {
-        const bahasa = $('#bahasa').val();
-        const mata_uang = $('#mata_uang').val();
-        const id_pemilik = $('#id_owner').val();
-        
-        $.ajax({
-            url: BASE_URL + 'pemilik/pengaturan/save_preferences',
-            type: 'POST',
-            data: {
-                id_pemilik: id_pemilik,
-                bahasa: bahasa,
-                mata_uang: mata_uang
-            },
-            dataType: 'json',
-            success: function(response) {
-                console.log('Response:', response);
-                showNotification(response.message, response.success ? 'success' : 'error');
-                if(response.success) {
-                    // Store in session/localStorage for immediate use
-                    localStorage.setItem('bahasa', bahasa);
-                    localStorage.setItem('mata_uang', mata_uang);
-                    
-                    // Reload page after 1.5 seconds to apply language changes
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
+        // ============ SAVE NOTIFICATION SETTINGS ============
+        function saveNotificationSettings() {
+            const notif_pesanan = $('#notif_pesanan').is(':checked') ? '1' : '0';
+            const notif_stok = $('#notif_stok').is(':checked') ? '1' : '0';
+            const notif_laporan = $('#notif_laporan').is(':checked') ? '1' : '0';
+            const id_pemilik = $('#id_owner').val();
+
+            $.ajax({
+                url: BASE_URL + 'pemilik/pengaturan/save_notification_settings',
+                type: 'POST',
+                data: {
+                    id_pemilik: id_pemilik,
+                    notif_pesanan: notif_pesanan,
+                    notif_stok: notif_stok,
+                    notif_laporan: notif_laporan
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Response:', response);
+                    showNotification(response.message, response.success ? 'success' : 'error');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.error('Response:', xhr.responseText);
+                    showNotification('Terjadi kesalahan: ' + error, 'error');
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                console.error('Response:', xhr.responseText);
-                showNotification('Terjadi kesalahan: ' + error, 'error');
+            });
+        }
+
+        // ============ SUBSCRIPTION MODAL ============
+        function openSubscriptionModal() {
+            document.getElementById('subscriptionModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSubscriptionModal() {
+            document.getElementById('subscriptionModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function selectPlan(plan) {
+            if (plan === 'free') {
+                showNotification('Anda sudah menggunakan paket Free', 'info');
+            } else {
+                window.location.href = BASE_URL + 'pembayaran/checkout/' + (plan === 'pro' ? '2' : '3');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('subscriptionModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSubscriptionModal();
             }
         });
-    }
-
-    // ============ SAVE NOTIFICATION SETTINGS ============
-    function saveNotificationSettings() {
-        const notif_pesanan = $('#notif_pesanan').is(':checked') ? '1' : '0';
-        const notif_stok = $('#notif_stok').is(':checked') ? '1' : '0';
-        const notif_laporan = $('#notif_laporan').is(':checked') ? '1' : '0';
-        const id_pemilik = $('#id_owner').val();
-        
-        $.ajax({
-            url: BASE_URL + 'pemilik/pengaturan/save_notification_settings',
-            type: 'POST',
-            data: {
-                id_pemilik: id_pemilik,
-                notif_pesanan: notif_pesanan,
-                notif_stok: notif_stok,
-                notif_laporan: notif_laporan
-            },
-            dataType: 'json',
-            success: function(response) {
-                console.log('Response:', response);
-                showNotification(response.message, response.success ? 'success' : 'error');
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                console.error('Response:', xhr.responseText);
-                showNotification('Terjadi kesalahan: ' + error, 'error');
-            }
-        });
-    }
-
-    // ============ SUBSCRIPTION MODAL ============
-    function openSubscriptionModal() {
-        document.getElementById('subscriptionModal').classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeSubscriptionModal() {
-        document.getElementById('subscriptionModal').classList.add('hidden');
-        document.body.style.overflow = '';
-    }
-
-    function selectPlan(plan) {
-        if(plan === 'free') {
-            showNotification('Anda sudah menggunakan paket Free', 'info');
-        } else {
-            window.location.href = BASE_URL + 'pembayaran/checkout/' + (plan === 'pro' ? '2' : '3');
-        }
-    }
-
-    // Close modal when clicking outside
-    document.getElementById('subscriptionModal')?.addEventListener('click', function(e) {
-        if(e.target === this) {
-            closeSubscriptionModal();
-        }
-    });
-</script>
+    </script>

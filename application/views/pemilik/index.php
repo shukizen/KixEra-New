@@ -47,9 +47,16 @@
                         <!-- User Profile with Dropdown -->
                         <div class="relative">
                             <button id="profileBtn" class="flex items-center gap-3 hover:bg-gray-50 rounded-xl px-3 py-2 transition">
-                                <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-user text-white"></i>
-                                </div>
+                                <?php 
+                                $foto_profil = $this->session->userdata('foto_profil');
+                                if (!empty($foto_profil) && file_exists(FCPATH . $foto_profil)): 
+                                ?>
+                                    <img src="<?= base_url($foto_profil) ?>" class="w-10 h-10 object-cover rounded-full" alt="Profile">
+                                <?php else: ?>
+                                    <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="text-left">
                                     <div class="text-sm font-medium text-gray-800">
                                         <?php echo $this->session->userdata('nama') ? $this->session->userdata('nama') : 'Owner'; ?>
@@ -255,16 +262,30 @@
                                             <td class="text-center py-4"><?php echo htmlspecialchars($order->nama_pelanggan); ?></td>
                                             <td class="text-center py-4"><?php echo htmlspecialchars($order->nama_layanan); ?></td>
                                             <td class="text-center py-4">
-                                                <span class="px-4 py-1 rounded-full text-sm text-white" 
-                                                      style="background-color: <?php 
-                                                          switch($order->status_pesanan) {
-                                                              case 'selesai': echo '#10b981'; break;
-                                                              case 'dalam_proses': echo '#eab308'; break;
-                                                              case 'siap_diambil': echo '#3b82f6'; break;
-                                                              default: echo '#6b7280';
-                                                          }
-                                                      ?>">
-                                                    <?php echo ucwords(str_replace('_', ' ', $order->status_pesanan)); ?>
+                                                <?php
+                                                $status = strtolower($order->status_pesanan ?? '');
+                                                $badge = 'bg-gray-100 text-gray-700';
+                                                $status_label = ucwords(str_replace('_', ' ', $status));
+
+                                                if ($status === 'sudah_diambil') {
+                                                    $badge = 'bg-emerald-500/10 text-emerald-600';
+                                                    $status_label = 'Sudah Diambil';
+                                                } elseif ($status === 'siap_diambil') {
+                                                    $badge = 'bg-green-500/10 text-green-600';
+                                                    $status_label = 'Siap Diambil';
+                                                } elseif ($status === 'selesai') {
+                                                    $badge = 'bg-teal-500/10 text-teal-600';
+                                                } elseif ($status === 'dalam_proses') {
+                                                    $badge = 'bg-yellow-500/10 text-yellow-600';
+                                                    $status_label = 'Dalam Proses';
+                                                } elseif ($status === 'diterima') {
+                                                    $badge = 'bg-blue-500/10 text-blue-600';
+                                                } elseif ($status === 'dibatalkan') {
+                                                    $badge = 'bg-red-500/10 text-red-600';
+                                                }
+                                                ?>
+                                                <span class="<?= $badge; ?> px-3 py-1 rounded-full text-xs font-medium">
+                                                    <?= htmlspecialchars($status_label ?: '-'); ?>
                                                 </span>
                                             </td>
                                             <td class="text-center py-4">Rp <?php echo number_format($order->total_harga, 0, ',', '.'); ?></td>
@@ -305,7 +326,7 @@
                         </div>
                         
                         <!-- Quick Actions -->
-                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <!-- <div class="bg-white rounded-2xl shadow-lg p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4"><?= lang_text('quick_actions') ?></h2>
                             <div class="space-y-3">
                                 <button onclick="window.location='<?= base_url('pemilik/pesanan/add') ?>'" class="w-full bg-emerald-500 text-white py-3 rounded-xl hover:bg-emerald-600 transition flex items-center justify-center gap-2">
@@ -317,7 +338,7 @@
                                     <?= lang_text('add_customer') ?>
                                 </button>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -565,6 +586,8 @@
                 'order': { icon: 'fas fa-shopping-cart', color: 'emerald' },
                 'payment': { icon: 'fas fa-money-bill-wave', color: 'blue' },
                 'pickup': { icon: 'fas fa-truck', color: 'orange' },
+                'stock': { icon: 'fas fa-boxes', color: 'amber' },
+                'report': { icon: 'fas fa-chart-bar', color: 'purple' },
                 'general': { icon: 'fas fa-info-circle', color: 'gray' }
             };
             return styles[type] || styles.general;

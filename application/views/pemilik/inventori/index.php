@@ -1,20 +1,5 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= lang_text('manage_inventory') ?> - KixEra</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body class="bg-gray-50">
-    <div class="flex min-h-screen">
-        <!-- Sidebar (gunakan sidebar yang sudah ada) -->
-        
-        <!-- Main Content -->
-        <main class="flex-1 ml-64">
+<!-- Main Content -->
+        <main class="flex-1 lg:ml-64 transition-all duration-300">
             <!-- Header -->
             <header class="bg-white border-b border-gray-100 shadow-sm px-6 py-4">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -741,8 +726,4 @@
         loadChartData();
         loadInventory();
     });
-
-    
 </script>
-</body>
-</html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +8,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
+
 <body class="bg-gray-50 antialiased">
     <div class="min-h-screen py-12 px-4">
         <div class="max-w-3xl mx-auto">
-            
+
             <!-- Success Card -->
             <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-emerald-500 to-teal-400 px-8 py-12 text-center">
+                <div class="bg-emerald-500 px-8 py-12 text-center">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg class="w-12 h-12 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -52,11 +56,11 @@
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Duration</span>
                                 <span class="font-semibold">
-                                    <?php 
-                                        $start = new DateTime($transaksi->tgl_mulai_langganan);
-                                        $end = new DateTime($transaksi->tgl_akhir_langganan);
-                                        $diff = $start->diff($end);
-                                        echo $diff->m > 0 ? $diff->m . ' Month(s)' : $diff->d . ' Day(s)';
+                                    <?php
+                                    $start = new DateTime($transaksi->tgl_mulai_langganan);
+                                    $end = new DateTime($transaksi->tgl_akhir_langganan);
+                                    $diff = $start->diff($end);
+                                    echo $diff->m > 0 ? $diff->m . ' Month(s)' : $diff->d . ' Day(s)';
                                     ?>
                                 </span>
                             </div>
@@ -84,26 +88,26 @@
                     </div>
 
                     <!-- Bank Account (Example for Bank Transfer) -->
-                    <?php if($transaksi->metode_pembayaran == 'bank'): ?>
-                    <div class="mb-8">
-                        <h4 class="font-semibold text-gray-900 mb-3">Bank Account Details</h4>
-                        <div class="bg-gray-50 rounded-xl p-6">
-                            <div class="space-y-3">
-                                <div>
-                                    <div class="text-sm text-gray-600">Bank Name</div>
-                                    <div class="font-semibold text-gray-900">Bank Mandiri</div>
-                                </div>
-                                <div>
-                                    <div class="text-sm text-gray-600">Account Number</div>
-                                    <div class="font-mono font-semibold text-gray-900 text-lg">1234567890</div>
-                                </div>
-                                <div>
-                                    <div class="text-sm text-gray-600">Account Name</div>
-                                    <div class="font-semibold text-gray-900">PT KixEra Indonesia</div>
+                    <?php if ($transaksi->metode_pembayaran == 'bank'): ?>
+                        <div class="mb-8">
+                            <h4 class="font-semibold text-gray-900 mb-3">Bank Account Details</h4>
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="text-sm text-gray-600">Bank Name</div>
+                                        <div class="font-semibold text-gray-900">Bank Mandiri</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-gray-600">Account Number</div>
+                                        <div class="font-mono font-semibold text-gray-900 text-lg">1234567890</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-gray-600">Account Name</div>
+                                        <div class="font-semibold text-gray-900">PT KixEra Indonesia</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     <?php endif; ?>
 
                     <!-- Action Buttons -->
@@ -111,7 +115,7 @@
                         <a href="<?= site_url('landingpage') ?>" class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors text-center">
                             Back to Home
                         </a>
-                        <a href="<?= site_url('dashboard') ?>" class="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-600 hover:to-teal-500 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl text-center">
+                        <a href="<?= site_url('dashboard') ?>" class="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl text-center">
                             Go to Dashboard
                         </a>
                     </div>
@@ -138,4 +142,5 @@
         </div>
     </div>
 </body>
+
 </html>

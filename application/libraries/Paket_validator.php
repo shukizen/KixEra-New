@@ -44,10 +44,24 @@ class Paket_validator {
     public function get_current_features() {
         $id_paket = $this->CI->session->userdata('id_paket');
         
-        // Default to Basic features if no package set (or handle as error/restricted)
+        // Fallback: if id_paket not in session, try to get from database
+        if (empty($id_paket)) {
+            $id_pemilik = $this->CI->session->userdata('id_pemilik');
+            if ($id_pemilik) {
+                $owner = $this->CI->db->select('id_paket')->get_where('pemilik', ['id_pemilik' => $id_pemilik])->row();
+                if ($owner && !empty($owner->id_paket)) {
+                    $id_paket = $owner->id_paket;
+                    // Cache it in session for future requests
+                    $this->CI->session->set_userdata('id_paket', (int)$id_paket);
+                }
+            }
+        }
+
+        // Cast to int since session values may be strings
+        $id_paket = (int)$id_paket;
+        
+        // Default to Basic features if no package set
         if (!isset($this->package_features[$id_paket])) {
-            // Fallback for trial or expired or unknown, maybe similar to Basic or strictly nothing?
-            // For now, let's safe default to Basic limits but maybe with flags
              return $this->package_features[1]; 
         }
 

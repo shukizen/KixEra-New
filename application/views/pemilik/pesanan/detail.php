@@ -11,8 +11,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .sidebar { position: fixed; left: 0; top: 0; }
-        .gradient-emerald { background: linear-gradient(to right, #10b981, #34d399); }
-        .gradient-red { background: linear-gradient(to right, rgba(185, 28, 28, 0.7), rgba(185, 28, 28, 0.7)); }
+        .gradient-emerald { background-color: #10b981; }
+        .gradient-red { background-color: #b91c1c; }
     </style>
 </head>
 
@@ -53,7 +53,7 @@
                 <!-- Main Content - 2/3 -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Informasi Pesanan -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-6 pb-4 border-b">
                             <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-info-circle text-emerald-600"></i>
@@ -109,7 +109,7 @@
                     </div>
 
                     <!-- Tanggal & Status -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-6 pb-4 border-b">
                             <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-calendar-alt text-blue-600"></i>
@@ -161,7 +161,7 @@
                     </div>
 
                     <!-- Catatan -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-4 pb-4 border-b">
                             <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-sticky-note text-orange-600"></i>
@@ -175,7 +175,7 @@
 
                     <!-- Detail Item Pesanan -->
                     <?php if (!empty($detail_items)): ?>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-6 pb-4 border-b">
                             <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-shoe-prints text-purple-600"></i>
@@ -229,7 +229,7 @@
                     }
                     ?>
                     <?php if ($has_photos): ?>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-4 pb-4 border-b">
                             <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-images text-indigo-600"></i>
@@ -280,7 +280,7 @@
                     <?php endif; ?>
 
                     <!-- Quick Info -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Informasi Singkat</h3>
 
                         <div class="space-y-4">
@@ -307,7 +307,7 @@
                     </div>
 
                     <!-- Timeline Progres -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-2 mb-6">
                             <i class="fas fa-history text-emerald-600"></i>
                             <h3 class="text-lg font-semibold text-gray-800">Timeline Progres</h3>
@@ -386,7 +386,7 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Aksi</h3>
 
                         <div class="space-y-3">

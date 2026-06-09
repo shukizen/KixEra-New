@@ -18,11 +18,11 @@
     }
     
     .gradient-emerald {
-        background: linear-gradient(to right, #10b981, #34d399);
+        background-color: #10b981;
     }
     
     .gradient-red {
-        background: linear-gradient(to right, rgba(185, 28, 28, 0.7), rgba(185, 28, 28, 0.7));
+        background-color: #b91c1c;
     }
     
     /* Custom Scrollbar for Sidebar */
@@ -38,6 +38,14 @@
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Fix untuk mencegah tombol hamburger menutupi teks header saat sidebar tertutup */
+    @media (max-width: 1023px) {
+        main header { padding-left: 5rem !important; }
+    }
+    @media (min-width: 1024px) {
+        main:not(.lg\:ml-64) header { padding-left: 5rem !important; }
     }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>

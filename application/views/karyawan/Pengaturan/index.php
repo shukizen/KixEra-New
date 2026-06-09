@@ -11,14 +11,16 @@
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
         <!-- Main Content -->
-        <main class="flex-1 ml-64">
-            <div class="p-6">
-                <!-- Header -->
-                <div class="mb-6">
+        <main class="flex-1 lg:ml-64 transition-all duration-300">
+            <!-- Header -->
+            <header class="p-6 pb-0 flex flex-col md:flex-row justify-between items-start gap-4">
+                <div>
                     <h1 class="text-2xl font-bold text-gray-800">Pengaturan</h1>
                     <p class="text-gray-600">Kelola profil dan preferensi akun Anda</p>
                 </div>
+            </header>
 
+            <div class="p-6">
                 <!-- Pengaturan Profile -->
                 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-6">Informasi Profil</h2>
@@ -90,7 +92,7 @@
                     <!-- Action Buttons -->
                     <div class="flex gap-4">
                         <button onclick="updateProfile()" 
-                                class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition font-medium">
+                                class="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:opacity-90 transition font-medium">
                             Simpan Perubahan
                         </button>
                         <button type="button" 
@@ -176,7 +178,7 @@
                     
                     <div class="flex justify-end">
                         <button onclick="saveSystemPreferences()" 
-                                class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-300 text-white rounded-xl hover:opacity-90 transition font-medium">
+                                class="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:opacity-90 transition font-medium">
                             <i class="fas fa-save mr-2"></i>Simpan Preferensi
                         </button>
                     </div>

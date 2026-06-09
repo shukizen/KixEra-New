@@ -35,3 +35,13 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 #-------------------------
 application/config/gemini.php
 application/config/google_config.php
+
+# Uploads and User Content
+uploads/*
+!uploads/index.html
+
+# Temporary storage and backups
+/temp_storage_cleanup/
+/backups/
+/node_modules/
+

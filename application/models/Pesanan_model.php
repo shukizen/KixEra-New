@@ -72,9 +72,55 @@ class Pesanan_model extends CI_Model
     // Update pesanan
     public function updatePesanan($id_pesanan, $data)
     {
+        // Check if status is being updated
+        $status_changed = false;
+        $new_status = null;
+        $old_status = null;
+        
+        if (isset($data['status_pesanan'])) {
+            $old_status = $this->getCurrentStatus($id_pesanan);
+            $new_status = $data['status_pesanan'];
+            if ($old_status !== $new_status) {
+                $status_changed = true;
+            }
+        }
+
         $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db->where('id_pesanan', $id_pesanan);
-        return $this->db->update($this->table, $data);
+        $result = $this->db->update($this->table, $data);
+
+        if ($result && $status_changed) {
+            $pesanan = $this->getPesananById($id_pesanan);
+            if ($pesanan) {
+                $cabang = $this->db->select('id_pemilik, nama_cabang')->get_where('cabang', ['id_cabang' => $pesanan->id_cabang])->row();
+                if ($cabang) {
+                    $status_labels = [
+                        'diterima' => 'Diterima',
+                        'dalam_proses' => 'Dalam Proses',
+                        'selesai' => 'Selesai',
+                        'siap_diambil' => 'Siap Diambil',
+                        'sudah_diambil' => 'Sudah Diambil',
+                        'dibatalkan' => 'Dibatalkan'
+                    ];
+                    $status_text = $status_labels[$new_status] ?? $new_status;
+                    $notif_type = 'order';
+                    if ($new_status === 'siap_diambil' || $new_status === 'sudah_diambil') {
+                        $notif_type = 'pickup';
+                    }
+                    
+                    $this->load->model('Notification_model');
+                    $this->Notification_model->create([
+                        'id_pemilik' => $cabang->id_pemilik,
+                        'title' => 'Status Pesanan Diperbarui',
+                        'message' => 'Status pesanan #' . $pesanan->nomor_pesanan . ' di cabang ' . $cabang->nama_cabang . ' berubah menjadi: ' . $status_text . '.',
+                        'type' => $notif_type,
+                        'related_id' => $id_pesanan
+                    ]);
+                }
+            }
+        }
+
+        return $result;
     }
 
     // Soft delete pesanan
@@ -130,6 +176,9 @@ class Pesanan_model extends CI_Model
         $this->db->select('
             v.*, 
             p.nomor_pesanan,
+            p.status_pembayaran,
+            p.metode_pembayaran,
+            p.catatan,
             p.created_at,
             p.updated_at
         ');
@@ -230,8 +279,25 @@ class Pesanan_model extends CI_Model
         if (empty($data['nomor_pesanan'])) {
             $data['nomor_pesanan'] = $this->generateNomorPesanan();
         }
+        
         $this->db->insert($this->table, $data);
-        return $this->db->insert_id();
+        $insert_id = $this->db->insert_id();
+        
+        if ($insert_id) {
+            $cabang = $this->db->select('id_pemilik, nama_cabang')->get_where('cabang', ['id_cabang' => $data['id_cabang']])->row();
+            if ($cabang) {
+                $this->load->model('Notification_model');
+                $this->Notification_model->create([
+                    'id_pemilik' => $cabang->id_pemilik,
+                    'title' => 'Pesanan Baru #' . $data['nomor_pesanan'],
+                    'message' => 'Pesanan baru ' . $data['nomor_pesanan'] . ' diterima di cabang ' . $cabang->nama_cabang . '.',
+                    'type' => 'order',
+                    'related_id' => $insert_id
+                ]);
+            }
+        }
+        
+        return $insert_id;
     }
 
     // Generate nomor pesanan unik
@@ -392,6 +458,19 @@ class Pesanan_model extends CI_Model
         $updated = $this->db->update($this->table, $data);
 
         if ($updated) {
+            // Create notification for payment
+            $cabang = $this->db->select('id_pemilik, nama_cabang')->get_where('cabang', ['id_cabang' => $pesanan->id_cabang])->row();
+            if ($cabang) {
+                $this->load->model('Notification_model');
+                $this->Notification_model->create([
+                    'id_pemilik' => $cabang->id_pemilik,
+                    'title' => 'Pembayaran Diterima',
+                    'message' => 'Pembayaran untuk pesanan #' . $pesanan->nomor_pesanan . ' di cabang ' . $cabang->nama_cabang . ' sebesar Rp ' . number_format($pesanan->total_harga, 0, ',', '.') . ' telah diterima.',
+                    'type' => 'payment',
+                    'related_id' => $id_pesanan
+                ]);
+            }
+
             // Trigger revenue entry
             $CI =& get_instance();
             $CI->load->model('Keuangan_model');

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -11,8 +11,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .sidebar { position: fixed; left: 0; top: 0; }
-        .gradient-emerald { background: linear-gradient(to right, #10b981, #34d399); }
-        .gradient-red { background: linear-gradient(to right, rgba(185, 28, 28, 0.7), rgba(185, 28, 28, 0.7)); }
+        .gradient-emerald { background-color: #10b981; }
+        .gradient-red { background-color: #b91c1c; }
     </style>
 </head>
 

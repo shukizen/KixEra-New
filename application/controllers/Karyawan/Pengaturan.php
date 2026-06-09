@@ -76,8 +76,8 @@ class Pengaturan extends CI_Controller {
         $result = $this->Pengaturan_karyawanmodel->update_karyawan($id_karyawan, $update_data);
         
         if ($result) {
-            // Update session data
-            $this->session->set_userdata('nama', $nama);
+            $this->load->library('auth_library');
+            $this->auth_library->refresh_session();
             
             echo json_encode(['success' => true, 'message' => 'Profil berhasil diperbarui']);
         } else {
@@ -129,6 +129,8 @@ class Pengaturan extends CI_Controller {
         $result = $this->Pengaturan_karyawanmodel->update_karyawan($id_karyawan, ['foto_profil' => $foto_path]);
         
         if ($result) {
+            $this->load->library('auth_library');
+            $this->auth_library->refresh_session();
             echo json_encode([
                 'success' => true, 
                 'message' => 'Foto berhasil diupload',

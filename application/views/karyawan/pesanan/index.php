@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <?php $this->load->view('template/header'); ?>
@@ -13,7 +13,7 @@
         <main class="flex-1 lg:ml-64 flex flex-col min-h-screen">
             
             <!-- Topbar -->
-            <div class="bg-white shadow-sm px-6 py-4 flex items-center justify-between flex-wrap gap-4">
+            <header class="bg-white shadow-sm px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
                     <h1 class="text-xl font-semibold text-gray-800">Kelola Pesanan</h1>
                     <span class="bg-emerald-100 text-emerald-600 text-sm px-3 py-1 rounded-full">
@@ -43,7 +43,7 @@
                         <i class="fas fa-plus"></i> Tambah Pesanan
                     </button>
                 </div>
-            </div>
+            </header>
 
             <!-- Content -->
             <div class="p-6">

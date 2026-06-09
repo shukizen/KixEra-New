@@ -22,7 +22,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-emerald-100 via-white to-emerald-300">
+<body class="min-h-screen bg-emerald-50">
     <!-- Language Toggle -->
     <div class="fixed top-4 right-4 z-50">
         <button 
@@ -44,7 +44,7 @@
                 <!-- Image Circle -->
                 <div class="relative w-80 h-80 lg:w-96 lg:h-96">
                     <div class="absolute inset-0 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                        <img src="<?= site_url ('assets/img/konten/dashbd.png') ?>" alt="dashboard">
+                        <img src="<?= site_url ('assets/img/konten/Dashboard.png') ?>" alt="dashboard">
                     </div>
                 </div>
                 
@@ -63,7 +63,7 @@
             <section class="w-full max-w-md">
                 <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden">
                     <!-- Top Gradient Bar -->
-                    <div class="h-1 bg-gradient-to-r from-emerald-500 via-emerald-300 to-emerald-500"></div>
+                    <div class="h-1 bg-emerald-500"></div>
                     
                     <!-- Logo -->
                     <div class="flex justify-center pt-8 pb-4">

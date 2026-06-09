@@ -77,7 +77,7 @@
                 </div>
                 
                 <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                    Masa Langganan Anda <br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Telah Berakhir</span>
+                    Masa Langganan Anda <br> <span class="text-red-600">Telah Berakhir</span>
                 </h1>
                 
                 <p class="text-lg md:text-xl text-gray-500 leading-relaxed mb-10 max-w-2xl mx-auto">

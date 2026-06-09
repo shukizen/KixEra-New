@@ -49,11 +49,11 @@
                         <select id="branchFilter"
                             class="px-4 py-2 border border-gray-300 rounded-xl text-black focus:outline-none focus:border-emerald-500">
                             <option value=""><?= lang_text('all_branches') ?></option>
-                            <option value="1">Kota Gede</option>
-                            <option value="2">Seturan</option>
-                            <option value="3">Condongcatur</option>
-                            <option value="4">Jakal</option>
-                            <option value="5">Banguntapan</option>
+                            <?php if (!empty($cabang_list)): ?>
+                                <?php foreach ($cabang_list as $cabang): ?>
+                                    <option value="<?= $cabang->id_cabang ?>"><?= htmlspecialchars($cabang->nama_cabang) ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
 
                         <!-- Add Customer Button -->
@@ -240,6 +240,19 @@
                 <input type="hidden" id="customerId" name="id_pelanggan">
                 <div class="p-6 space-y-4">
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cabang <span class="text-red-500">*</span></label>
+                        <select id="id_cabang" name="id_cabang" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">-- Pilih Cabang --</option>
+                            <?php if (!empty($cabang_list)): ?>
+                                <?php foreach ($cabang_list as $cabang): ?>
+                                    <option value="<?= $cabang->id_cabang ?>"><?= htmlspecialchars($cabang->nama_cabang) ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
                         <input type="text" id="nama" name="nama" required
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
@@ -311,7 +324,7 @@
                 <button onclick="closeDeleteModal()" class="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition font-medium">
                     Batal
                 </button>
-                <button id="confirmDeleteBtn" onclick="confirmDelete()" class="flex-1 px-4 py-3 rounded-xl text-white font-bold transition" style="background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 30px rgba(239, 68, 68, 0.4);">
+                <button id="confirmDeleteBtn" onclick="confirmDelete()" class="flex-1 px-4 py-3 rounded-xl text-white font-bold transition bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/50">
                     <i class="fas fa-trash mr-2"></i>Hapus
                 </button>
             </div>
@@ -324,6 +337,7 @@
         let distributionChart, topCustomersChart, growthChart;
         const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
                            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const initialCustomers = <?= json_encode($pelanggan ?? []) ?>;
         
         // Search functionality with debounce
         let searchTimeout;
@@ -347,7 +361,7 @@
                 success: function(response) {
                     if(response.success && response.data) {
                         updateTable(response.data);
-                        $('#totalBadge').text(response.data.length + ' Total Pelanggan');
+                        updateCustomerStats(response.data);
                     }
                 }
             });
@@ -391,29 +405,25 @@
             }
             $('#customerTableBody').html(html);
         }
+
+        function updateCustomerStats(customers) {
+            const totalCustomers = customers.length;
+            const activeCustomers = customers.filter(customer => Number(customer.total_pesanan) > 0).length;
+            const totalTransactions = customers.reduce((total, customer) => total + (parseInt(customer.total_pesanan) || 0), 0);
+
+            $('#totalBadge').text(totalCustomers + ' Total Pelanggan');
+            $('#totalCustomers').text(totalCustomers);
+            $('#activeCustomers').text(activeCustomers);
+            $('#totalTransactions').text(totalTransactions);
+        }
         
         function updateStatsCards(data) {
-            let totalPelanggan = 0;
-            if (data.distribusi) {
-                data.distribusi.forEach(d => totalPelanggan += parseInt(d.total) || 0);
-            }
-            $('#totalCustomers').text(totalPelanggan);
-            
-            const activeCustomers = data.top ? data.top.length : 0;
-            $('#activeCustomers').text(activeCustomers);
-            
             let newThisMonth = 0;
             if (data.growth && data.growth.length > 0) {
                 newThisMonth = parseInt(data.growth[data.growth.length - 1].total) || 0;
             }
             $('#newCustomers').text(newThisMonth);
-            
-            let totalTransactions = 0;
-            if (data.top) {
-                data.top.forEach(t => totalTransactions += parseInt(t.total_pesanan) || 0);
-            }
-            $('#totalTransactions').text(totalTransactions);
-            
+
             const now = new Date();
             $('#currentMonth').text(monthNames[now.getMonth()] + ' ' + now.getFullYear());
         }
@@ -560,6 +570,7 @@
             $('#modalTitle').text('Tambah Pelanggan Baru');
             $('#customerForm')[0].reset();
             $('#customerId').val('');
+            $('#id_cabang').prop('disabled', false);
             $('#customerModal').removeClass('hidden');
         }
         
@@ -580,10 +591,15 @@
                 url: url,
                 type: 'POST',
                 data: $(this).serialize(),
+                dataType: 'json',
                 success: function(response) {
-                    showNotification('Data pelanggan berhasil disimpan', 'success');
-                    closeModal();
-                    setTimeout(() => location.reload(), 1500);
+                    if (response.success) {
+                        showNotification(response.message || 'Data pelanggan berhasil disimpan', 'success');
+                        closeModal();
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showNotification(response.message || 'Terjadi kesalahan', 'error');
+                    }
                 },
                 error: function(xhr) {
                     const response = xhr.responseJSON;
@@ -649,6 +665,7 @@
                     if(customer) {
                         $('#modalTitle').text('Edit Pelanggan');
                         $('#customerId').val(customer.id_pelanggan);
+                        $('#id_cabang').val(customer.id_cabang || '').prop('disabled', true);
                         $('#nama').val(customer.nama);
                         $('#no_telp').val(customer.no_telp);
                         $('#email').val(customer.email);
@@ -745,12 +762,8 @@
         $(document).ready(function() {
             const now = new Date();
             $('#currentMonth').text(monthNames[now.getMonth()] + ' ' + now.getFullYear());
+            updateCustomerStats(initialCustomers);
             loadChartData();
-            
-            // Initial badge count from PHP
-            <?php if(isset($pelanggan)): ?>
-            $('#totalBadge').text('<?= count($pelanggan) ?> Total Pelanggan');
-            <?php endif; ?>
         });
     </script>
 </body>

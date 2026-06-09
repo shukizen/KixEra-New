@@ -12,13 +12,13 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-emerald-100 via-white to-emerald-300 flex items-center justify-center p-4">
+<body class="min-h-screen bg-emerald-50 flex items-center justify-center p-4">
     
     <div class="w-full max-w-md">
         <!-- Card -->
         <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden">
             <!-- Top Gradient Bar -->
-            <div class="h-1 bg-gradient-to-r from-emerald-500 via-emerald-300 to-emerald-500"></div>
+            <div class="h-1 bg-emerald-500"></div>
             
             <!-- Logo -->
             <div class="flex justify-center pt-8 pb-4">
