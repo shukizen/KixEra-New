@@ -2,17 +2,8 @@
 <html lang="id">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php $this->load->view('template/header'); ?>
     <title>Detail Pesanan - KixEra</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .sidebar { position: fixed; left: 0; top: 0; }
-        .gradient-emerald { background-color: #10b981; }
-        .gradient-red { background-color: #b91c1c; }
-    </style>
 </head>
 
 <body class="bg-gray-50">
@@ -390,8 +381,4 @@
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
-</body>
-
-</html>
+            <?php $this->load->view('template/footer'); ?>
