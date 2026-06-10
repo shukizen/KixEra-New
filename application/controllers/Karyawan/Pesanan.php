@@ -277,6 +277,15 @@ class Pesanan extends CI_Controller
         if (!$pesanan) {
             $resp = ['status' => 'error', 'message' => 'Pesanan tidak ditemukan'];
         } else {
+            // Sanitasi tanggal — ganti nilai kosong/invalid dengan null agar JS tidak crash
+            $invalid_dates = ['0000-00-00 00:00:00', '0000-00-00', ''];
+            $date_fields = ['tgl_masuk', 'tgl_estimasi_selesai', 'tgl_selesai', 'tgl_diambil', 'created_at', 'updated_at'];
+            foreach ($date_fields as $field) {
+                if (isset($pesanan->$field) && in_array($pesanan->$field, $invalid_dates)) {
+                    $pesanan->$field = null;
+                }
+            }
+
             // Get detail items
             $detail_items = $this->Pesanan_model->getDetailPesananByPesananId($id);
             $resp = [

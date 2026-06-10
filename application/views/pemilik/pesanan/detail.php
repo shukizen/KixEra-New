@@ -1,51 +1,29 @@
-<!DOCTYPE html>
-<html lang="id">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Pesanan - KixEra</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .sidebar { position: fixed; left: 0; top: 0; }
-        .gradient-emerald { background-color: #10b981; }
-        .gradient-red { background-color: #b91c1c; }
-    </style>
-</head>
-
-<body class="bg-gray-50">
-    <div class="flex min-h-screen">
-        <!-- Sidebar -->
-        <?php $this->load->view('template/sidebar'); ?>
-
-        <!-- Main Content -->
-        <main class="flex-1 lg:ml-64 p-4 lg:p-6 pt-20 lg:pt-6">
-            <!-- Header -->
-            <div class="mb-6">
-                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div>
-                        <nav class="text-sm text-gray-500 mb-2">
-                            <a href="<?= site_url('pemilik/pesanan') ?>" class="hover:text-emerald-600">Pesanan</a>
-                            <span class="mx-2">/</span>
-                            <span class="text-gray-800">Detail</span>
-                        </nav>
-                        <h1 class="text-2xl font-bold text-gray-800">Detail Pesanan</h1>
-                        <p class="text-gray-500">No. <?= htmlspecialchars($pesanan->nomor_pesanan) ?></p>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <a href="<?= site_url('pemilik/pesanan/cetak_nota/' . $pesanan->id_pesanan) ?>" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition border border-emerald-200">
-                            <i class="fas fa-print"></i>
-                            <span>Cetak Nota</span>
-                        </a>
-                        <a href="<?= site_url('pemilik/pesanan') ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
-                            <i class="fas fa-arrow-left"></i>
-                            <span>Kembali</span>
-                        </a>
-                    </div>
-                </div>
+<!-- Main Content -->
+<main class="flex-1 lg:ml-64 p-4 lg:p-6 pt-20 lg:pt-6">
+    <!-- Header -->
+    <header class="mb-6">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <nav class="text-sm text-gray-500 mb-2">
+                    <a href="<?= site_url('pemilik/pesanan') ?>" class="hover:text-emerald-600">Pesanan</a>
+                    <span class="mx-2">/</span>
+                    <span class="text-gray-800">Detail</span>
+                </nav>
+                <h1 class="text-2xl font-bold text-gray-800">Detail Pesanan</h1>
+                <p class="text-gray-500">No. <?= htmlspecialchars($pesanan->nomor_pesanan) ?></p>
             </div>
+            <div class="flex items-center gap-3">
+                <a href="<?= site_url('pemilik/pesanan/cetak_nota/' . $pesanan->id_pesanan) ?>" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition border border-emerald-200">
+                    <i class="fas fa-print"></i>
+                    <span>Cetak Nota</span>
+                </a>
+                <a href="<?= site_url('pemilik/pesanan') ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Kembali</span>
+                </a>
+            </div>
+        </div>
+    </header>
 
             <!-- Content Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -396,8 +374,16 @@
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
-</body>
+</main>
 
-</html>
+<script>
+    (function() {
+        var el = document.getElementById('page-header-title');
+        function adjust() {
+            if (!el) return;
+            el.style.paddingLeft = window.innerWidth >= 1024 ? '0' : '3.5rem';
+        }
+        adjust();
+        window.addEventListener('resize', adjust);
+    })();
+</script>

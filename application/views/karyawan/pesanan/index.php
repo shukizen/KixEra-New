@@ -237,11 +237,11 @@
                                                 </button>
                                                 <?php endif; ?>
                                                 
-                                                <button class="btn-view w-8 h-8 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 rounded-lg flex items-center justify-center transition" 
-                                                    data-id="<?= $p->id_pesanan ?>"
+                                                <a href="<?= site_url('karyawan/pesanan/detail/' . $p->id_pesanan) ?>" 
+                                                    class="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 rounded-lg flex items-center justify-center transition" 
                                                     title="Lihat Detail">
                                                     <i class="fas fa-eye text-sm"></i>
-                                                </button>
+                                                </a>
                                                 
                                                 <button class="btn-edit w-8 h-8 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition"
                                                     data-id="<?= $p->id_pesanan ?>" title="Edit">
@@ -668,11 +668,7 @@
                     </div>
                     
                     <!-- Fixed Footer -->
-                    <div class="p-4 border-t bg-gray-50 flex justify-between items-center gap-3">
-                        <a id="view-full-detail-link" href="#" target="_blank" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 border border-emerald-200">
-                            <i class="fas fa-external-link-alt text-xs"></i>
-                            <span>Halaman Detail</span>
-                        </a>
+                    <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
                         <button type="button" id="btnCloseViewFooter" class="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-medium transition-all flex items-center gap-2">
                             <i class="fas fa-times"></i>Tutup
                         </button>
@@ -1287,8 +1283,8 @@
 
                 // Format date helper
                 function formatDate(dateStr) {
-                    if (!dateStr || dateStr.startsWith('0000-00-00')) return '-';
-                    const d = new Date(dateStr.replace(' ', 'T'));
+                    if (!dateStr || dateStr === '0000-00-00 00:00:00' || dateStr === '0000-00-00') return '-';
+                    const d = new Date(dateStr);
                     if (isNaN(d.getTime())) return '-';
                     return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                 }
@@ -1336,12 +1332,6 @@
                                 // Render detail items
                                 renderViewDetailItems(p.detail_items || []);
                                 
-                                // Set link to full detail page
-                                const fullDetailLink = document.getElementById('view-full-detail-link');
-                                if (fullDetailLink) {
-                                    fullDetailLink.href = BASE_URL + 'detail/' + p.id_pesanan;
-                                }
-                                
                                 openModal();
                             } else {
                                 showNotification(json.message || 'Gagal memuat data', 'error');
@@ -1370,9 +1360,8 @@
                             document.getElementById('edit-total_harga').value = p.total_harga || 0;
                             document.getElementById('edit-catatan').value = p.catatan || '';
                             
-                            if (p.tgl_estimasi_selesai && !p.tgl_estimasi_selesai.startsWith('0000-00-00')) {
-                                const dateStr = p.tgl_estimasi_selesai.replace(' ', 'T');
-                                const dt = new Date(dateStr);
+                            if (p.tgl_estimasi_selesai && p.tgl_estimasi_selesai !== '0000-00-00 00:00:00' && p.tgl_estimasi_selesai !== '0000-00-00') {
+                                const dt = new Date(p.tgl_estimasi_selesai);
                                 if (!isNaN(dt.getTime())) {
                                     dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
                                     document.getElementById('edit-tgl_estimasi_selesai').value = dt.toISOString().slice(0, 16);

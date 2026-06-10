@@ -14,7 +14,7 @@
         <!-- Main Content -->
         <main class="flex-1 lg:ml-64 p-4 lg:p-6 pt-20 lg:pt-6">
             <!-- Header -->
-            <div class="mb-6">
+            <header class="mb-6">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
                         <nav class="text-sm text-gray-500 mb-2">
@@ -25,19 +25,25 @@
                         <h1 class="text-2xl font-bold text-gray-800">Detail Pesanan</h1>
                         <p class="text-gray-500">No. <?= htmlspecialchars($pesanan->nomor_pesanan) ?></p>
                     </div>
-                    <a href="<?= site_url('karyawan/pesanan') ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Kembali</span>
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <a href="<?= site_url('karyawan/pesanan/cetak_nota/' . $pesanan->id_pesanan) ?>" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition border border-emerald-200">
+                            <i class="fas fa-print"></i>
+                            <span>Cetak Nota</span>
+                        </a>
+                        <a href="<?= site_url('karyawan/pesanan') ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Kembali</span>
+                        </a>
+                    </div>
                 </div>
-            </div>
+            </header>
 
             <!-- Content Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Main Content - 2/3 -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Informasi Pesanan -->
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-6 pb-4 border-b">
                             <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-info-circle text-emerald-600"></i>
@@ -93,7 +99,7 @@
                     </div>
 
                     <!-- Tanggal & Status -->
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-6 pb-4 border-b">
                             <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-calendar-alt text-blue-600"></i>
@@ -130,7 +136,7 @@
                                 } elseif ($status === 'siap_diambil') {
                                     $badge = 'bg-green-100 text-green-600';
                                 } elseif ($status === 'selesai') {
-                                    $badge = 'bg-emerald-100 text-emerald-600';
+                                    $badge = 'bg-teal-100 text-teal-600';
                                 } elseif ($status === 'dalam_proses') {
                                     $badge = 'bg-yellow-100 text-yellow-600';
                                 } elseif ($status === 'diterima') {
@@ -145,7 +151,7 @@
                     </div>
 
                     <!-- Catatan -->
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-4 pb-4 border-b">
                             <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-sticky-note text-orange-600"></i>
@@ -159,7 +165,7 @@
 
                     <!-- Detail Item Pesanan -->
                     <?php if (!empty($detail_items)): ?>
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-6 pb-4 border-b">
                             <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-shoe-prints text-purple-600"></i>
@@ -213,7 +219,7 @@
                     }
                     ?>
                     <?php if ($has_photos): ?>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-3 mb-4 pb-4 border-b">
                             <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-images text-indigo-600"></i>
@@ -264,7 +270,7 @@
                     <?php endif; ?>
 
                     <!-- Quick Info -->
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Informasi Singkat</h3>
 
                         <div class="space-y-4">
@@ -291,7 +297,7 @@
                     </div>
 
                     <!-- Timeline Progres -->
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <div class="flex items-center gap-2 mb-6">
                             <i class="fas fa-history text-emerald-600"></i>
                             <h3 class="text-lg font-semibold text-gray-800">Timeline Progres</h3>
@@ -320,7 +326,7 @@
                                         $icon_color = 'text-yellow-500';
                                     } elseif ($status === 'selesai') {
                                         $icon = 'fa-check-double';
-                                        $icon_color = 'text-emerald-500';
+                                        $icon_color = 'text-teal-500';
                                     } elseif ($status === 'siap_diambil') {
                                         $icon = 'fa-box-open';
                                         $icon_color = 'text-green-500';
@@ -370,7 +376,7 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Aksi</h3>
 
                         <div class="space-y-3">
@@ -382,3 +388,15 @@
                 </div>
             </div>
             <?php $this->load->view('template/footer'); ?>
+
+<script>
+    (function() {
+        var el = document.getElementById('page-header-title');
+        function adjust() {
+            if (!el) return;
+            el.style.paddingLeft = window.innerWidth >= 1024 ? '0' : '3.5rem';
+        }
+        adjust();
+        window.addEventListener('resize', adjust);
+    })();
+</script>
