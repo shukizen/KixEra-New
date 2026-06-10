@@ -532,7 +532,7 @@
                                             class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                                     </div>
                                     
-                                    <div class="md:col-span-2">
+                                    <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-2">
                                             <i class="fas fa-sticky-note text-emerald-500 mr-1"></i>Catatan
                                         </label>
