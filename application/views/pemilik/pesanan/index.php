@@ -127,7 +127,7 @@
                     </div>
                 </div>
                 <!-- Delete Confirmation Modal -->
-                <div id="deleteModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50 backdrop-blur-sm">
+                <div id="deleteModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
                     <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 mx-4">
 
                         <div class="flex items-center gap-3 mb-4">

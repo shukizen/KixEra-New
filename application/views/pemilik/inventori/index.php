@@ -16,9 +16,9 @@
                         <!-- Category Filter -->
                         <select id="categoryFilter" class="px-4 py-2 border border-gray-200 rounded-xl text-black focus:outline-none focus:border-emerald-500">
                             <option value=""><?= lang_text('all_categories') ?></option>
-                            <option value="bahan"><?= lang_text('material') ?></option>
-                            <option value="alat"><?= lang_text('tools') ?></option>
-                            <option value="perlengkapan"><?= lang_text('supplies') ?></option>
+                            <option value="Bahan"><?= lang_text('material') ?></option>
+                            <option value="Alat"><?= lang_text('tools') ?></option>
+                            <option value="Perlengkapan"><?= lang_text('supplies') ?></option>
                         </select>
                     </div>
                 </div>
@@ -143,9 +143,9 @@
                         <select id="jenis_item" name="jenis_item" required
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500">
                             <option value="">Pilih Kategori</option>
-                            <option value="bahan">Bahan</option>
-                            <option value="alat">Alat</option>
-                            <option value="perlengkapan">Perlengkapan</option>
+                            <option value="Bahan">Bahan</option>
+                            <option value="Alat">Alat</option>
+                            <option value="Perlengkapan">Perlengkapan</option>
                         </select>
                     </div>
                     
@@ -208,6 +208,30 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 mx-4">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 flex items-center justify-center rounded-full bg-red-100">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800"><?= lang_text('confirm_delete') ?>?</h3>
+            </div>
+            <p class="text-gray-600 mb-6 leading-relaxed">
+                <?= lang_text('inventory') ?> <span id="delete-nama-text" class="font-semibold text-gray-800"></span> <?= lang_text('will_be_deleted') ?>.
+            </p>
+            <div class="flex justify-end gap-3">
+                <button id="cancelDeleteBtn" onclick="hideDeleteModal()"
+                    class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+                    <?= lang_text('cancel') ?>
+                </button>
+                <button id="confirmDeleteBtn"
+                    class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">
+                    <?= lang_text('delete') ?>
+                </button>
+            </div>
+        </div>
+    </div>
 
 <script>
     const BASE_URL = '<?= base_url() ?>';
@@ -695,17 +719,41 @@
         });
     }
     
+    let deleteItemId = null;
+
     // Delete item
     function deleteItem(id, namaItem) {
-        if(confirm('Apakah Anda yakin ingin menghapus "' + namaItem + '"?')) {
+        deleteItemId = id;
+        document.getElementById("delete-nama-text").textContent = '"' + namaItem + '"';
+        
+        const modal = document.getElementById("deleteModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+
+    function hideDeleteModal() {
+        const modal = document.getElementById("deleteModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        deleteItemId = null;
+    }
+    
+    // Initialize on page load
+    $(document).ready(function() {
+        console.log('Page ready, loading charts and inventory');
+        loadChartData();
+        loadInventory();
+
+        // Bind delete confirmation button
+        $('#confirmDeleteBtn').on('click', function() {
+            if (!deleteItemId) return;
             $.ajax({
-                url: BASE_URL + 'pemilik/inventori/delete/' + id,
+                url: BASE_URL + 'pemilik/inventori/delete/' + deleteItemId,
                 type: 'POST',
                 dataType: 'json',
                 success: function(response) {
                     if(response.success) {
                         showNotification(response.message, 'success');
-                        // update charts & table
                         loadChartData();
                         loadInventory();
                     } else {
@@ -717,13 +765,7 @@
                     showNotification('Terjadi kesalahan saat menghapus data', 'error');
                 }
             });
-        }
-    }
-    
-    // Initialize on page load
-    $(document).ready(function() {
-        console.log('Page ready, loading charts and inventory');
-        loadChartData();
-        loadInventory();
+            hideDeleteModal();
+        });
     });
 </script>

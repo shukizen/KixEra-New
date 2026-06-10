@@ -6,7 +6,7 @@ class Notifikasi extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
-        $this->load->model('Notifikasi_model');
+        $this->load->model('Notification_model');
         $this->load->library('auth_library');
         
         // Require admin role
@@ -19,8 +19,8 @@ class Notifikasi extends CI_Controller {
         $data['user'] = $this->auth_library->get_user();
         
         // Get notifications
-        $data['notifications'] = $this->Notifikasi_model->getAllAdmin(100);
-        $data['unread_count'] = $this->Notifikasi_model->countUnreadAdmin();
+        $data['notifications'] = $this->Notification_model->get_all_admin(100);
+        $data['unread_count'] = $this->Notification_model->count_unread_admin();
 
         $this->load->view('template/header', $data);
         $this->load->view('template/sidebar_admin', $data);
@@ -30,7 +30,7 @@ class Notifikasi extends CI_Controller {
 
     public function mark_read($id)
     {
-        $this->Notifikasi_model->markAsRead($id);
+        $this->Notification_model->mark_admin_as_read($id);
         if ($this->input->is_ajax_request()) {
             echo json_encode(['success' => true]);
         } else {
@@ -40,7 +40,7 @@ class Notifikasi extends CI_Controller {
 
     public function mark_all_read()
     {
-        $this->Notifikasi_model->markAllAsReadAdmin();
+        $this->Notification_model->mark_all_admin_as_read();
         if ($this->input->is_ajax_request()) {
             echo json_encode(['success' => true]);
         } else {
@@ -59,7 +59,7 @@ class Notifikasi extends CI_Controller {
                 'link' => 'admin/notifikasi',
                 'status' => 'unread'
             ];
-            $this->Notifikasi_model->insertNotification($data);
+            $this->Notification_model->insert_admin_notification($data);
             redirect('admin/notifikasi');
         }
     }

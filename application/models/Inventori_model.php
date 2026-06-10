@@ -344,4 +344,108 @@ class Inventori_model extends CI_Model {
         
         return $result;
     }
+
+    // Mengurangi stok item inventori yang cocok secara otomatis saat pesanan masuk tahap pengerjaan
+    public function kurangi_stok_layanan($id_layanan, $id_cabang, $nomor_pesanan, $jumlah_pesanan = 1) {
+        // Ambil resep kebutuhan bahan baku untuk layanan ini
+        $this->db->where('id_layanan', $id_layanan);
+        $resep = $this->db->get('layanan_inventori')->result();
+        
+        if (empty($resep)) {
+            return true; // Tidak ada bahan baku yang perlu dikurangi
+        }
+        
+        $this->db->trans_start();
+        
+        foreach ($resep as $bahan) {
+            // Cari item inventori di cabang bersangkutan yang memiliki nama_item yang cocok
+            $this->db->where('id_cabang', $id_cabang);
+            $this->db->where('nama_item', $bahan->nama_item);
+            $item = $this->db->get($this->table)->row();
+            
+            if ($item) {
+                $jumlah_dikurangi = $bahan->jumlah_dibutuhkan * $jumlah_pesanan;
+                $stok_baru = max(0, $item->stok_tersedia - $jumlah_dikurangi);
+                
+                // Update stok inventori
+                $this->db->where('id_inventori', $item->id_inventori);
+                $this->db->update($this->table, ['stok_tersedia' => $stok_baru]);
+                
+                // Catat di transaksi_inventori (keluar)
+                $transaksi_data = [
+                    'id_inventori' => $item->id_inventori,
+                    'id_cabang' => $id_cabang,
+                    'jenis_transaksi' => 'keluar',
+                    'jumlah' => $jumlah_dikurangi,
+                    'tgl_transaksi' => date('Y-m-d H:i:s'),
+                    'keterangan' => 'Konsumsi otomatis pesanan #' . $nomor_pesanan,
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+                $this->db->insert('transaksi_inventori', $transaksi_data);
+                
+                // Trigger notifikasi jika stok menipis (di bawah minimal)
+                if ($stok_baru <= $item->stok_minimal) {
+                    // Ambil id_pemilik dari cabang
+                    $cabang = $this->db->get_where('cabang', ['id_cabang' => $id_cabang])->row();
+                    if ($cabang) {
+                        $this->load->model('Notification_model');
+                        $this->Notification_model->create([
+                            'id_pemilik' => $cabang->id_pemilik,
+                            'title' => 'Stok Menipis: ' . $item->nama_item,
+                            'message' => 'Stok ' . $item->nama_item . ' di cabang ' . $cabang->nama_cabang . ' tersisa ' . $stok_baru . ' ' . $item->satuan . ' (minimal: ' . $item->stok_minimal . ') akibat pengerjaan pesanan #' . $nomor_pesanan . '.',
+                            'type' => 'stock',
+                            'related_id' => $item->id_inventori
+                        ]);
+                    }
+                }
+            }
+        }
+        
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    // Mengembalikan stok item inventori jika pesanan dibatalkan setelah masuk tahap pengerjaan
+    public function kembalikan_stok_layanan($id_layanan, $id_cabang, $nomor_pesanan, $jumlah_pesanan = 1) {
+        // Ambil resep kebutuhan bahan baku untuk layanan ini
+        $this->db->where('id_layanan', $id_layanan);
+        $resep = $this->db->get('layanan_inventori')->result();
+        
+        if (empty($resep)) {
+            return true;
+        }
+        
+        $this->db->trans_start();
+        
+        foreach ($resep as $bahan) {
+            // Cari item inventori di cabang bersangkutan yang memiliki nama_item yang cocok
+            $this->db->where('id_cabang', $id_cabang);
+            $this->db->where('nama_item', $bahan->nama_item);
+            $item = $this->db->get($this->table)->row();
+            
+            if ($item) {
+                $jumlah_dikembalikan = $bahan->jumlah_dibutuhkan * $jumlah_pesanan;
+                $stok_baru = $item->stok_tersedia + $jumlah_dikembalikan;
+                
+                // Update stok inventori
+                $this->db->where('id_inventori', $item->id_inventori);
+                $this->db->update($this->table, ['stok_tersedia' => $stok_baru]);
+                
+                // Catat di transaksi_inventori (masuk)
+                $transaksi_data = [
+                    'id_inventori' => $item->id_inventori,
+                    'id_cabang' => $id_cabang,
+                    'jenis_transaksi' => 'masuk',
+                    'jumlah' => $jumlah_dikembalikan,
+                    'tgl_transaksi' => date('Y-m-d H:i:s'),
+                    'keterangan' => 'Pemulihan otomatis (pembatalan pesanan #' . $nomor_pesanan . ')',
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+                $this->db->insert('transaksi_inventori', $transaksi_data);
+            }
+        }
+        
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
 }

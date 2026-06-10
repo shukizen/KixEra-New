@@ -98,4 +98,65 @@ class Notification_model extends CI_Model {
         
         return $this->db->get($this->table)->row();
     }
+
+    // ==========================================
+    // NOTIFIKASI ADMIN PLATFORM (Tabel: notifikasi)
+    // ==========================================
+
+    /**
+     * Get all notifications for Admin
+     */
+    public function get_all_admin($limit = 50) {
+        $this->db->where('type', 'admin');
+        $this->db->where('deleted_at IS NULL');
+        $this->db->order_by('created_at', 'DESC');
+        $this->db->limit($limit);
+        
+        return $this->db->get('notifikasi')->result();
+    }
+
+    /**
+     * Count unread notifications for Admin
+     */
+    public function count_unread_admin() {
+        $this->db->where('type', 'admin');
+        $this->db->where('status', 'unread');
+        $this->db->where('deleted_at IS NULL');
+        
+        return $this->db->count_all_results('notifikasi');
+    }
+
+    /**
+     * Mark admin notification as read
+     */
+    public function mark_admin_as_read($id_notifikasi) {
+        $data = [
+            'status' => 'read', 
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        $this->db->where('id_notifikasi', $id_notifikasi);
+        return $this->db->update('notifikasi', $data);
+    }
+
+    /**
+     * Mark all admin notifications as read
+     */
+    public function mark_all_admin_as_read() {
+        $data = [
+            'status' => 'read', 
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        $this->db->where('type', 'admin');
+        $this->db->where('status', 'unread');
+        return $this->db->update('notifikasi', $data);
+    }
+
+    /**
+     * Insert admin notification (legacy/debug support)
+     */
+    public function insert_admin_notification($data) {
+        if (!isset($data['created_at'])) $data['created_at'] = date('Y-m-d H:i:s');
+        if (!isset($data['status'])) $data['status'] = 'unread';
+        return $this->db->insert('notifikasi', $data);
+    }
 }

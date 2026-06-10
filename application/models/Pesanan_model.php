@@ -76,7 +76,7 @@ class Pesanan_model extends CI_Model
         $status_changed = false;
         $new_status = null;
         $old_status = null;
-        
+
         if (isset($data['status_pesanan'])) {
             $old_status = $this->getCurrentStatus($id_pesanan);
             $new_status = $data['status_pesanan'];
@@ -92,6 +92,14 @@ class Pesanan_model extends CI_Model
         if ($result && $status_changed) {
             $pesanan = $this->getPesananById($id_pesanan);
             if ($pesanan) {
+                // Integrasi pengurangan/pengembalian stok otomatis
+                $this->load->model('Inventori_model');
+                if ($new_status === 'dalam_proses') {
+                    $this->Inventori_model->kurangi_stok_layanan($pesanan->id_layanan, $pesanan->id_cabang, $pesanan->nomor_pesanan, $pesanan->jumlah_item);
+                } elseif ($new_status === 'dibatalkan' && $old_status === 'dalam_proses') {
+                    $this->Inventori_model->kembalikan_stok_layanan($pesanan->id_layanan, $pesanan->id_cabang, $pesanan->nomor_pesanan, $pesanan->jumlah_item);
+                }
+
                 $cabang = $this->db->select('id_pemilik, nama_cabang')->get_where('cabang', ['id_cabang' => $pesanan->id_cabang])->row();
                 if ($cabang) {
                     $status_labels = [
@@ -107,7 +115,7 @@ class Pesanan_model extends CI_Model
                     if ($new_status === 'siap_diambil' || $new_status === 'sudah_diambil') {
                         $notif_type = 'pickup';
                     }
-                    
+
                     $this->load->model('Notification_model');
                     $this->Notification_model->create([
                         'id_pemilik' => $cabang->id_pemilik,
@@ -151,16 +159,17 @@ class Pesanan_model extends CI_Model
 
         $this->db->where('pesanan.id_pesanan', $id_pesanan);
         $this->db->where('pesanan.deleted_at IS NULL');
-        
+
         if ($id_pemilik) {
             $this->db->where('cabang.id_pemilik', $id_pemilik);
         }
 
         return $this->db->get()->row();
     }
-    
+
     // Verify ownership helper
-    public function verify_ownership($id_pesanan, $id_pemilik) {
+    public function verify_ownership($id_pesanan, $id_pemilik)
+    {
         $this->db->select('pesanan.id_pesanan');
         $this->db->from('pesanan');
         $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
@@ -279,10 +288,10 @@ class Pesanan_model extends CI_Model
         if (empty($data['nomor_pesanan'])) {
             $data['nomor_pesanan'] = $this->generateNomorPesanan();
         }
-        
+
         $this->db->insert($this->table, $data);
         $insert_id = $this->db->insert_id();
-        
+
         if ($insert_id) {
             $cabang = $this->db->select('id_pemilik, nama_cabang')->get_where('cabang', ['id_cabang' => $data['id_cabang']])->row();
             if ($cabang) {
@@ -296,7 +305,7 @@ class Pesanan_model extends CI_Model
                 ]);
             }
         }
-        
+
         return $insert_id;
     }
 
@@ -304,7 +313,7 @@ class Pesanan_model extends CI_Model
     public function generateNomorPesanan()
     {
         $prefix = 'PES-' . date('Ymd') . '-';
-        
+
         $this->db->select('nomor_pesanan');
         $this->db->from($this->table);
         $this->db->like('nomor_pesanan', $prefix, 'after');
@@ -396,13 +405,13 @@ class Pesanan_model extends CI_Model
         $this->db->join('pelanggan', 'pelanggan.id_pelanggan = pesanan.id_pelanggan', 'left');
         $this->db->join('layanan', 'layanan.id_layanan = pesanan.id_layanan', 'left');
         $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
-        
+
         $this->db->where('cabang.id_pemilik', $id_pemilik);
         $this->db->where('pesanan.deleted_at IS NULL');
-        
+
         $this->db->order_by('pesanan.tgl_masuk', 'DESC');
         $this->db->limit($limit);
-        
+
         return $this->db->get()->result();
     }
 
@@ -412,14 +421,14 @@ class Pesanan_model extends CI_Model
         $this->db->from($this->table);
         $this->db->join('layanan', 'layanan.id_layanan = pesanan.id_layanan', 'left');
         $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
-        
+
         $this->db->where('cabang.id_pemilik', $id_pemilik);
         $this->db->where('pesanan.deleted_at IS NULL');
-        
+
         $this->db->group_by('layanan.id_layanan, layanan.nama_layanan');
         $this->db->order_by('total', 'DESC');
         $this->db->limit(5); // Top 5 services
-        
+
         return $this->db->get()->result();
     }
 
@@ -448,7 +457,7 @@ class Pesanan_model extends CI_Model
             'status_pembayaran' => 'sudah_bayar',
             'updated_at' => date('Y-m-d H:i:s')
         ];
-        
+
         // Update metode_pembayaran if provided
         if ($metode_pembayaran) {
             $data['metode_pembayaran'] = $metode_pembayaran;
@@ -472,9 +481,9 @@ class Pesanan_model extends CI_Model
             }
 
             // Trigger revenue entry
-            $CI =& get_instance();
+            $CI = &get_instance();
             $CI->load->model('Keuangan_model');
-            
+
             $pemasukan_data = [
                 'id_cabang' => $pesanan->id_cabang,
                 'nama_transaksi' => 'Pembayaran Pesanan #' . $pesanan->nomor_pesanan,
@@ -485,19 +494,19 @@ class Pesanan_model extends CI_Model
                 'keterangan' => 'Pembayaran ' . ($metode_pembayaran ?? $pesanan->metode_pembayaran ?? 'tunai') . ' - ' . ($pesanan->nama_pelanggan ?? 'Pelanggan'),
                 'id_karyawan' => $id_karyawan
             ];
-            
+
             $CI->Keuangan_model->insert_pemasukan($pemasukan_data);
-            
+
             // Add progress timeline entry for payment
             $metode_label = [
                 'tunai' => 'Tunai',
-                'debit' => 'Debit/Transfer', 
+                'debit' => 'Debit/Transfer',
                 'qris' => 'QRIS'
             ];
             $metode_text = $metode_label[$metode_pembayaran ?? $pesanan->metode_pembayaran] ?? 'Tunai';
             $this->insertProgres(
-                $id_pesanan, 
-                'pembayaran', 
+                $id_pesanan,
+                'pembayaran',
                 'Pembayaran ' . $metode_text . ' - Rp ' . number_format($pesanan->total_harga, 0, ',', '.'),
                 $id_karyawan
             );

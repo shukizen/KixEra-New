@@ -1,6 +1,6 @@
-<!-- Mobile Menu Button (Hamburger) -->
-<button id="mobileMenuBtn" class="fixed top-6 left-4 z-50 bg-white text-slate-800 border border-slate-200 p-3 rounded-lg shadow-sm hover:bg-slate-50 transition-all duration-300 lg:hidden">
-    <i class="fas fa-bars text-xl"></i>
+<!-- Floating Sidebar Toggle Button -->
+<button id="sidebarToggleBtn" class="fixed top-6 left-4 lg:left-[272px] z-50 bg-white text-slate-800 border border-slate-200 p-3 rounded-lg shadow-sm hover:bg-slate-50 transition-all duration-300 ease-in-out">
+    <i id="sidebarToggleIcon" class="fas fa-bars text-xl"></i>
 </button>
 
 <!-- Overlay untuk mobile -->
@@ -19,10 +19,6 @@ $segment2 = $CI->uri->segment(2);
         <div class="flex items-center gap-2">
             <img src="<?= base_url('assets/img/logo/logo.svg') ?>" alt="KixEra Logo" class="h-25 w-auto">
         </div>
-        <!-- Toggle button untuk mobile & desktop -->
-        <button id="closeSidebarBtn" class="text-slate-500 text-2xl hover:text-slate-700 transition-colors">
-            <i class="fas fa-bars"></i>
-        </button>
     </div>
 
     <!-- Navigation Menu -->
@@ -121,79 +117,93 @@ $segment2 = $CI->uri->segment(2);
 
         function initSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            const toggleIcon = document.getElementById('sidebarToggleIcon');
             const overlay = document.getElementById('sidebarOverlay');
+            const mainContent = document.querySelector('main');
 
-            if (!sidebar || !mobileMenuBtn || !closeSidebarBtn || !overlay) {
+            if (!sidebar || !toggleBtn || !toggleIcon || !overlay) {
                 console.error('Sidebar elements not found');
                 return;
             }
 
-            console.log('Sidebar script loaded successfully');
+            // Adjust headers padding to prevent overlap with floating toggle button
+            const headers = document.querySelectorAll('main header, header');
+            headers.forEach(h => {
+                if (h.closest('#sidebar')) return;
+                h.style.paddingLeft = '80px';
+            });
 
-            // Fungsi untuk membuka sidebar
-            function openSidebar(e) {
-                if (e) e.preventDefault();
-                sidebar.classList.remove('-translate-x-full');
-                sidebar.classList.add('lg:translate-x-0');
-                if (window.innerWidth < 1024) {
-                    overlay.classList.remove('hidden');
-                    document.body.style.overflow = 'hidden';
-                }
-                mobileMenuBtn.classList.remove('lg:opacity-0', 'lg:pointer-events-none');
-                mobileMenuBtn.classList.add('hidden');
-                
-                const mainContent = document.querySelector('main');
-                if (mainContent && window.innerWidth >= 1024) {
-                    mainContent.classList.add('lg:ml-64');
+            // State variable
+            let isSidebarOpen = window.innerWidth >= 1024;
+
+            // Set initial state
+            updateSidebarUI(isSidebarOpen);
+
+            function updateSidebarUI(open) {
+                if (open) {
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.classList.add('translate-x-0', 'lg:translate-x-0');
+                    toggleBtn.style.left = '272px';
+                    toggleIcon.className = 'fas fa-bars text-xl';
+                    if (window.innerWidth < 1024) {
+                        overlay.classList.remove('hidden');
+                        document.body.style.overflow = 'hidden';
+                    }
+                    if (mainContent && window.innerWidth >= 1024) {
+                        mainContent.classList.add('lg:ml-64');
+                    }
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                    sidebar.classList.remove('translate-x-0', 'lg:translate-x-0');
+                    toggleBtn.style.left = '16px'; // 16px is left-4
+                    toggleIcon.className = 'fas fa-bars text-xl';
+                    overlay.classList.add('hidden');
+                    document.body.style.overflow = '';
+                    if (mainContent) {
+                        mainContent.classList.remove('lg:ml-64');
+                    }
                 }
             }
 
-            // Fungsi untuk menutup sidebar
-            function closeSidebar(e) {
-                if (e) e.preventDefault();
-                sidebar.classList.add('-translate-x-full');
-                sidebar.classList.remove('lg:translate-x-0');
-                overlay.classList.add('hidden');
-                document.body.style.overflow = '';
-                
-                mobileMenuBtn.classList.remove('lg:opacity-0', 'lg:pointer-events-none');
-                mobileMenuBtn.classList.remove('hidden', 'lg:hidden');
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                isSidebarOpen = !isSidebarOpen;
+                updateSidebarUI(isSidebarOpen);
+            });
 
-                const mainContent = document.querySelector('main');
-                if (mainContent) {
-                    mainContent.classList.remove('lg:ml-64');
-                }
-            }
-
-            // Event listeners
-            mobileMenuBtn.addEventListener('click', openSidebar);
-            closeSidebarBtn.addEventListener('click', closeSidebar);
-            overlay.addEventListener('click', closeSidebar);
+            overlay.addEventListener('click', function() {
+                isSidebarOpen = false;
+                updateSidebarUI(isSidebarOpen);
+            });
 
             // Auto close sidebar saat link diklik (mobile)
             const sidebarLinks = sidebar.querySelectorAll('a');
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', function() {
                     if (window.innerWidth < 1024) {
-                        closeSidebar();
+                        isSidebarOpen = false;
+                        updateSidebarUI(isSidebarOpen);
                     }
                 });
             });
 
-            // Close sidebar on window resize to desktop
+            // Handle window resize
             window.addEventListener('resize', function() {
-                if (window.innerWidth >= 1024) {
-                    // Do not auto-open on resize if they explicitly closed it, just reset overlay
+                const isDesktop = window.innerWidth >= 1024;
+                if (isDesktop) {
                     overlay.classList.add('hidden');
                     document.body.style.overflow = '';
+                    updateSidebarUI(isSidebarOpen);
                 } else {
-                    // On mobile, if sidebar doesn't have -translate-x-full, show overlay
-                    if (!sidebar.classList.contains('-translate-x-full')) {
+                    if (isSidebarOpen) {
                         overlay.classList.remove('hidden');
                         document.body.style.overflow = 'hidden';
+                    } else {
+                        overlay.classList.add('hidden');
+                        document.body.style.overflow = '';
                     }
+                    updateSidebarUI(isSidebarOpen);
                 }
             });
         }

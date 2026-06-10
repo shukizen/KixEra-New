@@ -255,7 +255,7 @@
                                         <button onclick="edit<?php echo ucfirst($item->tipe_transaksi); ?>(<?php echo $item->id_transaksi; ?>)" class="text-blue-500 hover:text-blue-700 mr-3" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button onclick="deleteTransaksi('<?php echo $item->tipe_transaksi; ?>', <?php echo $item->id_transaksi; ?>)" class="text-red-500 hover:text-red-700" title="Hapus">
+                                        <button onclick="deleteTransaksi('<?php echo $item->tipe_transaksi; ?>', <?php echo $item->id_transaksi; ?>, '<?php echo htmlspecialchars($item->nama_transaksi, ENT_QUOTES); ?>')" class="text-red-500 hover:text-red-700" title="Hapus">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
@@ -522,6 +522,31 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 mx-4">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 flex items-center justify-center rounded-full bg-red-100">
+                <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800"><?= lang_text('confirm_delete') ?>?</h3>
+        </div>
+        <p class="text-gray-600 mb-6 leading-relaxed">
+            <?= lang_text('transactions') ?> <span id="delete-nama-text" class="font-semibold text-gray-800"></span> <?= lang_text('will_be_deleted') ?>.
+        </p>
+        <div class="flex justify-end gap-3">
+            <button id="cancelDeleteBtn" onclick="hideDeleteModal()"
+                class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+                <?= lang_text('cancel') ?>
+            </button>
+            <button id="confirmDeleteBtn"
+                class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">
+                <?= lang_text('delete') ?>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -919,39 +944,65 @@ function submitPengeluaran(event) {
 }
 
 // Delete Transaction
-function deleteTransaksi(tipe, id) {
-    if (!confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
-        return;
-    }
+let deleteTipe = null;
+let deleteId = null;
+
+function deleteTransaksi(tipe, id, nama) {
+    deleteTipe = tipe;
+    deleteId = id;
+    document.getElementById("delete-nama-text").textContent = '"' + nama + '"';
     
-    const url = tipe === 'pemasukan' ? 
-        BASE_URL + 'pemilik/keuangan/delete_pemasukan/' + id : 
-        BASE_URL + 'pemilik/keuangan/delete_pengeluaran/' + id;
-    
-    fetch(url, {
-        method: 'POST'
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(result => {
-        if (result.success) {
-            showNotification(result.message, 'success');
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
-        } else {
-            showNotification(result.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Terjadi kesalahan saat menghapus data: ' + error.message, 'error');
-    });
+    const modal = document.getElementById("deleteModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
 }
+
+function hideDeleteModal() {
+    const modal = document.getElementById("deleteModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    deleteTipe = null;
+    deleteId = null;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener("click", function() {
+            if (!deleteId || !deleteTipe) return;
+            
+            const url = deleteTipe === 'pemasukan' ? 
+                BASE_URL + 'pemilik/keuangan/delete_pemasukan/' + deleteId : 
+                BASE_URL + 'pemilik/keuangan/delete_pengeluaran/' + deleteId;
+            
+            fetch(url, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Terjadi kesalahan saat menghapus data: ' + error.message, 'error');
+            });
+            
+            hideDeleteModal();
+        });
+    }
+});
 
 // File input change handler
 function handleFileInput(inputId, labelId) {

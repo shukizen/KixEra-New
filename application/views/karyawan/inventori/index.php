@@ -215,13 +215,13 @@
                                                     title="Tambah Stok">
                                                     <i class="fas fa-plus text-sm"></i>
                                                 </button>
-                                                <a 
-                                                    href="<?= base_url('karyawan/inventori/delete/'.$item->id_inventori) ?>" 
-                                                    onclick="return confirm('Yakin ingin menghapus <?= htmlspecialchars($item->nama_item) ?>?')"
+                                                <button 
+                                                    type="button"
+                                                    onclick="showDeleteModal(<?= $item->id_inventori ?>, '<?= htmlspecialchars($item->nama_item, ENT_QUOTES) ?>')"
                                                     class="w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg flex items-center justify-center transition" 
                                                     title="Hapus">
                                                     <i class="fas fa-trash text-sm"></i>
-                                                </a>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -530,6 +530,31 @@
                 </div>
             </div>
 
+            <!-- Delete Confirmation Modal -->
+            <div id="deleteModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+                <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 mx-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-red-100">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800"><?= lang_text('confirm_delete') ?>?</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        <?= lang_text('inventory') ?> <span id="delete-nama-text" class="font-semibold text-gray-800"></span> <?= lang_text('will_be_deleted') ?>.
+                    </p>
+                    <div class="flex justify-end gap-3">
+                        <button id="cancelDeleteBtn" onclick="hideDeleteModal()"
+                            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+                            <?= lang_text('cancel') ?>
+                        </button>
+                        <button id="confirmDeleteBtn"
+                            class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">
+                            <?= lang_text('delete') ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
@@ -603,12 +628,40 @@ document.getElementById('modalTambahStok').addEventListener('click', function(e)
     if (e.target === this) closeAddStokModal();
 });
 
+let deleteItemId = null;
+
+function showDeleteModal(id, namaItem) {
+    deleteItemId = id;
+    document.getElementById("delete-nama-text").textContent = '"' + namaItem + '"';
+    const modal = document.getElementById("deleteModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function hideDeleteModal() {
+    const modal = document.getElementById("deleteModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    deleteItemId = null;
+}
+
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) hideDeleteModal();
+});
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (deleteItemId) {
+        window.location.href = "<?= base_url('karyawan/inventori/delete/') ?>" + deleteItemId;
+    }
+});
+
 // Close modals with Escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeAddModal();
         closeEditModal();
         closeAddStokModal();
+        hideDeleteModal();
     }
 });
 

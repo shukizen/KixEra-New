@@ -295,4 +295,56 @@ class Layanan extends CI_Controller {
             'data' => $layanan
         ]);
     }
+
+    // Mengambil resep bahan baku layanan dan kategori yang tersedia (AJAX)
+    public function get_bahan($id_layanan)
+    {
+        $id_pemilik = $this->get_id_pemilik();
+        
+        // RBAC Check
+        if (!$this->Layanan_model->checkOwnership($id_layanan, $id_pemilik)) {
+             echo json_encode(['success' => false, 'message' => 'Akses ditolak']);
+             return;
+        }
+
+        // Ambil bahan yang terdaftar untuk layanan ini
+        $bahan = $this->Layanan_model->getLayananInventori($id_layanan);
+        
+        // Ambil kategori inventori unik milik owner ini untuk pilihan dropdown
+        $kategori = $this->Layanan_model->getDistinctInventoriNames($id_pemilik);
+        
+        echo json_encode([
+            'success' => true,
+            'bahan' => $bahan,
+            'kategori' => $kategori
+        ]);
+    }
+
+    // Menyimpan resep bahan baku layanan (AJAX)
+    public function save_bahan($id_layanan)
+    {
+        $id_pemilik = $this->get_id_pemilik();
+        
+        // RBAC Check
+        if (!$this->Layanan_model->checkOwnership($id_layanan, $id_pemilik)) {
+             echo json_encode(['success' => false, 'message' => 'Akses ditolak']);
+             return;
+        }
+
+        $input_bahan = $this->input->post('bahan'); // Array of items
+        
+        $result = $this->Layanan_model->saveLayananInventori($id_layanan, $input_bahan);
+        
+        if ($result) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Bahan baku layanan berhasil diperbarui'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Gagal memperbarui bahan baku layanan'
+            ]);
+        }
+    }
 }

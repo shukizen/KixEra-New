@@ -316,7 +316,7 @@
                                 </button>
                             </div>
                             
-                            <div id="notificationsList" class="space-y-3">
+                            <div id="notificationsList" class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
                                 <!-- Notifications will be loaded dynamically here -->
                                 <div class="text-center py-8 text-gray-400">
                                     <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
@@ -629,7 +629,8 @@
             }
 
             let html = '';
-            notifications.forEach(notif => {
+            const displayNotifs = notifications.slice(0, 5); // Limit to 5 notifications
+            displayNotifs.forEach(notif => {
                 const style = getNotificationStyle(notif.type);
                 const isRead = notif.is_read == 1;
                 const bgClass = isRead ? 'bg-gray-50' : 'bg-white';

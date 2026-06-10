@@ -5,7 +5,7 @@ class Inventori extends CI_Controller {
     
     public function __construct() {
         parent::__construct();
-        $this->load->model('Inventorimodel');
+        $this->load->model('Inventori_model');
         $this->load->library('form_validation');
         
         // Check if user is logged in
@@ -30,10 +30,10 @@ class Inventori extends CI_Controller {
         $category = $this->input->get('category');
         $id_pemilik = $this->get_id_pemilik();
         
-        $data['inventory_items'] = $this->Inventorimodel->get_all_inventory($search, $category, $id_pemilik);
-        $data['stats'] = $this->Inventorimodel->get_inventory_stats($id_pemilik);
-        $data['branches'] = $this->Inventorimodel->get_all_branches($id_pemilik);
-        $data['category_stats'] = $this->Inventorimodel->get_items_by_category($id_pemilik);
+        $data['inventory_items'] = $this->Inventori_model->get_all_inventory($search, $category, $id_pemilik);
+        $data['stats'] = $this->Inventori_model->get_inventory_stats($id_pemilik);
+        $data['branches'] = $this->Inventori_model->get_all_branches($id_pemilik);
+        $data['category_stats'] = $this->Inventori_model->get_items_by_category($id_pemilik);
         
         $this->load->view('template/header');
         $this->load->view('template/sidebar');
@@ -47,7 +47,7 @@ class Inventori extends CI_Controller {
         $category = $this->input->post('category');
         $id_pemilik = $this->get_id_pemilik();
         
-        $items = $this->Inventorimodel->get_all_inventory($search, $category, $id_pemilik);
+        $items = $this->Inventori_model->get_all_inventory($search, $category, $id_pemilik);
         
         echo json_encode([
             'success' => true,
@@ -58,7 +58,7 @@ class Inventori extends CI_Controller {
     // Get single inventory item
     public function get_item($id) {
         $id_pemilik = $this->get_id_pemilik();
-        $item = $this->Inventorimodel->get_inventory_by_id($id, $id_pemilik);
+        $item = $this->Inventori_model->get_inventory_by_id($id, $id_pemilik);
         
         if ($item) {
             echo json_encode([
@@ -76,7 +76,7 @@ class Inventori extends CI_Controller {
     // Detail page for inventory item
     public function detail($id) {
         $id_pemilik = $this->get_id_pemilik();
-        $data['item'] = $this->Inventorimodel->get_inventory_by_id($id, $id_pemilik);
+        $data['item'] = $this->Inventori_model->get_inventory_by_id($id, $id_pemilik);
         
         $this->load->view('template/header');
         $this->load->view('template/sidebar');
@@ -105,7 +105,7 @@ class Inventori extends CI_Controller {
         $id_cabang = $this->input->post('id_cabang');
         
         // Validasi apakah cabang milik pemilik yang login
-        if (!$this->Inventorimodel->validate_branch_owner($id_cabang, $id_pemilik)) {
+        if (!$this->Inventori_model->validate_branch_owner($id_cabang, $id_pemilik)) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Cabang tidak valid atau bukan milik Anda'
@@ -114,7 +114,7 @@ class Inventori extends CI_Controller {
         }
         
         // Check if item already exists untuk pemilik ini
-        if ($this->Inventorimodel->item_exists($nama_item, null, $id_pemilik)) {
+        if ($this->Inventori_model->item_exists($nama_item, null, $id_pemilik)) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Item dengan nama tersebut sudah ada'
@@ -133,7 +133,7 @@ class Inventori extends CI_Controller {
             'keterangan' => $this->input->post('keterangan', true) ?: NULL
         ];
         
-        if ($this->Inventorimodel->insert_inventory($data)) {
+        if ($this->Inventori_model->insert_inventory($data)) {
             echo json_encode([
                 'success' => true,
                 'message' => 'Item berhasil ditambahkan'
@@ -167,7 +167,7 @@ class Inventori extends CI_Controller {
         $id_cabang = $this->input->post('id_cabang');
         
         // Validasi apakah item milik pemilik yang login
-        $existing_item = $this->Inventorimodel->get_inventory_by_id($id, $id_pemilik);
+        $existing_item = $this->Inventori_model->get_inventory_by_id($id, $id_pemilik);
         if (!$existing_item) {
             echo json_encode([
                 'success' => false,
@@ -177,7 +177,7 @@ class Inventori extends CI_Controller {
         }
         
         // Validasi apakah cabang milik pemilik yang login
-        if (!$this->Inventorimodel->validate_branch_owner($id_cabang, $id_pemilik)) {
+        if (!$this->Inventori_model->validate_branch_owner($id_cabang, $id_pemilik)) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Cabang tidak valid atau bukan milik Anda'
@@ -186,7 +186,7 @@ class Inventori extends CI_Controller {
         }
         
         // Check if item name exists (excluding current item)
-        if ($this->Inventorimodel->item_exists($nama_item, $id, $id_pemilik)) {
+        if ($this->Inventori_model->item_exists($nama_item, $id, $id_pemilik)) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Item dengan nama tersebut sudah ada'
@@ -205,7 +205,7 @@ class Inventori extends CI_Controller {
             'keterangan' => $this->input->post('keterangan', true) ?: NULL
         ];
         
-        if ($this->Inventorimodel->update_inventory($id, $data)) {
+        if ($this->Inventori_model->update_inventory($id, $data)) {
             echo json_encode([
                 'success' => true,
                 'message' => 'Item berhasil diupdate'
@@ -223,7 +223,7 @@ class Inventori extends CI_Controller {
         $id_pemilik = $this->get_id_pemilik();
         
         // Validasi apakah item milik pemilik yang login
-        $existing_item = $this->Inventorimodel->get_inventory_by_id($id, $id_pemilik);
+        $existing_item = $this->Inventori_model->get_inventory_by_id($id, $id_pemilik);
         if (!$existing_item) {
             echo json_encode([
                 'success' => false,
@@ -232,7 +232,7 @@ class Inventori extends CI_Controller {
             return;
         }
         
-        if ($this->Inventorimodel->delete_inventory($id)) {
+        if ($this->Inventori_model->delete_inventory($id)) {
             echo json_encode([
                 'success' => true,
                 'message' => 'Item berhasil dihapus'
@@ -250,13 +250,13 @@ class Inventori extends CI_Controller {
         $id_pemilik = $this->get_id_pemilik();
         
         // Top items by stock
-        $top_items = $this->Inventorimodel->get_top_items_by_stock(5, $id_pemilik);
+        $top_items = $this->Inventori_model->get_top_items_by_stock(5, $id_pemilik);
         
         // Items by category
-        $category_data = $this->Inventorimodel->get_items_by_category($id_pemilik);
+        $category_data = $this->Inventori_model->get_items_by_category($id_pemilik);
         
         // Stock trend by category
-        $stock_trend = $this->Inventorimodel->get_stock_trend_by_category($id_pemilik);
+        $stock_trend = $this->Inventori_model->get_stock_trend_by_category($id_pemilik);
         
         echo json_encode([
             'success' => true,
@@ -276,7 +276,7 @@ class Inventori extends CI_Controller {
         $id_pemilik = $this->get_id_pemilik();
         
         // Validasi apakah item milik pemilik yang login
-        $existing_item = $this->Inventorimodel->get_inventory_by_id($id, $id_pemilik);
+        $existing_item = $this->Inventori_model->get_inventory_by_id($id, $id_pemilik);
         if (!$existing_item) {
             echo json_encode([
                 'success' => false,
@@ -285,7 +285,7 @@ class Inventori extends CI_Controller {
             return;
         }
         
-        if ($this->Inventorimodel->update_stock($id, $quantity, $type)) {
+        if ($this->Inventori_model->update_stock($id, $quantity, $type)) {
             echo json_encode([
                 'success' => true,
                 'message' => 'Stok berhasil diupdate'

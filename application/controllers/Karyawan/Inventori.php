@@ -342,7 +342,7 @@ class Inventori extends CI_Controller {
         return [
             'Bahan',
             'Alat',
-            'Perlengakapan'
+            'Perlengkapan'
         ];
     }
     

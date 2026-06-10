@@ -163,7 +163,7 @@
                                     <tr class="hover:bg-gray-50 border-t border-gray-100">
                                         <td class="text-center py-4 px-4 text-gray-900 text-sm font-medium">#<?= $order['id_pesanan'] ?></td>
                                         <td class="text-center py-4 px-4 text-gray-600 text-sm"><?= htmlspecialchars($order['nama_pelanggan']) ?></td>
-                                        <td class="text-center py-4 px-4 text-gray-600 text-sm"><?= htmlspecialchars($order['jenis_layanan'] ?? '-') ?></td>
+                                        <td class="text-center py-4 px-4 text-gray-600 text-sm"><?= htmlspecialchars($order['nama_layanan'] ?? '-') ?></td>
                                         <td class="text-center py-4 px-4 text-gray-600 text-sm"><?= isset($cabang['nama_cabang']) ? $cabang['nama_cabang'] : '-' ?></td>
                                         <td class="text-center py-4 px-4">
                                             <?php
@@ -176,7 +176,7 @@
                                                 <?= ucfirst(str_replace('_', ' ', $order['status_pesanan'])) ?>
                                             </span>
                                         </td>
-                                        <td class="text-center py-4 px-4 text-gray-600 text-sm"><?= isset($order['estimasi_selesai']) && $order['estimasi_selesai'] ? date('d/m H:i', strtotime($order['estimasi_selesai'])) : '-' ?></td>
+                                        <td class="text-center py-4 px-4 text-gray-600 text-sm"><?= isset($order['tgl_estimasi_selesai']) && $order['tgl_estimasi_selesai'] ? date('d/m H:i', strtotime($order['tgl_estimasi_selesai'])) : '-' ?></td>
                                         <td class="text-center py-4 px-4">
                                             <a href="<?= base_url('karyawan/pesanan/detail/'.$order['id_pesanan']) ?>" class="text-emerald-500 font-medium hover:text-emerald-600">Lihat Detail</a>
                                         </td>

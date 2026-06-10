@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Layanan - KixEra</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
@@ -142,10 +141,10 @@
                                         <td class="py-4 px-4 text-center text-gray-700">
                                             <?php 
                                                 $waktu = $l->estimasi_waktu ?? 0;
-                                                if ($waktu >= 60) {
-                                                    $jam = floor($waktu / 60);
-                                                    $menit = $waktu % 60;
-                                                    echo $jam . ' jam' . ($menit > 0 ? ' ' . $menit . ' menit' : '');
+                                                if ($waktu > 0 && $waktu % 1440 === 0) {
+                                                    echo ($waktu / 1440) . ' hari';
+                                                } elseif ($waktu > 0 && $waktu % 60 === 0) {
+                                                    echo ($waktu / 60) . ' jam';
                                                 } else {
                                                     echo $waktu . ' menit';
                                                 }
@@ -162,6 +161,9 @@
                                             <div class="flex items-center justify-center gap-2">
                                                 <button onclick="viewLayanan(<?= $l->id_layanan ?>)" class="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 rounded-lg flex items-center justify-center transition" title="Detail">
                                                     <i class="fas fa-eye text-sm"></i>
+                                                </button>
+                                                <button onclick="manageBahan(<?= $l->id_layanan ?>, '<?= htmlspecialchars($l->nama_layanan ?? '', ENT_QUOTES) ?>')" class="w-8 h-8 bg-cyan-100 hover:bg-cyan-200 text-cyan-600 rounded-lg flex items-center justify-center transition" title="Kelola Bahan Baku">
+                                                    <i class="fas fa-flask text-sm"></i>
                                                 </button>
                                                 <button onclick="editLayanan(<?= $l->id_layanan ?>)" class="w-8 h-8 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition" title="Edit">
                                                     <i class="fas fa-edit text-sm"></i>
@@ -220,10 +222,17 @@
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Estimasi Waktu (menit) <span class="text-red-500">*</span></label>
-                            <input type="number" id="estimasi_waktu" name="estimasi_waktu" required min="1"
-                                   placeholder="60"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Estimasi Waktu <span class="text-red-500">*</span></label>
+                            <div class="flex gap-2">
+                                <input type="number" id="estimasi_waktu_val" required min="1" placeholder="3"
+                                       class="w-2/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <select id="estimasi_waktu_unit" class="w-1/3 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="menit">Menit</option>
+                                    <option value="jam">Jam</option>
+                                    <option value="hari">Hari</option>
+                                </select>
+                            </div>
+                            <input type="hidden" id="estimasi_waktu" name="estimasi_waktu">
                         </div>
                     </div>
                     
@@ -263,6 +272,49 @@
                     Tutup
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Kelola Bahan Baku -->
+    <div id="bahanModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl mx-4">
+            <div class="flex items-center justify-between p-6 border-b">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800">Kelola Bahan Baku</h3>
+                    <p id="bahanModalSubtitle" class="text-sm text-gray-500 mt-1"></p>
+                </div>
+                <button onclick="closeBahanModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="bahanForm">
+                <input type="hidden" id="bahanLayananId">
+                <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-medium text-gray-700">Daftar Bahan Baku yang Dibutuhkan</p>
+                        <button type="button" onclick="addBahanRow()" class="px-3 py-1.5 bg-cyan-100 hover:bg-cyan-200 text-cyan-700 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition">
+                            <i class="fas fa-plus text-xs"></i> Tambah Bahan
+                        </button>
+                    </div>
+
+                    <div id="bahanRowsContainer" class="space-y-3">
+                        <!-- Baris bahan baku akan dimasukkan secara dinamis di sini -->
+                    </div>
+
+                    <div id="noBahanPlaceholder" class="text-center py-6 text-gray-500 bg-gray-50 rounded-xl">
+                        <i class="fas fa-flask text-2xl text-gray-300 mb-2 block"></i>
+                        Belum ada bahan baku yang dikonfigurasi untuk layanan ini.
+                    </div>
+                </div>
+                <div class="flex gap-3 p-6 border-t bg-gray-50 rounded-b-2xl">
+                    <button type="button" onclick="closeBahanModal()" class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 font-medium transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2.5 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 font-medium shadow-md shadow-emerald-500/20 transition">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -348,6 +400,9 @@
                                     <button onclick="viewLayanan(${l.id_layanan})" class="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 rounded-lg flex items-center justify-center transition" title="Detail">
                                         <i class="fas fa-eye text-sm"></i>
                                     </button>
+                                    <button onclick="manageBahan(${l.id_layanan}, '${(l.nama_layanan || '').replace(/'/g, "\\'")}')" class="w-8 h-8 bg-cyan-100 hover:bg-cyan-200 text-cyan-600 rounded-lg flex items-center justify-center transition" title="Kelola Bahan Baku">
+                                        <i class="fas fa-flask text-sm"></i>
+                                    </button>
                                     <button onclick="editLayanan(${l.id_layanan})" class="w-8 h-8 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition" title="Edit">
                                         <i class="fas fa-edit text-sm"></i>
                                     </button>
@@ -387,18 +442,37 @@
         }
         
         function formatEstimasiWaktu(menit) {
-            if (menit >= 60) {
-                const jam = Math.floor(menit / 60);
-                const sisaMenit = menit % 60;
-                return jam + ' jam' + (sisaMenit > 0 ? ' ' + sisaMenit + ' menit' : '');
+            const m = parseInt(menit) || 0;
+            if (m > 0 && m % 1440 === 0) {
+                return (m / 1440) + ' hari';
+            } else if (m > 0 && m % 60 === 0) {
+                return (m / 60) + ' jam';
             }
-            return menit + ' menit';
+            return m + ' menit';
         }
+
+        function updateEstimasiWaktuHidden() {
+            const val = parseInt($('#estimasi_waktu_val').val()) || 0;
+            const unit = $('#estimasi_waktu_unit').val();
+            let minutes = val;
+            if (unit === 'jam') {
+                minutes = val * 60;
+            } else if (unit === 'hari') {
+                minutes = val * 1440;
+            }
+            $('#estimasi_waktu').val(minutes);
+        }
+
+        // Bind events for estimasi_waktu updates
+        $(document).on('input change', '#estimasi_waktu_val, #estimasi_waktu_unit', updateEstimasiWaktuHidden);
         
         function openAddModal() {
             $('#modalTitle').text('Tambah Layanan Baru');
             $('#layananForm')[0].reset();
             $('#layananId').val('');
+            $('#estimasi_waktu_val').val('');
+            $('#estimasi_waktu_unit').val('menit');
+            $('#estimasi_waktu').val('');
             $('#status').val('aktif');
             $('#layananModal').removeClass('hidden');
         }
@@ -444,43 +518,67 @@
                             ? '<span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Aktif</span>'
                             : '<span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Nonaktif</span>';
                         
-                        let html = `
-                            <div class="space-y-4">
-                                <div class="flex items-center gap-4 pb-4 border-b">
-                                    <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                                        ${(layanan.nama_layanan || 'L')[0].toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-semibold">${layanan.nama_layanan}</h3>
-                                        <p class="text-sm text-gray-500">#L${String(layanan.id_layanan).padStart(3, '0')}</p>
-                                    </div>
-                                </div>
-                                <div class="space-y-3">
-                                    ${layanan.deskripsi ? `
-                                    <div class="p-3 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-500 mb-1">Deskripsi</p>
-                                        <p class="text-gray-700">${layanan.deskripsi}</p>
-                                    </div>
-                                    ` : ''}
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <div class="p-3 bg-gray-50 rounded-lg">
-                                            <p class="text-sm text-gray-500 mb-1">Harga</p>
-                                            <p class="text-lg font-bold text-emerald-600">Rp ${formatRupiah(layanan.harga)}</p>
+                        // Muat bahan baku layanan
+                        $.ajax({
+                            url: BASE_URL + 'pemilik/layanan/get_bahan/' + id,
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(res) {
+                                let bahanHtml = '<p class="text-gray-500 italic text-sm">Tidak ada bahan baku dikonfigurasi</p>';
+                                if (res.success && res.bahan && res.bahan.length > 0) {
+                                    bahanHtml = '<ul class="list-disc pl-5 space-y-1 text-sm text-gray-700">';
+                                    res.bahan.forEach(b => {
+                                        bahanHtml += `<li><span class="font-semibold">${b.nama_item}</span>: ${parseFloat(b.jumlah_dibutuhkan)} unit per pasang</li>`;
+                                    });
+                                    bahanHtml += '</ul>';
+                                }
+
+                                let html = `
+                                    <div class="space-y-4">
+                                        <div class="flex items-center gap-4 pb-4 border-b">
+                                            <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                                                ${(layanan.nama_layanan || 'L')[0].toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <h3 class="text-lg font-semibold">${layanan.nama_layanan}</h3>
+                                                <p class="text-sm text-gray-500">#L${String(layanan.id_layanan).padStart(3, '0')}</p>
+                                            </div>
                                         </div>
-                                        <div class="p-3 bg-gray-50 rounded-lg">
-                                            <p class="text-sm text-gray-500 mb-1">Estimasi Waktu</p>
-                                            <p class="text-lg font-bold text-blue-600">${estimasi}</p>
+                                        <div class="space-y-3">
+                                            ${layanan.deskripsi ? `
+                                            <div class="p-3 bg-gray-50 rounded-lg">
+                                                <p class="text-sm text-gray-500 mb-1">Deskripsi</p>
+                                                <p class="text-gray-700">${layanan.deskripsi}</p>
+                                            </div>
+                                            ` : ''}
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <div class="p-3 bg-gray-50 rounded-lg">
+                                                    <p class="text-sm text-gray-500 mb-1">Harga</p>
+                                                    <p class="text-lg font-bold text-emerald-600">Rp ${formatRupiah(layanan.harga)}</p>
+                                                </div>
+                                                <div class="p-3 bg-gray-50 rounded-lg">
+                                                    <p class="text-sm text-gray-500 mb-1">Estimasi Waktu</p>
+                                                    <p class="text-lg font-bold text-blue-600">${estimasi}</p>
+                                                </div>
+                                            </div>
+                                            <div class="p-3 bg-gray-50 rounded-lg">
+                                                <p class="text-sm text-gray-500 mb-2 font-medium">Bahan Baku yang Digunakan</p>
+                                                ${bahanHtml}
+                                            </div>
+                                            <div class="p-3 bg-gray-50 rounded-lg">
+                                                <p class="text-sm text-gray-500 mb-2">Status</p>
+                                                ${statusBadge}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="p-3 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-500 mb-2">Status</p>
-                                        ${statusBadge}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        $('#viewContent').html(html);
-                        $('#viewModal').removeClass('hidden');
+                                `;
+                                $('#viewContent').html(html);
+                                $('#viewModal').removeClass('hidden');
+                            },
+                            error: function() {
+                                showNotification('Gagal memuat bahan baku', 'error');
+                            }
+                        });
                     } else {
                         showNotification('Data tidak ditemukan', 'error');
                     }
@@ -503,7 +601,21 @@
                         $('#nama_layanan').val(layanan.nama_layanan);
                         $('#deskripsi').val(layanan.deskripsi);
                         $('#harga').val(layanan.harga);
-                        $('#estimasi_waktu').val(layanan.estimasi_waktu);
+                        
+                        // Parse minutes to value and unit
+                        const minutes = parseInt(layanan.estimasi_waktu) || 0;
+                        if (minutes > 0 && minutes % 1440 === 0) {
+                            $('#estimasi_waktu_val').val(minutes / 1440);
+                            $('#estimasi_waktu_unit').val('hari');
+                        } else if (minutes > 0 && minutes % 60 === 0) {
+                            $('#estimasi_waktu_val').val(minutes / 60);
+                            $('#estimasi_waktu_unit').val('jam');
+                        } else {
+                            $('#estimasi_waktu_val').val(minutes);
+                            $('#estimasi_waktu_unit').val('menit');
+                        }
+                        $('#estimasi_waktu').val(minutes);
+                        
                         $('#status').val(layanan.status);
                         $('#layananModal').removeClass('hidden');
                     } else {
@@ -552,6 +664,108 @@
             });
         }
         
+        let availableCategories = [];
+
+        function manageBahan(id, nama) {
+            $('#bahanLayananId').val(id);
+            $('#bahanModalSubtitle').text('Layanan: ' + nama);
+            $('#bahanRowsContainer').empty();
+            $('#noBahanPlaceholder').removeClass('hidden');
+            
+            // Muat bahan baku layanan
+            $.ajax({
+                url: BASE_URL + 'pemilik/layanan/get_bahan/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        availableCategories = res.kategori || [];
+                        
+                        if (res.bahan && res.bahan.length > 0) {
+                            $('#noBahanPlaceholder').addClass('hidden');
+                            res.bahan.forEach(b => {
+                                addBahanRow(b.nama_item, b.jumlah_dibutuhkan);
+                            });
+                        }
+                        $('#bahanModal').removeClass('hidden');
+                    } else {
+                        showNotification(res.message || 'Gagal memuat bahan baku', 'error');
+                    }
+                },
+                error: function() {
+                    showNotification('Terjadi kesalahan saat mengambil bahan baku', 'error');
+                }
+            });
+        }
+
+        function closeBahanModal() {
+            $('#bahanModal').addClass('hidden');
+        }
+
+        function addBahanRow(selectedItem = '', quantity = 1) {
+            $('#noBahanPlaceholder').addClass('hidden');
+            
+            const rowIndex = $('#bahanRowsContainer').children().length;
+            
+            let optionsHtml = '<option value="">Pilih Barang...</option>';
+            availableCategories.forEach(cat => {
+                const isSelected = cat.nama_item === selectedItem ? 'selected' : '';
+                optionsHtml += `<option value="${cat.nama_item}" ${isSelected}>${cat.nama_item}</option>`;
+            });
+
+            // Fallback jika tidak ada barang terdaftar di inventori
+            if (availableCategories.length === 0 && selectedItem !== '') {
+                optionsHtml += `<option value="${selectedItem}" selected>${selectedItem}</option>`;
+            }
+
+            const rowHtml = `
+                <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200" id="bahan_row_${rowIndex}">
+                    <div class="flex-1">
+                        <select name="bahan[${rowIndex}][nama_item]" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                    <div class="w-1/3">
+                        <input type="number" name="bahan[${rowIndex}][jumlah_dibutuhkan]" value="${quantity}" required min="0.01" step="0.01" placeholder="Jumlah" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                    </div>
+                    <button type="button" onclick="removeBahanRow(${rowIndex})" class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
+            `;
+            $('#bahanRowsContainer').append(rowHtml);
+        }
+
+        function removeBahanRow(index) {
+            $(`#bahan_row_${index}`).remove();
+            if ($('#bahanRowsContainer').children().length === 0) {
+                $('#noBahanPlaceholder').removeClass('hidden');
+            }
+        }
+
+        $('#bahanForm').on('submit', function(e) {
+            e.preventDefault();
+            const id = $('#bahanLayananId').val();
+            
+            $.ajax({
+                url: BASE_URL + 'pemilik/layanan/save_bahan/' + id,
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showNotification(response.message || 'Bahan baku berhasil disimpan', 'success');
+                        closeBahanModal();
+                    } else {
+                        showNotification(response.message || 'Gagal menyimpan bahan baku', 'error');
+                    }
+                },
+                error: function() {
+                    showNotification('Terjadi kesalahan saat menyimpan bahan baku', 'error');
+                }
+            });
+        });
+
         function showNotification(message, type = 'info') {
             const existing = document.getElementById('temp-notification');
             if (existing) existing.remove();

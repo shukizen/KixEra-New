@@ -122,4 +122,52 @@ class  Layanan_model extends CI_Model {
         
         return $query->result();
     }
-}?>
+
+    // Get bahan baku untuk layanan tertentu
+    public function getLayananInventori($id_layanan) {
+        $this->db->where('id_layanan', $id_layanan);
+        $query = $this->db->get('layanan_inventori');
+        return $query->result();
+    }
+    
+    // Simpan/update bahan baku untuk layanan
+    public function saveLayananInventori($id_layanan, $data_bahan) {
+        $this->db->trans_start();
+        
+        // Hapus bahan baku lama terlebih dahulu
+        $this->db->where('id_layanan', $id_layanan);
+        $this->db->delete('layanan_inventori');
+        
+        // Insert bahan baku baru jika ada
+        if (!empty($data_bahan)) {
+            $insert_data = [];
+            foreach ($data_bahan as $bahan) {
+                if (!empty($bahan['nama_item']) && isset($bahan['jumlah_dibutuhkan']) && $bahan['jumlah_dibutuhkan'] > 0) {
+                    $insert_data[] = [
+                        'id_layanan' => $id_layanan,
+                        'nama_item' => $bahan['nama_item'],
+                        'jumlah_dibutuhkan' => $bahan['jumlah_dibutuhkan']
+                    ];
+                }
+            }
+            if (!empty($insert_data)) {
+                $this->db->insert_batch('layanan_inventori', $insert_data);
+            }
+        }
+        
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+    
+    // Ambil semua nama barang (nama_item) unik dari inventori milik owner ini
+    public function getDistinctInventoriNames($id_pemilik) {
+        $this->db->select('DISTINCT(inventori.nama_item)');
+        $this->db->from('inventori');
+        $this->db->join('cabang', 'cabang.id_cabang = inventori.id_cabang');
+        $this->db->where('cabang.id_pemilik', $id_pemilik);
+        $this->db->order_by('inventori.nama_item', 'ASC');
+        $query = $this->db->get();
+        return $query->result();
+    }
+}
+?>
