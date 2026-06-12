@@ -872,12 +872,16 @@
                                     <i class="fas fa-camera text-emerald-500 mr-1"></i>Foto Sebelum (Kondisi Awal)
                                 </label>
                                 <div class="flex items-center gap-4">
-                                    <label class="w-24 h-24 bg-emerald-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-teal-400 cursor-pointer hover:border-emerald-500 hover:bg-emerald-100 transition-all">
-                                        <i class="fas fa-cloud-upload-alt text-emerald-400 text-xl mb-1"></i>
-                                        <span class="text-xs text-emerald-600">Upload</span>
-                                        <input type="file" name="foto_sebelum_${i}" accept="image/*" 
-                                            onchange="previewImage(this, 'preview_${i}')" class="hidden">
-                                    </label>
+                                    <div class="flex flex-col gap-2">
+                                        <label class="w-24 h-10 bg-emerald-50 rounded-xl flex items-center justify-center border-2 border-dashed border-teal-400 cursor-pointer hover:border-emerald-500 hover:bg-emerald-100 transition-all">
+                                            <span class="text-xs text-emerald-600"><i class="fas fa-upload"></i> File</span>
+                                            <input type="file" id="input_sebelum_${i}" name="foto_sebelum_${i}" accept="image/*" 
+                                                onchange="previewImage(this, 'preview_${i}')" class="hidden">
+                                        </label>
+                                        <button type="button" onclick="openKamera('input_sebelum_${i}', 'preview_${i}')" class="w-24 h-10 bg-blue-50 rounded-xl flex items-center justify-center border-2 border-dashed border-blue-400 cursor-pointer hover:border-blue-500 hover:bg-blue-100 transition-all text-blue-600 text-xs">
+                                            <i class="fas fa-camera mr-1"></i> Kamera
+                                        </button>
+                                    </div>
                                     <img id="preview_${i}" src="" alt="" class="hidden w-24 h-24 object-cover rounded-xl border-2 border-emerald-500">
                                 </div>
                             </div>
@@ -969,9 +973,9 @@
                 // Append foto files
                 const jumlah = parseInt(form.jumlah_item.value) || 1;
                 for (let i = 1; i <= jumlah; i++) {
-                    const fotoInput = document.querySelector(`[name="foto_sebelum_${i}"]`);
-                    if (fotoInput && fotoInput.files[0]) {
-                        formData.append(`foto_sebelum_${i}`, fotoInput.files[0]);
+                    const fotoInputSebelum = document.querySelector(`[name="foto_sebelum_${i}"]`);
+                    if (fotoInputSebelum && fotoInputSebelum.files[0]) {
+                        formData.append(`foto_sebelum_${i}`, fotoInputSebelum.files[0]);
                     }
                 }
 
@@ -1155,14 +1159,18 @@
                                                 <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">After</span>
                                                </div>`
                                             : showFotoSesudah 
-                                                ? `<div class="space-y-2">
-                                                    <label class="w-24 h-24 mx-auto bg-emerald-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-teal-400 cursor-pointer hover:border-emerald-500 hover:bg-emerald-100 transition-all">
-                                                        <i class="fas fa-cloud-upload-alt text-green-400 text-xl mb-1"></i>
-                                                        <span class="text-xs text-green-600">Upload</span>
-                                                        <input type="file" name="foto_sesudah_${i}" accept="image/*" 
-                                                            onchange="previewImage(this, 'edit_preview_sesudah_${i}')" class="hidden">
-                                                    </label>
-                                                    <img id="edit_preview_sesudah_${i}" src="" class="hidden w-24 h-24 mx-auto object-cover rounded-xl border-2 border-green-500">
+                                                ? `<div class="flex items-center justify-center gap-2">
+                                                    <div class="flex flex-col gap-2">
+                                                        <label class="w-20 h-8 bg-emerald-50 rounded-lg flex items-center justify-center border-2 border-dashed border-teal-400 cursor-pointer hover:border-emerald-500 hover:bg-emerald-100 transition-all">
+                                                            <span class="text-xs text-emerald-600"><i class="fas fa-upload mr-1"></i> File</span>
+                                                            <input type="file" id="edit_input_sesudah_${i}" name="foto_sesudah_${i}" accept="image/*" 
+                                                                onchange="previewImage(this, 'edit_preview_sesudah_${i}')" class="hidden">
+                                                        </label>
+                                                        <button type="button" onclick="openKamera('edit_input_sesudah_${i}', 'edit_preview_sesudah_${i}')" class="w-20 h-8 bg-blue-50 rounded-lg flex items-center justify-center border-2 border-dashed border-blue-400 cursor-pointer hover:border-blue-500 hover:bg-blue-100 transition-all text-blue-600 text-xs">
+                                                            <i class="fas fa-camera mr-1"></i> Kam
+                                                        </button>
+                                                    </div>
+                                                    <img id="edit_preview_sesudah_${i}" src="" class="hidden w-20 h-20 object-cover rounded-xl border-2 border-green-500">
                                                    </div>`
                                                 : `<div class="w-24 h-24 mx-auto bg-gray-50 rounded-xl flex flex-col items-center justify-center border border-gray-200">
                                                     <i class="fas fa-lock text-gray-300 text-lg mb-1"></i>
@@ -1725,6 +1733,88 @@
                 });
             });
         })();
+    </script>
+
+    <!-- Modal Kamera -->
+    <div id="modalKamera" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[60]">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden flex flex-col">
+            <div class="bg-gray-800 p-4 flex items-center justify-between">
+                <h3 class="text-white font-semibold">Ambil Foto</h3>
+                <button id="btnCloseKamera" class="text-gray-400 hover:text-white text-xl">&times;</button>
+            </div>
+            <div class="relative bg-black flex-1 min-h-[300px] flex items-center justify-center">
+                <video id="kameraVideo" class="w-full h-auto max-h-[60vh] object-cover" autoplay playsinline></video>
+            </div>
+            <div class="p-4 bg-gray-100 flex justify-center gap-4">
+                <button id="btnAmbilFoto" class="w-16 h-16 rounded-full bg-white border-4 border-gray-300 shadow-md flex items-center justify-center hover:bg-gray-200 transition-all">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500"></div>
+                </button>
+            </div>
+            <canvas id="kameraCanvas" class="hidden"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let currentKameraTarget = null;
+        let currentPreviewTarget = null;
+        let kameraStream = null;
+
+        async function openKamera(inputId, previewId) {
+            currentKameraTarget = document.getElementById(inputId);
+            currentPreviewTarget = document.getElementById(previewId);
+            
+            const modalKamera = document.getElementById('modalKamera');
+            const video = document.getElementById('kameraVideo');
+            
+            modalKamera.classList.remove('hidden');
+            modalKamera.classList.add('flex');
+            
+            try {
+                kameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = kameraStream;
+            } catch (err) {
+                alert("Tidak dapat mengakses kamera: " + err.message);
+                closeKamera();
+            }
+        }
+
+        function closeKamera() {
+            if (kameraStream) {
+                kameraStream.getTracks().forEach(track => track.stop());
+                kameraStream = null;
+            }
+            document.getElementById('modalKamera').classList.add('hidden');
+            document.getElementById('modalKamera').classList.remove('flex');
+        }
+
+        document.getElementById('btnCloseKamera')?.addEventListener('click', closeKamera);
+
+        document.getElementById('btnAmbilFoto')?.addEventListener('click', () => {
+            const video = document.getElementById('kameraVideo');
+            const canvas = document.getElementById('kameraCanvas');
+            
+            if (video.videoWidth) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                canvas.toBlob((blob) => {
+                    const file = new File([blob], "kamera_" + Date.now() + ".jpg", { type: "image/jpeg" });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    
+                    if (currentKameraTarget) {
+                        currentKameraTarget.files = dataTransfer.files;
+                    }
+                    if (currentPreviewTarget) {
+                        currentPreviewTarget.src = URL.createObjectURL(blob);
+                        currentPreviewTarget.classList.remove('hidden');
+                    }
+                    closeKamera();
+                }, 'image/jpeg', 0.8);
+            }
+        });
     </script>
 </body>
 </html>

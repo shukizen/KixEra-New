@@ -196,11 +196,18 @@ class Pesanan extends CI_Controller
             for ($i = 0; $i < $jumlah; $i++) {
                 $detail = $detail_items[$i] ?? [];
                 $foto_sebelum = null;
+                $foto_sesudah = null;
                 
-                // Handle foto upload
-                $foto_key = 'foto_sebelum_' . ($i + 1);
-                if (!empty($_FILES[$foto_key]['name'])) {
-                    $foto_sebelum = $this->uploadFoto($foto_key, $id_pesanan, $i + 1);
+                // Handle foto sebelum upload
+                $foto_key_sebelum = 'foto_sebelum_' . ($i + 1);
+                if (!empty($_FILES[$foto_key_sebelum]['name'])) {
+                    $foto_sebelum = $this->uploadFoto($foto_key_sebelum, $id_pesanan, $i + 1);
+                }
+
+                // Handle foto sesudah upload
+                $foto_key_sesudah = 'foto_sesudah_' . ($i + 1);
+                if (!empty($_FILES[$foto_key_sesudah]['name'])) {
+                    $foto_sesudah = $this->uploadFotoSesudah($foto_key_sesudah, $id_pesanan, $i + 1);
                 }
                 
                 $detail_data = [
@@ -211,6 +218,7 @@ class Pesanan extends CI_Controller
                     'kondisi_awal' => $detail['kondisi_awal'] ?? null,
                     'catatan_khusus' => $detail['catatan_khusus'] ?? null,
                     'foto_sebelum' => $foto_sebelum,
+                    'foto_sesudah' => $foto_sesudah,
                 ];
                 $this->Pesanan_model->insertDetailPesanan($detail_data);
             }
@@ -323,7 +331,14 @@ class Pesanan extends CI_Controller
         $allowed = ['id_pelanggan', 'id_layanan', 'id_karyawan', 'tgl_masuk', 'total_harga', 'status_pesanan', 'jumlah_item', 'tgl_estimasi_selesai', 'catatan'];
         $data = [];
         foreach ($allowed as $f) {
-            if (isset($input[$f])) $data[$f] = $input[$f];
+            if (isset($input[$f])) {
+                if ($f === 'tgl_estimasi_selesai') {
+                    $val = trim($input[$f]);
+                    $data[$f] = ($val === '') ? null : str_replace('T', ' ', $val);
+                } else {
+                    $data[$f] = $input[$f];
+                }
+            }
         }
 
         // Check if status changed
@@ -366,7 +381,14 @@ class Pesanan extends CI_Controller
         $allowed = ['id_pelanggan', 'id_layanan', 'id_karyawan', 'tgl_masuk', 'total_harga', 'status_pesanan', 'jumlah_item', 'tgl_estimasi_selesai', 'catatan'];
         $data = [];
         foreach ($allowed as $f) {
-            if (isset($input[$f])) $data[$f] = $input[$f];
+            if (isset($input[$f])) {
+                if ($f === 'tgl_estimasi_selesai') {
+                    $val = trim($input[$f]);
+                    $data[$f] = ($val === '') ? null : str_replace('T', ' ', $val);
+                } else {
+                    $data[$f] = $input[$f];
+                }
+            }
         }
 
         // Check if status changed

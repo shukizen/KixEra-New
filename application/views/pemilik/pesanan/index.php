@@ -53,108 +53,8 @@
 
             <!-- Dashboard Content -->
             <div class="p-6">
-                <!-- Edit Modal (hidden) -->
-                <div id="editModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-                    <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
-                        <div class="p-4 border-b flex items-center justify-between">
-                            <h3 class="text-lg font-semibold"><?= lang_text('edit') ?> <?= lang_text('orders') ?></h3>
-                            <button id="closeModal" class="text-gray-500">&times;</button>
-                        </div>
-                        <div class="p-6">
-                            <form id="editForm">
-                                <input type="hidden" id="edit-id_pesanan" name="id_pesanan">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="text-sm text-gray-600">Pelanggan</label>
-                                        <select id="edit-id_pelanggan" name="id_pelanggan" class="w-full px-4 py-2 border rounded-xl">
-                                            <option value="">-- Pilih Pelanggan --</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="text-sm text-gray-600">Layanan</label>
-                                        <select id="edit-id_layanan" name="id_layanan" class="w-full px-4 py-2 border rounded-xl">
-                                            <option value="">-- Pilih Layanan --</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="text-sm text-gray-600">Karyawan</label>
-                                        <select id="edit-id_karyawan" name="id_karyawan" class="w-full px-4 py-2 border rounded-xl">
-                                            <option value="">-- Pilih Karyawan --</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="text-sm text-gray-600">Tanggal Masuk</label>
-                                        <input type="date" id="edit-tgl_masuk" name="tgl_masuk" class="w-full px-4 py-2 border rounded-xl" />
-                                    </div>
-                                    <div>
-                                        <label class="text-sm text-gray-600">Total Harga</label>
-                                        <input type="number" id="edit-total_harga" name="total_harga" class="w-full px-4 py-2 border rounded-xl" />
-                                    </div>
-                                    <div>
-                                        <label class="text-sm text-gray-600">Status</label>
-                                        <select id="edit-status_pesanan" name="status_pesanan" class="w-full px-4 py-2 border rounded-xl">
-                                            <option value="diterima">Diterima</option>
-                                            <option value="dalam_proses">Dalam Proses</option>
-                                            <option value="selesai">Selesai</option>
-                                            <option value="siap_diambil">Siap Diambil</option>
-                                            <option value="sudah_diambil">Sudah Diambil</option>
-                                            <option value="dibatalkan">Dibatalkan</option>
-                                        </select>
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <label class="text-sm text-gray-600">Cabang</label>
-                                        <input id="edit-cabang" name="cabang" class="w-full px-4 py-2 border rounded-xl" readonly />
-                                    </div>
-                                    <div>
-                                        <label class="text-sm text-gray-600">Jumlah Item</label>
-                                        <input type="number" id="edit-jumlah_item" name="jumlah_item" class="w-full px-4 py-2 border rounded-xl" />
-                                    </div>
-                                    <div>
-                                        <label class="text-sm text-gray-600">Tanggal Estimasi Selesai</label>
-                                        <input type="datetime-local" id="edit-tgl_estimasi_selesai" name="tgl_estimasi_selesai" class="w-full px-4 py-2 border rounded-xl" />
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <label class="text-sm text-gray-600">Catatan</label>
-                                        <textarea id="edit-catatan" name="catatan" class="w-full px-4 py-2 border rounded-xl" rows="3"></textarea>
-                                    </div>
-                                </div>
-                                <div class="mt-4 flex justify-end gap-3">
-                                    <button type="button" id="cancelEdit" class="px-4 py-2 rounded-xl border"><?= lang_text('cancel') ?></button>
-                                    <button type="submit" class="bg-emerald-500 text-white px-6 py-2 rounded-xl"><?= lang_text('save') ?></button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <!-- Delete Confirmation Modal -->
-                <div id="deleteModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
-                    <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 mx-4">
 
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-12 h-12 flex items-center justify-center rounded-full bg-red-100">
-                                <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
-                            </div>
-                            <h3 class="text-xl font-semibold text-gray-800"><?= lang_text('confirm_delete') ?>?</h3>
-                        </div>
 
-                        <p class="text-gray-600 mb-6 leading-relaxed">
-                            <?= lang_text('orders') ?> <span id="delete-id-text" class="font-semibold text-gray-800"></span> <?= lang_text('will_be_deleted') ?>.
-                        </p>
-
-                        <div class="flex justify-end gap-3">
-                            <button id="cancelDeleteBtn"
-                                class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
-                                <?= lang_text('cancel') ?>
-                            </button>
-
-                            <button id="confirmDeleteBtn"
-                                class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">
-                                <?= lang_text('delete') ?>
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
 
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
@@ -370,10 +270,211 @@
                     </div>
                 </div>
             </div>
+            </div>
 
-        </main>
-    </div>
+    <!-- Modal Edit Pesanan -->
+            <div id="modalEditPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden">
+                    <!-- Header -->
+                    <div class="bg-white border-b p-6 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-edit text-emerald-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">Edit Pesanan</h2>
+                                <p class="text-gray-500 text-sm">Perbarui informasi pesanan</p>
+                            </div>
+                        </div>
+                        <button id="btnCloseEditModal" class="text-gray-400 hover:text-gray-600 text-2xl hover:bg-gray-100 rounded-lg w-10 h-10 flex items-center justify-center transition-all">
+                            &times;
+                        </button>
+                    </div>
+                    
+                    <!-- Body with scroll -->
+                    <div class="p-6 max-h-[calc(90vh-180px)] overflow-y-auto">
+                        <form id="formEditPesanan" enctype="multipart/form-data">
+                            <input type="hidden" name="id_pesanan" id="edit-id_pesanan">
+                            
+                            <!-- Info Pesanan Section -->
+                            <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-6">
+                                <div class="flex items-center gap-2 mb-4">
+                                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-info-circle text-emerald-600 text-sm"></i>
+                                    </div>
+                                    <h3 class="font-semibold text-gray-800">Informasi Pesanan</h3>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                                            <i class="fas fa-flag text-emerald-500 mr-1"></i>Status Pesanan
+                                        </label>
+                                        <select name="status_pesanan" id="edit-status_pesanan"
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
+                                            <?php foreach ($status_list as $value => $label): ?>
+                                                <option value="<?= $value ?>"><?= $label ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                                            <i class="fas fa-concierge-bell text-emerald-500 mr-1"></i>Layanan
+                                        </label>
+                                        <select name="id_layanan" id="edit-id_layanan"
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
+                                            <?php foreach ($layanan_list as $lay): ?>
+                                                <option value="<?= $lay->id_layanan ?>" data-harga="<?= $lay->harga ?>">
+                                                    <?= htmlspecialchars($lay->nama_layanan) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                                            <i class="fas fa-shoe-prints text-emerald-500 mr-1"></i>Jumlah Item
+                                        </label>
+                                        <input type="number" name="jumlah_item" id="edit-jumlah_item" min="1" readonly
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-100 text-gray-600">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                                            <i class="fas fa-money-bill-wave text-emerald-500 mr-1"></i>Total Harga
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Rp</span>
+                                            <input type="number" name="total_harga" id="edit-total_harga"
+                                                class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                                            <i class="fas fa-calendar-check text-emerald-500 mr-1"></i>Estimasi Selesai
+                                        </label>
+                                        <input type="datetime-local" name="tgl_estimasi_selesai" id="edit-tgl_estimasi_selesai"
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                                            <i class="fas fa-sticky-note text-emerald-500 mr-1"></i>Catatan
+                                        </label>
+                                        <textarea name="catatan" id="edit-catatan" rows="2" placeholder="Catatan tambahan..."
+                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Detail Items Section -->
+                            <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-shoe-prints text-emerald-600 text-sm"></i>
+                                        </div>
+                                        <h3 class="font-semibold text-gray-800">Detail Sepatu</h3>
+                                    </div>
+                                    <span class="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border">
+                                        <i class="fas fa-camera mr-1"></i>Upload foto saat selesai
+                                    </span>
+                                </div>
+                                
+                                <div id="editDetailItemsContainer" class="space-y-4">
+                                    <!-- Dynamic items will be loaded here -->
+                                    <div class="text-center py-8 text-gray-400">
+                                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                        <p class="text-sm">Memuat detail sepatu...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Fixed Footer -->
+                    <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                        <button type="button" id="btnBatalEditModal" class="px-6 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-all flex items-center gap-2">
+                            <i class="fas fa-times"></i>Batal
+                        </button>
+                        <button type="submit" form="formEditPesanan" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all flex items-center gap-2">
+                            <i class="fas fa-save"></i>Simpan Perubahan
+                        </button>
+                    </div>
+                </div>
+            </div>
 
+
+            <!-- Modal Delete Confirmation -->
+            <div id="modalDeletePesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+                <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-red-100">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Hapus Pesanan?</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">
+                        Pesanan <span id="delete-nomor" class="font-semibold"></span> akan dihapus. Tindakan ini tidak bisa dibatalkan.
+                    </p>
+                    <input type="hidden" id="delete-id">
+                    <div class="flex justify-end gap-3">
+                        <button id="btnCancelDelete" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                        <button id="btnConfirmDelete" class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">Hapus</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Status Change Confirmation -->
+            <div id="modalStatusPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+                <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div id="status-icon" class="w-12 h-12 flex items-center justify-center rounded-full bg-emerald-100">
+                            <i class="fas fa-sync-alt text-emerald-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Ubah Status Pesanan</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">
+                        Ubah status pesanan menjadi <span id="status-label" class="font-semibold text-emerald-600"></span>?
+                    </p>
+                    <input type="hidden" id="status-id">
+                    <input type="hidden" id="status-value">
+                    <div class="flex justify-end gap-3">
+                        <button id="btnCancelStatus" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                        <button id="btnConfirmStatus" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg">
+                            <i class="fas fa-check mr-1"></i>Konfirmasi
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Success with Print Option -->
+            <div id="modalSuccessPesanan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+                <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4 text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-emerald-100">
+                        <i class="fas fa-check-circle text-emerald-500 text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Pesanan Berhasil Disimpan!</h3>
+                    <p class="text-gray-600 mb-2">Nomor Pesanan:</p>
+                    <p id="success-nomor-pesanan" class="text-2xl font-bold text-emerald-600 mb-6">#-</p>
+                    <input type="hidden" id="success-id-pesanan">
+                    <div class="flex flex-col gap-3">
+                        <button id="btnCetakNota" class="w-full px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all">
+                            <i class="fas fa-print"></i>
+                            <span>Cetak Nota</span>
+                        </button>
+                        <button id="btnCloseSuccess" class="w-full px-5 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-medium transition-all">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+     
+
+    
     <script>
         // Helper to format Date to YYYY-MM-DD in local time
         const formatLocalDate = (date) => {
@@ -640,326 +741,10 @@
             document.getElementById('stat-batal').textContent = batal;
         }
 
-        // populate select options
-        function populateSelect(selectId, items, idKey, labelKey) {
-            const sel = document.getElementById(selectId);
-            if (!sel) return;
-            // keep first placeholder option
-            sel.innerHTML = '<option value="">-- Pilih --</option>';
-            items.forEach(function(it) {
-                const opt = document.createElement('option');
-                opt.value = it[idKey];
-                opt.text = it[labelKey];
-                sel.appendChild(opt);
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            populateSelect('edit-id_pelanggan', pelangganList, 'id_pelanggan', 'nama');
-            populateSelect('edit-id_layanan', layananList, 'id_layanan', 'nama_layanan');
-            populateSelect('edit-id_karyawan', karyawanList, 'id_karyawan', 'nama');
-        });
-
-        // Edit modal flow (GET JSON -> populate -> submit JSON)
-        (function() {
-            function showModal() {
-                const m = document.getElementById('editModal');
-                m.classList.remove('hidden');
-                m.classList.add('flex');
-            }
-
-            function hideModal() {
-                const m = document.getElementById('editModal');
-                m.classList.add('hidden');
-                m.classList.remove('flex');
-            }
-
-            // open edit modal and populate
-            async function openEditModal(id) {
-                try {
-                    const res = await fetch('<?php echo site_url("pemilik/pesanan/get/"); ?>' + id);
-                    const json = await res.json();
-                    if (!json || !json.data) {
-                        // Data tidak tersedia, tapi modal tetap dibuka dengan form kosong (fallback)
-                        console.warn('Data tidak lengkap, membuka form dengan field kosong');
-                    } else {
-                        const p = json.data;
-                        document.getElementById('edit-id_pesanan').value = p.id_pesanan || '';
-                        // prefer selecting by readable name (match option text) falling back to id
-                        try {
-                            const pelName = p.nama_pelanggan || '';
-                            const pelSelect = document.getElementById('edit-id_pelanggan');
-                            let matched = false;
-                            if (pelName) {
-                                Array.from(pelSelect.options).forEach(function(opt) {
-                                    if (opt.text === pelName) {
-                                        opt.selected = true;
-                                        matched = true;
-                                    }
-                                });
-                            }
-                            if (!matched) pelSelect.value = p.id_pelanggan || '';
-
-                            const layName = p.nama_layanan || '';
-                            const laySelect = document.getElementById('edit-id_layanan');
-                            matched = false;
-                            if (layName) {
-                                Array.from(laySelect.options).forEach(function(opt) {
-                                    if (opt.text === layName) {
-                                        opt.selected = true;
-                                        matched = true;
-                                    }
-                                });
-                            }
-                            if (!matched) laySelect.value = p.id_layanan || '';
-
-                            const karName = p.nama_karyawan || '';
-                            const karSelect = document.getElementById('edit-id_karyawan');
-                            matched = false;
-                            if (karName) {
-                                Array.from(karSelect.options).forEach(function(opt) {
-                                    if (opt.text === karName) {
-                                        opt.selected = true;
-                                        matched = true;
-                                    }
-                                });
-                            }
-                            if (!matched) karSelect.value = p.id_karyawan || '';
-                        } catch (e) {
-                            document.getElementById('edit-id_pelanggan').value = p.id_pelanggan || '';
-                            document.getElementById('edit-id_layanan').value = p.id_layanan || '';
-                            document.getElementById('edit-id_karyawan').value = p.id_karyawan || '';
-                        }
-                        document.getElementById('edit-tgl_masuk').value = p.tgl_masuk ? p.tgl_masuk.split(' ')[0] : '';
-                        document.getElementById('edit-total_harga').value = p.total_harga || 0;
-                        document.getElementById('edit-status_pesanan').value = p.status_pesanan || '';
-                        document.getElementById('edit-cabang').value = p.nama_cabang || '';
-                        document.getElementById('edit-jumlah_item').value = p.jumlah_item || '';
-                        if (p.tgl_estimasi_selesai) {
-                            const est = new Date(p.tgl_estimasi_selesai);
-                            document.getElementById('edit-tgl_estimasi_selesai').value =
-                                est.toISOString().slice(0, 16); // format: YYYY-MM-DDTHH:MM
-                        } else {
-                            document.getElementById('edit-tgl_estimasi_selesai').value = '';
-                        }
-                        document.getElementById('edit-catatan').value = p.catatan || '';
-                    }
-                    showModal();
-                } catch (e) {
-                    console.error(e);
-                    // Tetap buka modal supaya user bisa edit dengan field kosong
-                    showModal();
-                }
-            }
-
-            // submit form as JSON
-            async function submitEditForm(e) {
-                e.preventDefault();
-
-                // Validasi form wajib terisi
-                const pelanggan = document.getElementById('edit-id_pelanggan').value;
-                const layanan = document.getElementById('edit-id_layanan').value;
-                const karyawan = document.getElementById('edit-id_karyawan').value;
-                const tgl_masuk = document.getElementById('edit-tgl_masuk').value;
-                const total_harga = document.getElementById('edit-total_harga').value;
-                const status = document.getElementById('edit-status_pesanan').value;
-
-                if (!pelanggan) {
-                    showNotification('Pelanggan harus dipilih', 'error');
-                    return;
-                }
-                if (!layanan) {
-                    showNotification('Layanan harus dipilih', 'error');
-                    return;
-                }
-                if (!karyawan) {
-                    showNotification('Karyawan harus dipilih', 'error');
-                    return;
-                }
-                if (!tgl_masuk) {
-                    showNotification('Tanggal Masuk harus diisi', 'error');
-                    return;
-                }
-                if (!total_harga || total_harga <= 0) {
-                    showNotification('Total Harga harus diisi dan lebih dari 0', 'error');
-                    return;
-                }
-                if (!status) {
-                    showNotification('Status harus dipilih', 'error');
-                    return;
-                }
-
-                const payload = {
-                    id_pesanan: document.getElementById('edit-id_pesanan').value,
-                    id_pelanggan: pelanggan,
-                    id_layanan: layanan,
-                    id_karyawan: karyawan,
-                    tgl_masuk: tgl_masuk,
-                    total_harga: total_harga,
-                    status_pesanan: status,
-                    jumlah_item: parseInt(document.getElementById('edit-jumlah_item').value) || 0,
-                    tgl_estimasi_selesai: document.getElementById('edit-tgl_estimasi_selesai').value,
-                    catatan: document.getElementById('edit-catatan').value || '',
-                    // do not send `cabang` (no column in pesanan table)
-                };
-
-                const url = '<?php echo site_url("pemilik/pesanan/update_json"); ?>';
-                console.log('Sending update request to:', url);
-                console.log('Payload:', payload);
-
-                try {
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    });
-                    console.log('Response status:', res.status, 'ok:', res.ok);
-                    const json = await res.json();
-                    console.log('Update response:', json);
-                    console.log('pesananData before update:', pesananData);
-                    if (json.status === 'success') {
-                        // Update local pesanan data with data from server response
-                        if (json.data) {
-                            const idx = pesananData.findIndex(p => p.id_pesanan == json.data.id_pesanan);
-                            console.log('Found pesanan at index:', idx, 'id:', json.data.id_pesanan);
-                            if (idx !== -1) {
-                                pesananData[idx] = json.data;
-                                console.log('Updated pesananData[' + idx + ']:', pesananData[idx]);
-                            }
-                        }
-                        hideModal();
-                        showNotification('Pesanan berhasil diperbarui', 'success');
-                        // Update stats without full page reload
-                        console.log('Calling updateStatsCards, pesananData:', pesananData);
-                        updateStatsCards();
-                        // Optionally reload to see updated table row styling
-                        setTimeout(() => location.reload(), 800);
-                    } else {
-                        showNotification(json.message || 'Gagal menyimpan', 'error');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    showNotification('Terjadi kesalahan jaringan: ' + err.message, 'error');
-                }
-            }
-
-            document.addEventListener('DOMContentLoaded', function() {
-                // edit buttons
-                document.querySelectorAll('.btn-edit').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                        const id = this.getAttribute('data-id');
-                        if (!id) return;
-                        openEditModal(id);
-                    });
-                });
-
-                // close/cancel handlers
-                document.getElementById('closeModal').addEventListener('click', hideModal);
-                document.getElementById('cancelEdit').addEventListener('click', hideModal);
-
-                // submit handler
-                document.getElementById('editForm').addEventListener('submit', submitEditForm);
-            });
-        })();
-
-        let deleteId = null;
-
-        function showDeleteModal(id, nomor) {
-            deleteId = id;
-            document.getElementById("delete-id-text").textContent = nomor;
-
-            const modal = document.getElementById("deleteModal");
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-        }
-
-        function hideDeleteModal() {
-            const modal = document.getElementById("deleteModal");
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-
-            // Open modal on delete button click (use nomor_pesanan for display)
-            document.querySelectorAll('.btn-delete').forEach(btn => {
-                btn.addEventListener("click", function() {
-                    const id = this.getAttribute("data-id");
-                    const nomor = this.getAttribute("data-nomor") || id;
-                    showDeleteModal(id, nomor);
-                });
-            });
-
-            // Cancel button
-            document.getElementById("cancelDeleteBtn").addEventListener("click", hideDeleteModal);
-
-            // Confirm delete button
-            document.getElementById("confirmDeleteBtn").addEventListener("click", function() {
-
-                fetch('<?php echo site_url("pemilik/pesanan/delete"); ?>', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-                        },
-                        body: 'id_pesanan=' + encodeURIComponent(deleteId)
-                    })
-                    .then(res => res.json())
-                    .then(json => {
-                        if (json.status === 'success') {
-                            showNotification('Pesanan berhasil dihapus', 'success');
-                            setTimeout(() => {
-                                location.reload();
-                            }, 800);
-                        } else {
-                            showNotification(json.message || 'Gagal menghapus pesanan', 'error');
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        showNotification('Terjadi kesalahan jaringan', 'error');
-                    });
-
-                hideDeleteModal();
-            });
-        });
 
 
-        // Function to filter table by search and status
-        function filterTable() {
-            const searchValue = document.getElementById('searchInput').value.toLowerCase().trim();
-            const statusValue = document.getElementById('statusFilter').value.toLowerCase();
 
-            document.querySelectorAll('table tbody tr').forEach(row => {
-                // Get text from nomor pesanan (col 1), pelanggan (col 3), dan status (col 7)
-                const nomorCell = row.querySelector('td:nth-child(1)');
-                const pelangganCell = row.querySelector('td:nth-child(3)');
-                const statusCell = row.querySelector('td:nth-child(7)');
 
-                if (!nomorCell || !pelangganCell || !statusCell) return;
-
-                const nomor = nomorCell.textContent.trim().toLowerCase();
-                const pelanggan = pelangganCell.textContent.trim().toLowerCase();
-                const status = statusCell.textContent.trim().toLowerCase();
-
-                // Match search (nomor pesanan atau nama pelanggan)
-                const matchSearch = searchValue === '' || nomor.includes(searchValue) || pelanggan.includes(searchValue);
-
-                // Match status filter
-                const matchStatus = statusValue === '' || status === statusValue;
-
-                // Show row jika kedua filter cocok
-                if (matchSearch && matchStatus) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-
-        document.getElementById('searchInput').addEventListener('keyup', filterTable);
-        document.getElementById('statusFilter').addEventListener('change', filterTable);
 
 
         (function() {
@@ -1088,7 +873,594 @@
                 notification.remove();
             }, 3000);
         }
-    </script>
-</body>
+    
+        const BASE_URL = '<?= site_url("pemilik/pesanan/") ?>';
 
-</html>
+// ============ MODAL EDIT PESANAN ============
+        (function() {
+            const modal = document.getElementById('modalEditPesanan');
+            const btnClose = document.getElementById('btnCloseEditModal');
+            const btnBatal = document.getElementById('btnBatalEditModal');
+            const form = document.getElementById('formEditPesanan');
+
+            function openModal() {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                form.reset();
+                document.getElementById('editDetailItemsContainer').innerHTML = '';
+            }
+
+            btnClose.addEventListener('click', closeModal);
+            btnBatal.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            // Render detail items for edit
+            function renderEditDetailItems(details, status) {
+                const container = document.getElementById('editDetailItemsContainer');
+                
+                if (!details || details.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-400">
+                            <i class="fas fa-shoe-prints text-4xl mb-3 opacity-50"></i>
+                            <p class="text-sm">Tidak ada detail sepatu</p>
+                        </div>`;
+                    return;
+                }
+                
+                const showFotoSesudah = ['selesai', 'siap_diambil', 'sudah_diambil'].includes(status);
+                
+                let html = '';
+                details.forEach((d, index) => {
+                    const i = index + 1;
+                    html += `
+                        <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all" data-detail-id="${d.id_detail}">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
+                                        <span class="text-white font-bold text-sm">${i}</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">${d.jenis_sepatu || 'Sepatu ' + i}</h4>
+                                        <p class="text-xs text-gray-500">${d.warna || 'Warna tidak diketahui'}</p>
+                                    </div>
+                                </div>
+                                ${d.foto_sebelum || d.foto_sesudah ? `<span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full"><i class="fas fa-image mr-1"></i>Foto tersedia</span>` : ''}
+                            </div>
+                            <input type="hidden" name="detail_id_${i}" value="${d.id_detail}">
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                                        <i class="fas fa-tag text-gray-400 mr-1"></i>Jenis Sepatu
+                                    </label>
+                                    <input type="text" name="edit_detail[${i}][jenis_sepatu]" value="${d.jenis_sepatu || ''}"
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                                        <i class="fas fa-palette text-gray-400 mr-1"></i>Warna
+                                    </label>
+                                    <input type="text" name="edit_detail[${i}][warna]" value="${d.warna || ''}"
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                                        <i class="fas fa-clipboard-list text-gray-400 mr-1"></i>Kondisi Awal
+                                    </label>
+                                    <input type="text" name="edit_detail[${i}][kondisi_awal]" value="${d.kondisi_awal || ''}"
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                                        <i class="fas fa-sticky-note text-gray-400 mr-1"></i>Catatan Khusus
+                                    </label>
+                                    <input type="text" name="edit_detail[${i}][catatan_khusus]" value="${d.catatan_khusus || ''}"
+                                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all">
+                                </div>
+                            </div>
+                            
+                            <!-- Foto Section -->
+                            <div class="pt-4 border-t border-gray-100">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <!-- Foto Sebelum -->
+                                    <div class="text-center">
+                                        <label class="block text-xs font-medium text-gray-500 mb-2">
+                                            <i class="fas fa-camera text-orange-400 mr-1"></i>Foto Sebelum
+                                        </label>
+                                        ${d.foto_sebelum 
+                                            ? `<div class="relative inline-block">
+                                                <img src="${BASE_URL}../../${d.foto_sebelum}" class="w-24 h-24 object-cover rounded-xl border-2 border-orange-200 shadow-lg" alt="Sebelum">
+                                                <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">Before</span>
+                                               </div>`
+                                            : `<div class="w-24 h-24 mx-auto bg-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300">
+                                                <i class="fas fa-image text-gray-300 text-2xl"></i>
+                                               </div>`
+                                        }
+                                    </div>
+                                    
+                                    <!-- Foto Sesudah -->
+                                    <div class="text-center">
+                                        <label class="block text-xs font-medium text-gray-500 mb-2">
+                                            <i class="fas fa-camera-retro text-green-500 mr-1"></i>Foto Sesudah
+                                        </label>
+                                        ${d.foto_sesudah 
+                                            ? `<div class="relative inline-block">
+                                                <img src="${BASE_URL}../../${d.foto_sesudah}" class="w-24 h-24 object-cover rounded-xl border-2 border-green-200 shadow-lg" alt="Sesudah">
+                                                <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">After</span>
+                                               </div>`
+                                            : showFotoSesudah 
+                                                ? `<div class="flex items-center justify-center gap-2">
+                                                    <div class="flex flex-col gap-2">
+                                                        <label class="w-20 h-8 bg-emerald-50 rounded-lg flex items-center justify-center border-2 border-dashed border-teal-400 cursor-pointer hover:border-emerald-500 hover:bg-emerald-100 transition-all">
+                                                            <span class="text-xs text-emerald-600"><i class="fas fa-upload mr-1"></i> File</span>
+                                                            <input type="file" id="edit_input_sesudah_${i}" name="foto_sesudah_${i}" accept="image/*" 
+                                                                onchange="previewImage(this, 'edit_preview_sesudah_${i}')" class="hidden">
+                                                        </label>
+                                                        <button type="button" onclick="openKamera('edit_input_sesudah_${i}', 'edit_preview_sesudah_${i}')" class="w-20 h-8 bg-blue-50 rounded-lg flex items-center justify-center border-2 border-dashed border-blue-400 cursor-pointer hover:border-blue-500 hover:bg-blue-100 transition-all text-blue-600 text-xs">
+                                                            <i class="fas fa-camera mr-1"></i> Kam
+                                                        </button>
+                                                    </div>
+                                                    <img id="edit_preview_sesudah_${i}" src="" class="hidden w-20 h-20 object-cover rounded-xl border-2 border-green-500">
+                                                   </div>`
+                                                : `<div class="w-24 h-24 mx-auto bg-gray-50 rounded-xl flex flex-col items-center justify-center border border-gray-200">
+                                                    <i class="fas fa-lock text-gray-300 text-lg mb-1"></i>
+                                                    <span class="text-xs text-gray-400">Setelah selesai</span>
+                                                   </div>`
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            }
+
+
+
+            // Attach click handlers to edit buttons
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const id = this.dataset.id;
+                    try {
+                        const res = await fetch(BASE_URL + 'get/' + id);
+                        const json = await res.json();
+                        
+                        if (json.status === 'success' && json.data) {
+                            const p = json.data;
+                            document.getElementById('edit-id_pesanan').value = p.id_pesanan;
+                            document.getElementById('edit-status_pesanan').value = p.status_pesanan || '';
+                            document.getElementById('edit-id_layanan').value = p.id_layanan || '';
+                            document.getElementById('edit-jumlah_item').value = p.jumlah_item || 1;
+                            document.getElementById('edit-total_harga').value = p.total_harga || 0;
+                            document.getElementById('edit-catatan').value = p.catatan || '';
+                            
+                            if (p.tgl_estimasi_selesai && p.tgl_estimasi_selesai !== '0000-00-00 00:00:00' && p.tgl_estimasi_selesai !== '0000-00-00') {
+                                const dt = new Date(p.tgl_estimasi_selesai);
+                                if (!isNaN(dt.getTime())) {
+                                    dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
+                                    document.getElementById('edit-tgl_estimasi_selesai').value = dt.toISOString().slice(0, 16);
+                                }
+                            }
+                            
+                            // Load and render detail items
+                            renderEditDetailItems(json.detail_items || [], p.status_pesanan);
+                            
+                            openModal();
+                        }
+                    } catch (err) {
+                        showNotification('Gagal memuat data: ' + err.message, 'error');
+                    }
+                });
+            });
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Use FormData for file upload
+                const formData = new FormData();
+                formData.append('id_pesanan', form.id_pesanan.value);
+                formData.append('status_pesanan', form.status_pesanan.value);
+                formData.append('id_layanan', form.id_layanan.value);
+                formData.append('jumlah_item', form.jumlah_item.value);
+                formData.append('total_harga', form.total_harga.value);
+                formData.append('tgl_estimasi_selesai', form.tgl_estimasi_selesai.value);
+                formData.append('catatan', form.catatan.value);
+                
+                // Collect detail items data
+                const detailContainer = document.getElementById('editDetailItemsContainer');
+                const detailItems = detailContainer.querySelectorAll('[data-detail-id]');
+                const details = [];
+                
+                detailItems.forEach((item, index) => {
+                    const i = index + 1;
+                    const detailId = item.dataset.detailId;
+                    
+                    details.push({
+                        id_detail: detailId,
+                        jenis_sepatu: item.querySelector(`[name="edit_detail[${i}][jenis_sepatu]"]`)?.value || '',
+                        warna: item.querySelector(`[name="edit_detail[${i}][warna]"]`)?.value || '',
+                        kondisi_awal: item.querySelector(`[name="edit_detail[${i}][kondisi_awal]"]`)?.value || '',
+                        catatan_khusus: item.querySelector(`[name="edit_detail[${i}][catatan_khusus]"]`)?.value || ''
+                    });
+                    
+                    // Append foto sesudah if exists
+                    const fotoInput = item.querySelector(`[name="foto_sesudah_${i}"]`);
+                    if (fotoInput && fotoInput.files[0]) {
+                        formData.append(`foto_sesudah_${i}`, fotoInput.files[0]);
+                        formData.append(`detail_id_${i}`, detailId);
+                    }
+                });
+                
+                formData.append('detail_items', JSON.stringify(details));
+
+                try {
+                    const res = await fetch(BASE_URL + 'update', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const json = await res.json();
+                    
+                    if (json.status === 'success') {
+                        showNotification(json.message);
+                        closeModal();
+                        setTimeout(() => location.reload(), 500);
+                    } else {
+                        showNotification(json.message, 'error');
+                    }
+                } catch (err) {
+                    showNotification('Gagal menyimpan: ' + err.message, 'error');
+                }
+            });
+        })();
+
+        // ============ MODAL DELETE ============
+        (function() {
+            const modal = document.getElementById('modalDeletePesanan');
+            const btnCancel = document.getElementById('btnCancelDelete');
+            const btnConfirm = document.getElementById('btnConfirmDelete');
+
+            function openModal(id, nomor) {
+                document.getElementById('delete-id').value = id;
+                document.getElementById('delete-nomor').textContent = nomor;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            btnCancel.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    openModal(this.dataset.id, this.dataset.nomor);
+                });
+            });
+
+            btnConfirm.addEventListener('click', async function() {
+                const id = document.getElementById('delete-id').value;
+                
+                try {
+                    const res = await fetch(BASE_URL + 'delete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id_pesanan: id })
+                    });
+                    const json = await res.json();
+                    
+                    if (json.status === 'success') {
+                        showNotification(json.message);
+                        closeModal();
+                        setTimeout(() => location.reload(), 500);
+                    } else {
+                        showNotification(json.message, 'error');
+                    }
+                } catch (err) {
+                    showNotification('Gagal menghapus: ' + err.message, 'error');
+                }
+            });
+        })();
+
+
+        // ============ QUICK STATUS CHANGE ============
+        (function() {
+            const modal = document.getElementById('modalStatusPesanan');
+            const btnCancel = document.getElementById('btnCancelStatus');
+            const btnConfirm = document.getElementById('btnConfirmStatus');
+            
+            const statusLabels = {
+                'dalam_proses': 'Dalam Proses',
+                'selesai': 'Selesai',
+                'siap_diambil': 'Siap Diambil',
+                'sudah_diambil': 'Sudah Diambil'
+            };
+            
+            const statusColors = {
+                'dalam_proses': { bg: 'bg-yellow-100', text: 'text-yellow-600' },
+                'selesai': { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+                'siap_diambil': { bg: 'bg-green-100', text: 'text-green-600' },
+                'sudah_diambil': { bg: 'bg-emerald-100', text: 'text-emerald-600' }
+            };
+
+            function openModal(id, status) {
+                document.getElementById('status-id').value = id;
+                document.getElementById('status-value').value = status;
+                document.getElementById('status-label').textContent = statusLabels[status] || status;
+                
+                // Update icon color
+                const iconDiv = document.getElementById('status-icon');
+                const colors = statusColors[status] || { bg: 'bg-emerald-100', text: 'text-emerald-600' };
+                iconDiv.className = `w-12 h-12 flex items-center justify-center rounded-full ${colors.bg}`;
+                iconDiv.querySelector('i').className = `fas fa-sync-alt ${colors.text} text-2xl`;
+                
+                // Update label color
+                document.getElementById('status-label').className = `font-semibold ${colors.text}`;
+                
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            btnCancel.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            // Attach click handlers to quick status buttons
+            document.querySelectorAll('.btn-quick-status').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const newStatus = this.dataset.status;
+                    openModal(id, newStatus);
+                });
+            });
+
+            // Confirm status change
+            btnConfirm.addEventListener('click', async function() {
+                const id = document.getElementById('status-id').value;
+                const newStatus = document.getElementById('status-value').value;
+                
+                try {
+                    const res = await fetch(BASE_URL + 'quick_status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id_pesanan: id, status_pesanan: newStatus })
+                    });
+                    const json = await res.json();
+                    
+                    if (json.status === 'success') {
+                        showNotification(json.message);
+                        closeModal();
+                        setTimeout(() => location.reload(), 500);
+                    } else {
+                        showNotification(json.message, 'error');
+                    }
+                } catch (err) {
+                    showNotification('Gagal mengubah status: ' + err.message, 'error');
+                }
+            });
+        })();
+
+        // ============ QUICK UPLOAD FOTO ============
+        (function() {
+            document.querySelectorAll('.btn-upload-foto').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    // Open edit modal which has foto upload
+                    document.querySelector(`.btn-edit[data-id="${id}"]`).click();
+                });
+            });
+        })();
+
+        // ============ PAYMENT TOGGLE HANDLER ============
+        (function() {
+            const toggle = document.getElementById('add-sudah_bayar');
+            const hiddenInput = document.getElementById('add-status_pembayaran');
+            const label = document.getElementById('sudah-bayar-label');
+            
+            if (toggle) {
+                toggle.addEventListener('change', function() {
+                    if (this.checked) {
+                        hiddenInput.value = 'sudah_bayar';
+                        label.textContent = 'Sudah Dibayar';
+                        label.classList.remove('text-gray-700');
+                        label.classList.add('text-green-600');
+                    } else {
+                        hiddenInput.value = 'belum_bayar';
+                        label.textContent = 'Belum Dibayar';
+                        label.classList.remove('text-green-600');
+                        label.classList.add('text-gray-700');
+                    }
+                });
+            }
+        })();
+
+        // ============ CONFIRM PAYMENT HANDLER ============
+        (function() {
+            document.querySelectorAll('.btn-confirm-payment').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const id = this.dataset.id;
+                    const nomor = this.dataset.nomor;
+                    const total = this.dataset.total;
+                    const currentMetode = this.dataset.metode;
+                    
+                    // Create confirmation modal
+                    const modalHtml = `
+                        <div id="modalConfirmPayment" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+                                <div class="bg-white border-b p-5">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                            <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h2 class="text-lg font-bold text-gray-800">Konfirmasi Pembayaran</h2>
+                                            <p class="text-gray-500 text-sm">Pesanan ${nomor}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-5">
+                                    <div class="text-center mb-4">
+                                        <p class="text-gray-600 mb-2">Total Pembayaran:</p>
+                                        <p class="text-3xl font-bold text-green-600">Rp ${Number(total).toLocaleString('id-ID')}</p>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                                            <i class="fas fa-wallet text-blue-500 mr-1"></i>Metode Pembayaran
+                                        </label>
+                                        <select id="confirm-metode-pembayaran" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white">
+                                            <option value="tunai" ${currentMetode === 'tunai' ? 'selected' : ''}>Tunai</option>
+                                            <option value="debit" ${currentMetode === 'debit' ? 'selected' : ''}>Debit/Transfer</option>
+                                            <option value="qris" ${currentMetode === 'qris' ? 'selected' : ''}>QRIS</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                                    <button type="button" id="btnCancelPayment" class="px-4 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 font-medium">
+                                        Batal
+                                    </button>
+                                    <button type="button" id="btnConfirmPayment" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium flex items-center gap-2">
+                                        <i class="fas fa-check"></i>Konfirmasi Bayar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    const modal = document.getElementById('modalConfirmPayment');
+                    
+                    // Cancel button
+                    document.getElementById('btnCancelPayment').addEventListener('click', () => {
+                        modal.remove();
+                    });
+                    
+                    // Close on overlay click
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) modal.remove();
+                    });
+                    
+                    // Confirm button
+                    document.getElementById('btnConfirmPayment').addEventListener('click', async () => {
+                        const metode = document.getElementById('confirm-metode-pembayaran').value;
+                        
+                        try {
+                            const res = await fetch(BASE_URL + 'confirm_payment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    id_pesanan: id, 
+                                    metode_pembayaran: metode 
+                                })
+                            });
+                            const json = await res.json();
+                            
+                            if (json.status === 'success') {
+                                showNotification(json.message);
+                                modal.remove();
+                                setTimeout(() => location.reload(), 500);
+                            } else {
+                                showNotification(json.message, 'error');
+                            }
+                        } catch (err) {
+                            showNotification('Gagal mengkonfirmasi pembayaran: ' + err.message, 'error');
+                        }
+                    });
+                });
+            });
+        })();
+    </script>
+
+    <!-- Modal Kamera -->
+    <div id="modalKamera" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[60]">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden flex flex-col">
+            <div class="bg-gray-800 p-4 flex items-center justify-between">
+                <h3 class="text-white font-semibold">Ambil Foto</h3>
+                <button id="btnCloseKamera" class="text-gray-400 hover:text-white text-xl">&times;</button>
+            </div>
+            <div class="relative bg-black flex-1 min-h-[300px] flex items-center justify-center">
+                <video id="kameraVideo" class="w-full h-auto max-h-[60vh] object-cover" autoplay playsinline></video>
+            </div>
+            <div class="p-4 bg-gray-100 flex justify-center gap-4">
+                <button id="btnAmbilFoto" class="w-16 h-16 rounded-full bg-white border-4 border-gray-300 shadow-md flex items-center justify-center hover:bg-gray-200 transition-all">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500"></div>
+                </button>
+            </div>
+            <canvas id="kameraCanvas" class="hidden"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let currentKameraTarget = null;
+        let currentPreviewTarget = null;
+        let kameraStream = null;
+
+        async function openKamera(inputId, previewId) {
+            currentKameraTarget = document.getElementById(inputId);
+            currentPreviewTarget = document.getElementById(previewId);
+            
+            const modalKamera = document.getElementById('modalKamera');
+            const video = document.getElementById('kameraVideo');
+            
+            modalKamera.classList.remove('hidden');
+            modalKamera.classList.add('flex');
+            
+            try {
+                kameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = kameraStream;
+            } catch (err) {
+                alert("Tidak dapat mengakses kamera: " + err.message);
+                closeKamera();
+            }
+        }
+
+        function closeKamera() {
+            if (kameraStream) {
+                kameraStream.getTracks().forEach(track => track.stop());
+                kameraStream = null;
+            }
+            document.getElementById('modalKamera').classList.add('hidden');
+            document.getElementById('modalKamera').classList.remove('flex');
+        }
+
+        document.getElementById('btnCloseKamera')?.addEventListener('click', closeKamera);
+
+        document.getElementById('btnAmbilFoto')?.addEventListener('click', () => {
+            const video = document.getElementById('kameraVideo');
+            const canvas = document.getElementById('kameraCanvas');
+            
+            if (video.videoWidth) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                canvas.toBlob((blob) => {
+                    const file = new File([blob], "kamera_" + Date.now() + ".jpg", { type: "image/jpeg" });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    
+                    if (currentKameraTarget) {
+                        currentKameraTarget.files = dataTransfer.files;
+                    }
+                    if (currentPreviewTarget) {
+                        currentPreviewTarget.src = URL.createObjectURL(blob);
+                        currentPreviewTarget.classList.remove('hidden');
+                    }
+                    closeKamera();
+                }, 'image/jpeg', 0.8);
+            }
+        });
+    </script>

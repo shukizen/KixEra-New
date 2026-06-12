@@ -91,7 +91,8 @@ class Pesanan extends CI_Controller
     // Update pesanan (expects POST with `id_pesanan` and fields to update)
     public function update()
     {
-        $id = $this->input->post('id_pesanan');
+        $input = $this->input->post();
+        $id = isset($input['id_pesanan']) ? $input['id_pesanan'] : null;
         $id_pemilik = $this->get_id_pemilik();
         
         if (empty($id)) {
@@ -107,10 +108,19 @@ class Pesanan extends CI_Controller
              return $this->output->set_content_type('application/json')->set_output(json_encode($resp));
         }
 
-        $data = $this->input->post();
-        unset($data['id_pesanan']);
-        // pesanan table doesn't have `cabang` column; ensure we don't attempt to update it
-        if (isset($data['cabang'])) unset($data['cabang']);
+        // Whitelist fields
+        $allowed = ['id_pelanggan', 'id_layanan', 'id_karyawan', 'tgl_masuk', 'total_harga', 'status_pesanan', 'jumlah_item', 'tgl_estimasi_selesai', 'catatan'];
+        $data = [];
+        foreach ($allowed as $f) {
+            if (isset($input[$f])) {
+                if ($f === 'tgl_estimasi_selesai') {
+                    $val = trim($input[$f]);
+                    $data[$f] = ($val === '') ? null : str_replace('T', ' ', $val);
+                } else {
+                    $data[$f] = $input[$f];
+                }
+            }
+        }
 
         // Check if status is being changed
         $new_status = isset($data['status_pesanan']) ? $data['status_pesanan'] : null;
@@ -121,10 +131,40 @@ class Pesanan extends CI_Controller
         if ($updated) {
             // If status changed, add progress record
             if ($new_status && $new_status !== $old_status) {
-                $id_karyawan = $this->session->userdata('id_karyawan');
+                $id_karyawan = isset($input['id_karyawan']) ? $input['id_karyawan'] : $this->session->userdata('id_karyawan');
                 $this->Pesanan_model->insertProgres($id, $new_status, null, $id_karyawan);
             }
-            $resp = ['status' => 'success', 'message' => 'Pesanan updated'];
+            
+            // Update detail items
+            if (!empty($input['detail_items'])) {
+                $detail_items = json_decode($input['detail_items'], true) ?: [];
+                foreach ($detail_items as $index => $detail) {
+                    if (!empty($detail['id_detail'])) {
+                        $detail_data = [
+                            'jenis_sepatu' => $detail['jenis_sepatu'] ?? null,
+                            'warna' => $detail['warna'] ?? null,
+                            'kondisi_awal' => $detail['kondisi_awal'] ?? null,
+                            'catatan_khusus' => $detail['catatan_khusus'] ?? null,
+                        ];
+                        $this->Pesanan_model->updateDetailPesanan($detail['id_detail'], $detail_data);
+                    }
+                }
+            }
+            
+            // Upload foto sesudah if provided
+            for ($i = 1; $i <= 10; $i++) {
+                $foto_key = 'foto_sesudah_' . $i;
+                $detail_id_key = 'detail_id_' . $i;
+                
+                if (!empty($_FILES[$foto_key]['name']) && !empty($input[$detail_id_key])) {
+                    $foto_path = $this->uploadFotoSesudah($foto_key, $id, $i);
+                    if ($foto_path) {
+                        $this->Pesanan_model->updateDetailPesanan($input[$detail_id_key], ['foto_sesudah' => $foto_path]);
+                    }
+                }
+            }
+            
+            $resp = ['status' => 'success', 'message' => 'Pesanan berhasil diperbarui'];
         } else {
             $resp = ['status' => 'error', 'message' => 'Failed to update pesanan'];
         }
@@ -132,6 +172,33 @@ class Pesanan extends CI_Controller
         return $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode($resp));
+    }
+
+    // Upload foto sesudah helper
+    private function uploadFotoSesudah($field_name, $id_pesanan, $item_number)
+    {
+        $upload_path = './uploads/pesanan/' . $id_pesanan . '/';
+        
+        if (!is_dir($upload_path)) {
+            mkdir($upload_path, 0777, true);
+        }
+        
+        $config = [
+            'upload_path' => $upload_path,
+            'allowed_types' => 'jpg|jpeg|png|gif|webp',
+            'max_size' => 5120,
+            'file_name' => 'sesudah_' . $item_number . '_' . time(),
+        ];
+        
+        $this->load->library('upload', $config);
+        $this->upload->initialize($config);
+        
+        if ($this->upload->do_upload($field_name)) {
+            $upload_data = $this->upload->data();
+            return 'uploads/pesanan/' . $id_pesanan . '/' . $upload_data['file_name'];
+        }
+        
+        return null;
     }
 
     // Delete pesanan (soft delete). Expects POST with `id_pesanan`.
@@ -179,7 +246,6 @@ class Pesanan extends CI_Controller
         echo json_encode($data);
     }
 
-    // Method get() untuk modal edit - mengembalikan format {status, data}
     public function get($id)
     {
         $id_pemilik = $this->get_id_pemilik();
@@ -188,7 +254,12 @@ class Pesanan extends CI_Controller
         if (!$pesanan) {
             $resp = ['status' => 'error', 'message' => 'Pesanan tidak ditemukan atau akses ditolak'];
         } else {
-            $resp = ['status' => 'success', 'data' => $pesanan];
+            $detail_items = $this->Pesanan_model->getDetailPesanan($id);
+            $resp = [
+                'status' => 'success',
+                'data' => $pesanan,
+                'detail_items' => $detail_items
+            ];
         }
 
         return $this->output
