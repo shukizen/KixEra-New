@@ -170,8 +170,7 @@ class Pelanggan_model extends CI_Model {
     {
         $this->db->select('c.nama_cabang, COUNT(DISTINCT p.id_pelanggan) as total');
         $this->db->from('cabang c');
-        $this->db->join('pesanan ps', 'c.id_cabang = ps.id_cabang AND ps.deleted_at IS NULL', 'left');
-        $this->db->join('pelanggan p', 'ps.id_pelanggan = p.id_pelanggan AND p.deleted_at IS NULL', 'left');
+        $this->db->join('pelanggan p', 'p.id_cabang = c.id_cabang AND p.deleted_at IS NULL', 'left');
         $this->db->where('c.deleted_at IS NULL');
         
         if ($id_pemilik) {
@@ -181,7 +180,13 @@ class Pelanggan_model extends CI_Model {
         $this->db->group_by('c.id_cabang, c.nama_cabang');
         $this->db->order_by('total', 'DESC');
         
-        return $this->db->get()->result();
+        $query = $this->db->get();
+        if ($query === false) {
+            $this->logQueryError('grafikCabang');
+            return [];
+        }
+
+        return $query->result();
     }
 
     // GRAFIK 2: Top Pelanggan Aktif (berdasarkan jumlah pesanan)
@@ -202,7 +207,13 @@ class Pelanggan_model extends CI_Model {
         $this->db->order_by('total_pesanan', 'DESC');
         $this->db->limit(5);
         
-        return $this->db->get()->result();
+        $query = $this->db->get();
+        if ($query === false) {
+            $this->logQueryError('topPelanggan');
+            return [];
+        }
+
+        return $query->result();
     }
 
     // GRAFIK 3: Pertumbuhan Pelanggan Bulanan
@@ -210,58 +221,39 @@ class Pelanggan_model extends CI_Model {
     {
         $months = intval($months);
         if ($months < 1 || $months > 24) $months = 6;
-        
-        // This is tricky for scoped customers since 'created_at' is global.
-        // We will approximate by using the date of their first order in owner's shop?
-        // Or just show global growth if that's what's intended?
-        // Let's stick to safe defaults: Show growth of customers LINKED TO OWNER.
-        // If id_pemilik is set, count unique customers who made their FIRST order with this owner in that month?
-        // That's complex query.
-        // Simpler approach: Count distinct customers active in that month? No, that's activity not growth.
-        // Alternative: Count new orders by NEW customers?
-        // Let's revert to a simpler "New Orders" metric if "New Customers" is too hard, 
-        // OR just count creation date if we assume customers are created BY the owner.
-        
-        // Assuming customers are created by owner:
-        $this->db->select("DATE_FORMAT(pelanggan.created_at, '%b') as bulan, DATE_FORMAT(pelanggan.created_at, '%Y-%m') as periode, COUNT(*) as total");
-        $this->db->from('pelanggan');
-        
+
+        $this->db->select("DATE_FORMAT(p.created_at, '%b') as bulan, DATE_FORMAT(p.created_at, '%Y-%m') as periode, COUNT(DISTINCT p.id_pelanggan) as total");
+        $this->db->from('pelanggan p');
+
         if ($id_pemilik) {
-           // This join filters only customers who have ordered at least once from owner.
-           // BUT it still groups by their ORIGINAL creation date, which might be years ago (if they moved).
-           // If the app is designed where each owner inputs their customers, then `created_at` is fine.
-           // Let's assume shared customers are rare or this metric accepts that caveat.
-           $this->db->join('pesanan', 'pesanan.id_pelanggan = pelanggan.id_pelanggan');
-           $this->db->join('cabang', 'cabang.id_cabang = pesanan.id_cabang');
-           $this->db->where('cabang.id_pemilik', $id_pemilik);
-           $this->db->where('pesanan.deleted_at IS NULL');
-           // We need distinct here because join multiplies rows
-           // But SQL `COUNT(*)` with GROUP BY clause on simple join will overcount.
-           // We need unique customers.
-           // Complex query needed.
+            $this->db->join('cabang c', 'c.id_cabang = p.id_cabang');
+            $this->db->where('c.id_pemilik', $id_pemilik);
+            $this->db->where('c.deleted_at IS NULL');
         }
+
+        $this->db->where('p.deleted_at IS NULL');
+        $this->db->where("p.created_at >= DATE_SUB(CURDATE(), INTERVAL {$months} MONTH)", NULL, FALSE);
+
+        $this->db->group_by("YEAR(p.created_at), MONTH(p.created_at), DATE_FORMAT(p.created_at, '%b'), DATE_FORMAT(p.created_at, '%Y-%m')");
+        $this->db->order_by('YEAR(p.created_at) ASC, MONTH(p.created_at) ASC');
         
-        // Let's use a simpler query for now that doesn't break.
-        // If strictly isolated, we can assume we only care about customers explicitly interacting.
-        // Let's rely on standard logic but if id_pemilik, we subquery?
-        
-        // Allow global for now if too complex to solve in one turn, BUT verify it doesn't leak info.
-        // "Growth of customers" -> showing "5 customers in Jan" is generic statistics, not PII.
-        // So maybe acceptable to leave as is? 
-        // NO. "You have 1000 customers" when I only added 2 is confusing.
-        
-        // Let's filter by: created_at AND (EXISTS in my orders)
-        $this->db->where('pelanggan.deleted_at IS NULL');
-        $this->db->where("pelanggan.created_at >= DATE_SUB(NOW(), INTERVAL $months MONTH)", NULL, FALSE);
-        
-        if ($id_pemilik) {
-             $this->db->where("EXISTS (SELECT 1 FROM pesanan ps JOIN cabang c ON ps.id_cabang = c.id_cabang WHERE ps.id_pelanggan = pelanggan.id_pelanggan AND c.id_pemilik = $id_pemilik)", NULL, FALSE);
+        $query = $this->db->get();
+        if ($query === false) {
+            $this->logQueryError('pertumbuhanBulanan');
+            return [];
         }
-        
-        $this->db->group_by('YEAR(pelanggan.created_at), MONTH(pelanggan.created_at)');
-        $this->db->order_by('YEAR(pelanggan.created_at) ASC, MONTH(pelanggan.created_at) ASC');
-        
-        return $this->db->get()->result();
+
+        return $query->result();
+    }
+
+    private function logQueryError($method)
+    {
+        $error = $this->db->error();
+        $message = isset($error['message']) ? $error['message'] : 'Unknown database error';
+        $code = isset($error['code']) ? $error['code'] : 'no-code';
+
+        log_message('error', 'Pelanggan_model::' . $method . ' failed [' . $code . ']: ' . $message);
+        log_message('error', 'Last query: ' . $this->db->last_query());
     }
 
     // Check if owner has access to customer (via orders or if new customer)

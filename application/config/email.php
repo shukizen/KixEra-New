@@ -9,12 +9,12 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 // Gmail SMTP Settings
 $config['protocol'] = 'smtp';
-$config['smtp_host'] = 'ssl://smtp.gmail.com';
-$config['smtp_port'] = 465;
-$config['smtp_user'] = 'hattajunior1@gmail.com';
-$config['smtp_pass'] = 'tgfqgvfywpldlyvt'; // App Password (tanpa spasi)
-$config['smtp_timeout'] = 30;
-$config['smtp_crypto'] = 'ssl';
+$config['smtp_host'] = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
+$config['smtp_port'] = getenv('SMTP_PORT') ?: 587;
+$config['smtp_user'] = getenv('SMTP_USER') ?: 'hattajunior1@gmail.com';
+$config['smtp_pass'] = getenv('SMTP_PASS') ?: 'tgfqgvfywpldlyvt'; // App Password (tanpa spasi)
+$config['smtp_timeout'] = getenv('SMTP_TIMEOUT') ?: 30;
+$config['smtp_crypto'] = getenv('SMTP_CRYPTO') ?: 'tls';
 
 // Email Settings
 $config['mailtype'] = 'html';
@@ -24,5 +24,5 @@ $config['newline'] = "\r\n";
 $config['crlf'] = "\r\n";
 
 // From Address (default sender)
-$config['from_email'] = 'hattajunior1@gmail.com';
-$config['from_name'] = 'KixEra';
+$config['from_email'] = getenv('MAIL_FROM_EMAIL') ?: 'hattajunior1@gmail.com';
+$config['from_name'] = getenv('MAIL_FROM_NAME') ?: 'KixEra';

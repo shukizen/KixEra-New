@@ -417,6 +417,7 @@
                     <!-- Body -->
                     <form id="formEditInventory" method="POST" action="<?= site_url('karyawan/inventori/update') ?>">
                         <input type="hidden" name="id_inventori" id="edit_id">
+                        <input type="hidden" name="return_url" value="<?= htmlspecialchars(current_url(), ENT_QUOTES, 'UTF-8') ?>">
                         
                         <div class="p-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -651,7 +652,7 @@ document.getElementById('deleteModal').addEventListener('click', function(e) {
 
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
     if (deleteItemId) {
-        window.location.href = "<?= base_url('karyawan/inventori/delete/') ?>" + deleteItemId;
+        window.location.href = "<?= base_url('karyawan/inventori/delete/') ?>" + deleteItemId + '?return_url=' + encodeURIComponent(window.location.href);
     }
 });
 

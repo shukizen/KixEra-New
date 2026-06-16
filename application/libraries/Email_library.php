@@ -20,12 +20,12 @@ class Email_library
         // Load email config manually
         $this->config = [
             'protocol' => 'smtp',
-            'smtp_host' => 'smtp.gmail.com', // Remove ssl:// prefix
-            'smtp_port' => 465,
-            'smtp_user' => 'hattajunior1@gmail.com',
-            'smtp_pass' => 'tgfqgvfywpldlyvt',
-            'smtp_timeout' => 30,
-            'smtp_crypto' => 'ssl', // This handles the encryption
+            'smtp_host' => getenv('SMTP_HOST') ?: 'smtp.gmail.com', // Remove ssl:// prefix
+            'smtp_port' => getenv('SMTP_PORT') ?: 587,
+            'smtp_user' => getenv('SMTP_USER') ?: 'hattajunior1@gmail.com',
+            'smtp_pass' => getenv('SMTP_PASS') ?: 'tgfqgvfywpldlyvt',
+            'smtp_timeout' => getenv('SMTP_TIMEOUT') ?: 30,
+            'smtp_crypto' => getenv('SMTP_CRYPTO') ?: 'tls', // This handles the encryption
             'mailtype' => 'html',
             'charset' => 'utf-8',
             'wordwrap' => TRUE,
@@ -89,11 +89,16 @@ class Email_library
     public function send($to, $subject, $message)
     {
         try {
+            $mail_driver = strtolower(getenv('MAIL_DRIVER') ?: getenv('EMAIL_DRIVER') ?: 'smtp');
+
+            if ($mail_driver === 'brevo_api') {
+                return $this->send_via_brevo_api($to, $subject, $message);
+            }
+
             $this->CI->email->clear();
 
-            // Use hardcoded from address
-            $from_email = 'hattajunior1@gmail.com';
-            $from_name = 'KixEra';
+            $from_email = getenv('MAIL_FROM_EMAIL') ?: 'hattajunior1@gmail.com';
+            $from_name = getenv('MAIL_FROM_NAME') ?: 'KixEra';
 
             $this->CI->email->from($from_email, $from_name);
             $this->CI->email->to($to);
@@ -122,6 +127,83 @@ class Email_library
                 'message' => 'Error: ' . $e->getMessage()
             ];
         }
+    }
+
+    /**
+     * Kirim email via Brevo Transactional Email API.
+     */
+    private function send_via_brevo_api($to, $subject, $message)
+    {
+        $api_key = getenv('BREVO_API_KEY');
+        $api_url = getenv('BREVO_API_URL') ?: 'https://api.brevo.com/v3/smtp/email';
+        $from_email = getenv('MAIL_FROM_EMAIL') ?: 'hattajunior1@gmail.com';
+        $from_name = getenv('MAIL_FROM_NAME') ?: 'KixEra';
+
+        if (empty($api_key)) {
+            log_message('error', 'Brevo API send failed: BREVO_API_KEY is empty');
+            return [
+                'success' => false,
+                'message' => 'Gagal mengirim email',
+                'debug' => 'BREVO_API_KEY belum diset'
+            ];
+        }
+
+        $payload = [
+            'sender' => [
+                'email' => $from_email,
+                'name' => $from_name
+            ],
+            'to' => [
+                [
+                    'email' => $to
+                ]
+            ],
+            'subject' => $subject,
+            'htmlContent' => $message
+        ];
+
+        $ch = curl_init($api_url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'accept: application/json',
+                'api-key: ' . $api_key,
+                'content-type: application/json'
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+            CURLOPT_TIMEOUT => getenv('BREVO_API_TIMEOUT') ?: 30,
+            CURLOPT_SSL_VERIFYPEER => true
+        ]);
+
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
+        curl_close($ch);
+
+        if ($response === false) {
+            log_message('error', 'Brevo API cURL error: ' . $curl_error);
+            return [
+                'success' => false,
+                'message' => 'Gagal mengirim email',
+                'debug' => $curl_error
+            ];
+        }
+
+        if ($http_code < 200 || $http_code >= 300) {
+            log_message('error', 'Brevo API send failed HTTP ' . $http_code . ': ' . $response);
+            return [
+                'success' => false,
+                'message' => 'Gagal mengirim email',
+                'debug' => $response
+            ];
+        }
+
+        log_message('info', "Email sent successfully via Brevo API to: {$to}");
+        return [
+            'success' => true,
+            'message' => 'Email berhasil dikirim'
+        ];
     }
 
     /**

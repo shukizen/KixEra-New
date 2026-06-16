@@ -650,6 +650,7 @@
             $.ajax({
                 url: BASE_URL + 'pemilik/layanan/delete/' + id,
                 type: 'POST',
+                dataType: 'json',
                 success: function(response) {
                     if(response.success) {
                         showNotification('Layanan berhasil dihapus', 'success');

@@ -297,7 +297,7 @@ class Admin_model extends CI_Model {
                 'icon' => 'fa-user-plus',
                 'title' => 'Pendaftaran Baru',
                 'message' => "$new_today pemilik usaha baru mendaftar hari ini",
-                'link' => base_url('admin/manajemen_pengguna')
+                'link' => base_url('admin/user_management')
             );
         }
         

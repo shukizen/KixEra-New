@@ -219,29 +219,48 @@ class Inventori extends CI_Controller {
     }
     
     // Delete inventory item
-    public function delete($id) {
+    public function delete($id = null) {
+        if (empty($id)) {
+            $id = $this->input->post('id_inventori', true) ?: $this->input->post('id', true);
+        }
+        if (empty($id)) {
+            $raw = $this->input->raw_input_stream;
+            $input = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($input)) {
+                $id = isset($input['id_inventori']) ? $input['id_inventori'] : ($input['id'] ?? null);
+            }
+        }
+
         $id_pemilik = $this->get_id_pemilik();
+
+        if (empty($id)) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'success' => false,
+                    'message' => 'ID item tidak ditemukan'
+                ]));
+        }
         
         // Validasi apakah item milik pemilik yang login
         $existing_item = $this->Inventori_model->get_inventory_by_id($id, $id_pemilik);
         if (!$existing_item) {
-            echo json_encode([
+            return $this->output->set_content_type('application/json')->set_output(json_encode([
                 'success' => false,
                 'message' => 'Item tidak ditemukan atau Anda tidak memiliki akses'
-            ]);
-            return;
+            ]));
         }
         
         if ($this->Inventori_model->delete_inventory($id)) {
-            echo json_encode([
+            return $this->output->set_content_type('application/json')->set_output(json_encode([
                 'success' => true,
                 'message' => 'Item berhasil dihapus'
-            ]);
+            ]));
         } else {
-            echo json_encode([
+            return $this->output->set_content_type('application/json')->set_output(json_encode([
                 'success' => false,
                 'message' => 'Gagal menghapus item'
-            ]);
+            ]));
         }
     }
     

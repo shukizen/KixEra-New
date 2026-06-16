@@ -60,18 +60,6 @@ $segment2 = $CI->uri->segment(2);
             Pengaturan
         </a>
 
-        <!-- Dark Mode Toggle -->
-        <button id="themeToggleBtn" type="button" class="w-full flex items-center justify-between px-4 py-3 rounded-xl mb-2 transition-colors text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700">
-            <span class="flex items-center">
-                <i id="themeToggleIcon" class="fas fa-moon mr-3"></i>
-                <span id="themeToggleText">Mode Gelap</span>
-            </span>
-            <span class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="themeToggleCheckbox" class="sr-only peer">
-                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-500"></div>
-            </span>
-        </button>
-
         <!-- Logout -->
         <a href="<?= base_url('auth/logout') ?>"
             class="bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400 flex items-center px-4 py-3 rounded-xl font-medium hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">

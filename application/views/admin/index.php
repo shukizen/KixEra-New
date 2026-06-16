@@ -307,7 +307,7 @@
                         <div class="bg-white rounded-2xl shadow-lg p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
                             <div class="space-y-3">
-                                <button onclick="window.location='<?= base_url('admin/manajemen_pengguna') ?>'" 
+                                <button onclick="window.location='<?= base_url('admin/user_management') ?>'" 
                                         class="w-full bg-emerald-500 text-white py-3 rounded-xl hover:bg-emerald-600 transition flex items-center justify-center gap-2">
                                     <i class="fas fa-user-plus"></i>
                                     Manage Users

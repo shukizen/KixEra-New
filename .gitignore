@@ -8,7 +8,6 @@ application/logs/*
 
 !application/*/.htaccess
 
-composer.lock
 tests/mocks/database/ci_test.sqlite
 
 user_guide_src/build/*
@@ -33,8 +32,6 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 
 # API Keys & Sensitive Config
 #-------------------------
-application/config/gemini.php
-application/config/google_config.php
 
 # Uploads and User Content
 uploads/*

@@ -1205,7 +1205,7 @@ class Auth extends CI_Controller
                 $this->session->set_flashdata('error', 'Gagal menghubungkan akun Google');
             }
 
-            redirect('pemilik/profile'); // Sesuaikan dengan halaman profile Anda
+            redirect('pemilik/pengaturan');
             return;
         }
 

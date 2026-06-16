@@ -115,7 +115,7 @@
                         <a href="<?= site_url('landingpage') ?>" class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors text-center">
                             Back to Home
                         </a>
-                        <a href="<?= site_url('dashboard') ?>" class="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl text-center">
+                        <a href="<?= site_url('pemilik/pemilik_dashboard') ?>" class="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl text-center">
                             Go to Dashboard
                         </a>
                     </div>

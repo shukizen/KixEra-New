@@ -25,7 +25,7 @@ class Pengaturan extends CI_Controller {
         
         $this->load->view('template/header');
         $this->load->view('template/sidebarkaryawan');
-        $this->load->view('karyawan/pengaturan/index', $data);
+        $this->load->view('karyawan/Pengaturan/index', $data);
         $this->load->view('template/footer');
     }
     

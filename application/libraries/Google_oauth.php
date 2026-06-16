@@ -180,7 +180,7 @@ class Google_oauth {
         
         // Normalize data user
         $normalized = [
-            'google_id' => $user_info['id'] ?? null,
+            'google_id' => $user_info['id'] ?? ($user_info['sub'] ?? null),
             'email' => $user_info['email'] ?? null,
             'verified_email' => $user_info['email_verified'] ?? false,
             'name' => $user_info['name'] ?? null,

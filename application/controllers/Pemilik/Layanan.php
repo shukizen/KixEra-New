@@ -221,15 +221,37 @@ class Layanan extends CI_Controller {
         }
     }
 
-    public function delete($id)
+    public function delete($id = null)
     {
+        if (empty($id)) {
+            $id = $this->input->post('id_layanan', true) ?: $this->input->post('id', true);
+        }
+        if (empty($id)) {
+            $raw = $this->input->raw_input_stream;
+            $input = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($input)) {
+                $id = isset($input['id_layanan']) ? $input['id_layanan'] : ($input['id'] ?? null);
+            }
+        }
+
         $id_pemilik = $this->get_id_pemilik();
+        $is_ajax = $this->input->is_ajax_request();
+
+        if (empty($id)) {
+            $response = ['success' => false, 'message' => 'ID layanan tidak ditemukan'];
+            if ($is_ajax) {
+                return $this->output->set_content_type('application/json')->set_output(json_encode($response));
+            }
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('pemilik/layanan');
+            return;
+        }
         
         // RBAC Check
         if (!$this->Layanan_model->checkOwnership($id, $id_pemilik)) {
              $msg = 'Akses ditolak';
-             if ($this->input->is_ajax_request()) {
-                 echo json_encode(['success' => false, 'message' => $msg]);
+             if ($is_ajax) {
+                 return $this->output->set_content_type('application/json')->set_output(json_encode(['success' => false, 'message' => $msg]));
              } else {
                  $this->session->set_flashdata('error', $msg);
                  redirect('pemilik/layanan');
@@ -237,22 +259,19 @@ class Layanan extends CI_Controller {
              return;
         }
 
-        // Check if AJAX request
-        $is_ajax = $this->input->is_ajax_request();
-        
         // Check if layanan exists
         $layanan = $this->Layanan_model->getLayananById($id);
         
         if(!$layanan) {
             if($is_ajax) {
-                echo json_encode([
+                return $this->output->set_content_type('application/json')->set_output(json_encode([
                     'success' => false,
                     'message' => 'Data layanan tidak ditemukan'
-                ]);
-                return;
+                ]));
             } else {
                 $this->session->set_flashdata('error', 'Data layanan tidak ditemukan');
                 redirect('pemilik/layanan');
+                return;
             }
         }
 
@@ -260,10 +279,10 @@ class Layanan extends CI_Controller {
         $result = $this->Layanan_model->softDelete($id);
         
         if($is_ajax) {
-            echo json_encode([
+            return $this->output->set_content_type('application/json')->set_output(json_encode([
                 'success' => true,
                 'message' => 'Layanan berhasil dihapus'
-            ]);
+            ]));
         } else {
             $this->session->set_flashdata('success', 'Layanan berhasil dihapus');
             redirect('pemilik/layanan');

@@ -53,14 +53,33 @@ $route['default_controller'] = 'Landingpage';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 $config['index_page'] ='';
-$route['keuangan'] = 'keuangan/index';
-$route['keuangan/(.+)'] = 'keuangan/$1';
+$route['keuangan'] = 'Pemilik/Keuangan/index';
+$route['keuangan/(.+)'] = 'Pemilik/Keuangan/$1';
 
 // Midtrans Webhook Routes
 $route['pembayaran/notification'] = 'pembayaran/notification';
-$route['admin/dashboard'] = 'admin/admin_dashboard';
 
-// Admin Auth Routes
-$route['admin/login'] = 'admin/auth/login';
-$route['admin/auth/process_login'] = 'admin/auth/process_login';
-$route['admin/logout'] = 'admin/auth/logout'; // Explicit logout route for admin if needed, or share generic one. Better to have dedicated to clear admin sessions properly if they differ.
+// Linux-safe controller routes. CI3 resolves controller folders/files case-sensitively.
+$route['dashboard'] = 'Landingpage';
+
+$route['admin'] = 'Admin/Admin_dashboard';
+$route['admin/dashboard'] = 'Admin/Admin_dashboard';
+$route['admin/admin_dashboard'] = 'Admin/Admin_dashboard';
+$route['admin/admin_dashboard/(.+)'] = 'Admin/Admin_dashboard/$1';
+$route['admin/login'] = 'Admin/Auth/login';
+$route['admin/auth/process_login'] = 'Admin/Auth/process_login';
+$route['admin/logout'] = 'Admin/Auth/logout';
+$route['admin/(:any)/(.+)'] = 'Admin/$1/$2';
+$route['admin/(:any)'] = 'Admin/$1';
+
+$route['pemilik'] = 'Pemilik/Pemilik_Dashboard';
+$route['pemilik/pemilik_dashboard'] = 'Pemilik/Pemilik_Dashboard';
+$route['pemilik/pemilik_dashboard/(.+)'] = 'Pemilik/Pemilik_Dashboard/$1';
+$route['pemilik/(:any)/(.+)'] = 'Pemilik/$1/$2';
+$route['pemilik/(:any)'] = 'Pemilik/$1';
+
+$route['karyawan'] = 'Karyawan/Karyawan_dashboard';
+$route['karyawan/karyawan_dashboard'] = 'Karyawan/Karyawan_dashboard';
+$route['karyawan/karyawan_dashboard/(.+)'] = 'Karyawan/Karyawan_dashboard/$1';
+$route['karyawan/(:any)/(.+)'] = 'Karyawan/$1/$2';
+$route['karyawan/(:any)'] = 'Karyawan/$1';

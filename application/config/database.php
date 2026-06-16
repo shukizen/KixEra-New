@@ -73,12 +73,24 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $active_group = 'default';
 $query_builder = TRUE;
 
+$mysql_url = getenv('MYSQL_URL') ?: getenv('DATABASE_URL');
+$mysql_parts = $mysql_url ? parse_url($mysql_url) : [];
+if (!is_array($mysql_parts)) {
+	$mysql_parts = [];
+}
+
+$db_hostname = getenv('MYSQLHOST') ?: ($mysql_parts['host'] ?? 'localhost');
+$db_port = getenv('MYSQLPORT') ?: ($mysql_parts['port'] ?? '');
+$db_username = getenv('MYSQLUSER') ?: ($mysql_parts['user'] ?? 'root');
+$db_password = getenv('MYSQLPASSWORD') ?: (isset($mysql_parts['pass']) ? rawurldecode($mysql_parts['pass']) : '');
+$db_database = getenv('MYSQLDATABASE') ?: (isset($mysql_parts['path']) ? ltrim($mysql_parts['path'], '/') : 'kixera_db');
+
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => 'localhost',
-	'username' => 'root',
-	'password' => '',
-	'database' => 'kixera_db',
+	'hostname' => $db_hostname,
+	'username' => $db_username,
+	'password' => $db_password,
+	'database' => $db_database,
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
 	'pconnect' => FALSE,
@@ -94,3 +106,7 @@ $db['default'] = array(
 	'failover' => array(),
 	'save_queries' => TRUE
 );
+
+if (!empty($db_port)) {
+	$db['default']['port'] = $db_port;
+}

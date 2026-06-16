@@ -23,7 +23,11 @@ defined('BASEPATH') or exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/kixera/';
+$base_url = getenv('BASE_URL');
+if (!$base_url && getenv('RAILWAY_PUBLIC_DOMAIN')) {
+	$base_url = 'https://' . getenv('RAILWAY_PUBLIC_DOMAIN');
+}
+$config['base_url'] = $base_url ? rtrim($base_url, '/') . '/' : 'http://localhost/kixera/';
 
 /*
 |--------------------------------------------------------------------------
@@ -225,7 +229,7 @@ $config['allow_get_array'] = TRUE;
 | your log files will fill up very fast.
 |
 */
-$config['log_threshold'] = 4;
+$config['log_threshold'] = getenv('CI_LOG_THRESHOLD') !== false ? (int) getenv('CI_LOG_THRESHOLD') : 4;
 
 /*
 |--------------------------------------------------------------------------
@@ -326,7 +330,7 @@ $config['cache_query_string'] = FALSE;
 | https://codeigniter.com/userguide3/libraries/encryption.html
 |
 */
-$config['encryption_key'] = '';
+$config['encryption_key'] = getenv('CI_ENCRYPTION_KEY') ?: '';
 
 /*
 |--------------------------------------------------------------------------
@@ -391,7 +395,7 @@ $config['sess_expiration'] = 7200;
 $config['sess_match_ip'] = FALSE;
 $config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = FALSE;
-$config['sess_save_path'] = sys_get_temp_dir();
+$config['sess_save_path'] = getenv('CI_SESSION_SAVE_PATH') ?: sys_get_temp_dir();
 
 /*
 |--------------------------------------------------------------------------
@@ -412,7 +416,7 @@ $config['sess_save_path'] = sys_get_temp_dir();
 $config['cookie_prefix']    = '';
 $config['cookie_domain']    = '';
 $config['cookie_path']        = '/';
-$config['cookie_secure']    = FALSE;
+$config['cookie_secure']    = getenv('COOKIE_SECURE') !== false ? filter_var(getenv('COOKIE_SECURE'), FILTER_VALIDATE_BOOLEAN) : FALSE;
 $config['cookie_httponly']     = FALSE;
 $config['cookie_samesite']     = 'Lax';
 

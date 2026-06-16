@@ -249,7 +249,7 @@
                                 title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <a href="<?= base_url('karyawan/inventori/delete/'.$item->id_inventori) ?>" 
+                            <a href="<?= base_url('karyawan/inventori/delete/'.$item->id_inventori) ?>?return_url=<?= rawurlencode(current_url()) ?>" 
                                onclick="return confirm('Yakin ingin menghapus <?= $item->nama_item ?>?')"
                                class="w-9 h-9 bg-red-100 hover:bg-red-500 text-red-600 hover:text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-red-500/30" 
                                title="Hapus">
@@ -292,6 +292,7 @@
         
         <form method="POST" action="<?= base_url('karyawan/inventori/update') ?>" id="formEdit">
             <input type="hidden" name="id_inventori" id="edit_id">
+            <input type="hidden" name="return_url" value="<?= htmlspecialchars(current_url(), ENT_QUOTES, 'UTF-8') ?>">
             
             <div class="p-6">
                 <div class="grid grid-cols-2 gap-4">
@@ -422,7 +423,8 @@ document.addEventListener('keydown', function(e) {
 // Confirm delete with better UX
 function confirmDelete(nama, url) {
     if (confirm('Yakin ingin menghapus "' + nama + '"?')) {
-        window.location.href = url;
+        const separator = url.indexOf('?') === -1 ? '?' : '&';
+        window.location.href = url + separator + 'return_url=' + encodeURIComponent(window.location.href);
     }
     return false;
 }

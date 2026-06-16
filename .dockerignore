@@ -1,0 +1,10 @@
+.git
+.idea
+node_modules
+vendor
+application/cache/*
+!application/cache/index.html
+application/logs/*
+!application/logs/index.html
+backups
+temp_storage_cleanup

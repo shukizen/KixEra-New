@@ -18,7 +18,7 @@ class Inventori extends CI_Controller {
         
         // Pastikan yang akses adalah karyawan
         if ($this->session->userdata('role') !== 'karyawan') {
-            redirect('dashboard');
+            redirect('karyawan/karyawan_dashboard');
         }
     }
 
@@ -71,6 +71,38 @@ class Inventori extends CI_Controller {
         
         // Load view
         $this->load->view('karyawan/inventori/index', $data);
+    }
+
+    private function redirect_after_action($fallback = 'karyawan/inventori')
+    {
+        $target = $this->input->post('return_url', true) ?: $this->input->get('return_url', true);
+        if (!$target) {
+            $target = $this->input->server('HTTP_REFERER', true);
+        }
+
+        if ($this->is_safe_local_url($target)) {
+            redirect($target);
+            return;
+        }
+
+        redirect($fallback);
+    }
+
+    private function is_safe_local_url($url)
+    {
+        if (empty($url)) {
+            return false;
+        }
+
+        $base_host = parse_url(base_url(), PHP_URL_HOST);
+        $target_scheme = parse_url($url, PHP_URL_SCHEME);
+        $target_host = parse_url($url, PHP_URL_HOST);
+
+        if (empty($target_host)) {
+            return empty($target_scheme);
+        }
+
+        return $target_host === $base_host;
     }
     
     // Fungsi untuk menyimpan data inventory
@@ -219,7 +251,7 @@ class Inventori extends CI_Controller {
         
         if ($this->form_validation->run() == FALSE) {
             $this->session->set_flashdata('error', validation_errors());
-            redirect('karyawan/inventori/lihat_stok');
+            $this->redirect_after_action();
             return;
         }
         
@@ -228,7 +260,7 @@ class Inventori extends CI_Controller {
         
         if (!$item) {
             $this->session->set_flashdata('error', 'Data tidak ditemukan atau Anda tidak memiliki akses!');
-            redirect('karyawan/inventori/lihat_stok');
+            $this->redirect_after_action();
             return;
         }
         
@@ -249,7 +281,7 @@ class Inventori extends CI_Controller {
             $this->session->set_flashdata('error', 'Gagal mengupdate data!');
         }
         
-        redirect('karyawan/inventori/lihat_stok');
+        $this->redirect_after_action();
     }
     
     // Delete inventory item
@@ -257,7 +289,7 @@ class Inventori extends CI_Controller {
     {
         if (empty($id) || !is_numeric($id)) {
             $this->session->set_flashdata('error', 'ID tidak valid!');
-            redirect('karyawan/inventori/lihat_stok');
+            $this->redirect_after_action();
             return;
         }
         
@@ -268,7 +300,7 @@ class Inventori extends CI_Controller {
         
         if (!$item) {
             $this->session->set_flashdata('error', 'Data tidak ditemukan atau Anda tidak memiliki akses!');
-            redirect('karyawan/inventori/lihat_stok');
+            $this->redirect_after_action();
             return;
         }
         
@@ -280,7 +312,7 @@ class Inventori extends CI_Controller {
             $this->session->set_flashdata('error', 'Gagal menghapus data!');
         }
         
-        redirect('karyawan/inventori/lihat_stok');
+        $this->redirect_after_action();
     }
     
     // AJAX: Get inventory data

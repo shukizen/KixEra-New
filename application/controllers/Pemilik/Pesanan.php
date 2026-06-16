@@ -205,6 +205,14 @@ class Pesanan extends CI_Controller
     public function delete()
     {
         $id = $this->input->post('id_pesanan');
+        if (empty($id)) {
+            $raw = $this->input->raw_input_stream;
+            $input = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($input)) {
+                $id = isset($input['id_pesanan']) ? $input['id_pesanan'] : ($input['id'] ?? null);
+            }
+        }
+
         $id_pemilik = $this->get_id_pemilik();
         
         if (empty($id)) {

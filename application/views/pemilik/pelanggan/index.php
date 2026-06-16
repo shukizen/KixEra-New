@@ -454,15 +454,23 @@
             updateTopCustomersChart(data.top || []);
             updateGrowthChart(data.growth || []);
         }
+
+        function hasChartValues(values) {
+            return values.some(value => Number(value) > 0);
+        }
         
         function updateDistributionChart(branches) {
             const labels = branches.map(b => b.nama_cabang || 'Unknown');
             const dataValues = branches.map(b => Number(b.total) || 0);
-            const colors = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#0f766e', '#047857'];
+            const hasData = hasChartValues(dataValues);
+            const chartLabels = hasData ? labels : ['Belum ada pelanggan'];
+            const chartData = hasData ? dataValues : [1];
+            const colors = hasData ? ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#0f766e', '#047857'] : ['#e5e7eb'];
             
             if (distributionChart) {
-                distributionChart.data.labels = labels;
-                distributionChart.data.datasets[0].data = dataValues;
+                distributionChart.data.labels = chartLabels;
+                distributionChart.data.datasets[0].data = chartData;
+                distributionChart.data.datasets[0].backgroundColor = colors;
                 distributionChart.update();
             } else {
                 const ctx = document.getElementById('distributionChart');
@@ -471,9 +479,9 @@
                 distributionChart = new Chart(ctx.getContext('2d'), {
                     type: 'doughnut',
                     data: {
-                        labels: labels.length > 0 ? labels : ['Tidak ada data'],
+                        labels: chartLabels,
                         datasets: [{
-                            data: dataValues.length > 0 ? dataValues : [1],
+                            data: chartData,
                             backgroundColor: colors,
                             borderWidth: 2,
                             borderColor: '#fff'
@@ -493,10 +501,13 @@
         function updateTopCustomersChart(customers) {
             const labels = customers.map(c => c.nama || 'Unknown');
             const dataValues = customers.map(c => Number(c.total_pesanan) || 0);
+            const hasData = hasChartValues(dataValues);
+            const chartLabels = hasData ? labels : ['Belum ada pesanan'];
+            const chartData = hasData ? dataValues : [0];
             
             if (topCustomersChart) {
-                topCustomersChart.data.labels = labels;
-                topCustomersChart.data.datasets[0].data = dataValues;
+                topCustomersChart.data.labels = chartLabels;
+                topCustomersChart.data.datasets[0].data = chartData;
                 topCustomersChart.update();
             } else {
                 const ctx = document.getElementById('topCustomersChart');
@@ -505,10 +516,10 @@
                 topCustomersChart = new Chart(ctx.getContext('2d'), {
                     type: 'bar',
                     data: {
-                        labels: labels.length > 0 ? labels : ['Tidak ada data'],
+                        labels: chartLabels,
                         datasets: [{
                             label: 'Total Pesanan',
-                            data: dataValues.length > 0 ? dataValues : [0],
+                            data: chartData,
                             backgroundColor: '#3b82f6',
                             borderRadius: 8
                         }]
@@ -529,10 +540,13 @@
         function updateGrowthChart(growth) {
             const labels = growth.map(g => g.bulan || 'Unknown');
             const dataValues = growth.map(g => Number(g.total) || 0);
+            const hasData = hasChartValues(dataValues);
+            const chartLabels = hasData ? labels : ['Belum ada pelanggan'];
+            const chartData = hasData ? dataValues : [0];
             
             if (growthChart) {
-                growthChart.data.labels = labels;
-                growthChart.data.datasets[0].data = dataValues;
+                growthChart.data.labels = chartLabels;
+                growthChart.data.datasets[0].data = chartData;
                 growthChart.update();
             } else {
                 const ctx = document.getElementById('growthChart');
@@ -541,10 +555,10 @@
                 growthChart = new Chart(ctx.getContext('2d'), {
                     type: 'line',
                     data: {
-                        labels: labels.length > 0 ? labels : ['Tidak ada data'],
+                        labels: chartLabels,
                         datasets: [{
                             label: 'Pelanggan Baru',
-                            data: dataValues.length > 0 ? dataValues : [0],
+                            data: chartData,
                             borderColor: '#10b981',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
                             tension: 0.4,
@@ -702,6 +716,7 @@
             $.ajax({
                 url: BASE_URL + 'pemilik/pelanggan/delete/' + id,
                 type: 'POST',
+                dataType: 'json',
                 success: function(response) {
                     if(response.success) {
                         showNotification('Pelanggan berhasil dihapus', 'success');

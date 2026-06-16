@@ -11,13 +11,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 
 // Midtrans Server Key (gunakan Sandbox key untuk testing)
-$config['midtrans_server_key'] = 'SB-Mid-server-ccsm2ziDa00TI2R473-w_Ec9';
+$config['midtrans_server_key'] = getenv('MIDTRANS_SERVER_KEY') ?: 'SB-Mid-server-ccsm2ziDa00TI2R473-w_Ec9';
 
 // Midtrans Client Key
-$config['midtrans_client_key'] = 'SB-Mid-client-wmkO_f69div7oz3s';
+$config['midtrans_client_key'] = getenv('MIDTRANS_CLIENT_KEY') ?: 'SB-Mid-client-wmkO_f69div7oz3s';
 
 // Set ke FALSE untuk Sandbox, TRUE untuk Production
-$config['midtrans_is_production'] = FALSE;
+$config['midtrans_is_production'] = getenv('MIDTRANS_IS_PRODUCTION') !== false
+    ? filter_var(getenv('MIDTRANS_IS_PRODUCTION'), FILTER_VALIDATE_BOOLEAN)
+    : FALSE;
 
 // Sanitize input
 $config['midtrans_is_sanitized'] = TRUE;

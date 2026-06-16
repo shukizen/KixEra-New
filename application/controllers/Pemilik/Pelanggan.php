@@ -230,38 +230,57 @@ class Pelanggan extends CI_Controller {
         }
     }
 
-    public function delete($id)
+    public function delete($id = null)
     {
+        if (empty($id)) {
+            $id = $this->input->post('id_pelanggan', true) ?: $this->input->post('id', true);
+        }
+        if (empty($id)) {
+            $raw = $this->input->raw_input_stream;
+            $input = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($input)) {
+                $id = isset($input['id_pelanggan']) ? $input['id_pelanggan'] : ($input['id'] ?? null);
+            }
+        }
+
         $id_pemilik = $this->get_id_pemilik();
+        $is_ajax = $this->input->is_ajax_request();
+
+        if (empty($id)) {
+            $response = ['success' => false, 'message' => 'ID pelanggan tidak ditemukan'];
+            if ($is_ajax) {
+                return $this->output->set_content_type('application/json')->set_output(json_encode($response));
+            }
+            $this->session->set_flashdata('error', $response['message']);
+            redirect('pemilik/pelanggan');
+            return;
+        }
         
         // RBAC Check
         if (!$this->Pelanggan_model->checkAccess($id, $id_pemilik)) {
              $msg = 'Akses ditolak';
-             if ($this->input->is_ajax_request()) {
-                 echo json_encode(['success' => false, 'message' => $msg]);
+             if ($is_ajax) {
+                 return $this->output->set_content_type('application/json')->set_output(json_encode(['success' => false, 'message' => $msg]));
              } else {
                  $this->session->set_flashdata('error', $msg);
-                 redirect('pelanggan');
+                 redirect('pemilik/pelanggan');
              }
              return;
         }
 
-        // Check if AJAX request
-        $is_ajax = $this->input->is_ajax_request();
-        
         // Check if customer exists
         $pelanggan = $this->Pelanggan_model->getPelangganById($id);
         
         if(!$pelanggan) {
             if($is_ajax) {
-                echo json_encode([
+                return $this->output->set_content_type('application/json')->set_output(json_encode([
                     'success' => false,
                     'message' => 'Data pelanggan tidak ditemukan'
-                ]);
-                return;
+                ]));
             } else {
                 $this->session->set_flashdata('error', 'Data pelanggan tidak ditemukan');
-                redirect('pelanggan');
+                redirect('pemilik/pelanggan');
+                return;
             }
         }
 
@@ -273,27 +292,27 @@ class Pelanggan extends CI_Controller {
         
         if($has_orders) {
             if($is_ajax) {
-                echo json_encode([
+                return $this->output->set_content_type('application/json')->set_output(json_encode([
                     'success' => false,
                     'message' => 'Data pelanggan ini tidak bisa dihapus karena memiliki data pesanan'
-                ]);
-                return;
+                ]));
             } else {
                 $this->session->set_flashdata('error', 'Pelanggan tidak dapat dihapus karena memiliki riwayat pesanan');
-                redirect('pelanggan');
+                redirect('pemilik/pelanggan');
+                return;
             }
         }
 
         $result = $this->Pelanggan_model->softDelete($id);
         
         if($is_ajax) {
-            echo json_encode([
+            return $this->output->set_content_type('application/json')->set_output(json_encode([
                 'success' => true,
                 'message' => 'Pelanggan berhasil dihapus'
-            ]);
+            ]));
         } else {
             $this->session->set_flashdata('success', 'Pelanggan berhasil dihapus');
-            redirect('pelanggan');
+            redirect('pemilik/pelanggan');
         }
     }
 
